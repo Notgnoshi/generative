@@ -1,0 +1,4 @@
+numpy
+pyglet
+pytest
+svgwrite
