@@ -1,4 +1,5 @@
 numpy
 pyglet
 pytest
+scipy
 svgwrite
