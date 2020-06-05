@@ -1,46 +1,99 @@
-import abc
 import itertools
-from typing import Dict, Generator, Iterable, NewType
+from dataclasses import dataclass
+from typing import Callable, Dict, Generator, Iterable, Set, Tuple, Union
 
-Token = NewType("Token", str)
-Tokens = Iterable[Token]
+from multidict import MultiDict
+
+Number = Union[int, float]
 
 
-class LSystemGrammar(abc.ABC):
-    """A representation of a Lindenmayer System grammar.
+@dataclass
+class Token:
+    name: str
+    parameters: Dict[str, Number]
 
-    An L-System grammar is composed of a set of rules of the form:
 
-        x -> y
+@dataclass
+class RuleMapping:
+    production: Tuple[Token]
+    probability: Union[None, Number]
+    condition: Callable[[Dict[str, Number], Tuple, Tuple, Tuple], bool]
+    left_context: Token
+    right_context: Token
 
-    These rules mean: replace occurences of the string 'x' with the string 'y'. Such strings may
-    be composed of multiple tokens. The production rules are then iteratively applied to a starting
-    axiom, comprised of at least one token.
 
-    Example:
-        a -> ab
-        b -> a
+Rule = Tuple[Token, RuleMapping]
 
-        0th iteration:  a     (axiom)
-        1st iteration:  ab    (apply a -> ab)
-        2nd iteration:  aba   (apply a -> ab, then b -> a, left-to-right)
-        3rd iteration:  abaab (apply rules left-to-right)
+
+class LSystemGrammar:
+    """A context-sensitive, stochastic, and parametric Lindenmayer System grammar parser.
+
+    Parses strings of tokens using a set of production rules.
+    Unlike traditional parsing, the rules are applied on the _entire_ string of tokens from left to
+    right _before_ returning to the first symbol in the string.
+
+    Example
+        Given the rules 'a -> ab', 'b -> a', and the starting axiom 'a',
+
+        1st iteration: a -> ab
+        2nd iteration: ab -> aba (apply 'a -> ab' on the first token, then 'b -> a' on the second).
+        3rd iteration: aba -> abaab
+
+    The rules may be context-sensitive, and may have at most one token of context to the left,
+    right, or both directions.
+    Some tokens may optionally be ignored when considering context.
+
+    The rules may be stochastic, with more than one possible replacement for a given token.
+    The probabilities for each token can be specified.
+    If multiple replacements for the same token are parsed, but probabilities are not given, we
+    assume uniform probability.
+
+    The rules may be parametric, and applied only if a certain condition is met, and the
+    replacements may modify per-token parameters for consideration the next iteration.
+    There may also be global constants (not parameters) that may be used in the condition evaluation
+    or the replacement.
+
+    The context matching only matches the token, and not the parameters.
+
+    Thus, production rules are the following mapping:
+        token -> tuple(left_context, right_context, probability, condition, production)
+
+    The left and right contexts are single tokens, possibly parametric.
+    The probability may be None, or a float in (0, 1].
+    The condition is a boolean expression using Python syntax. Available variables are:
+        * Any global constants
+        * Any context parameters
+        * Any parameters for the token being replaced
+    The production is a series of tokens, possible parametric with mathematical operations performed
+    using Python syntax on the parameters. The productions have the same access as the conditions.
+
+    There may be multiple rules for the same token.
+    If, after considering context and the condition expression, there are multiple matching rules,
+    one will be picked randomly with the probability distribution specified in the rule definitions.
     """
 
-    def __init__(self, rules: Dict[Tokens, Tokens]):
-        """Initialize the grammar with a set of production rules."""
-        self.rules = rules
+    def __init__(
+        self,
+        rules: Dict[Token, RuleMapping],
+        constants: Dict[str, Number] = None,
+        ignore: Set[Token] = None,
+    ):
+        """Initialize a Lindenmayer-System grammar parser with the given rules.
 
-    @abc.abstractmethod
-    def _apply_once(self, text: Tokens) -> Tokens:
-        """Apply one iteration of the production rules to the given text left-to-right."""
-
-    def iapply(self, axiom: Tokens) -> Generator[Tokens, None, None]:
-        """Infinitely apply the production rules to the given axiom.
-
-        :param axiom: The axiom to apply the production rule to.
-        :returns: A generator of token iterables.
+        :param rules: A set of production rules. A mapping of token -> replacements, along with
+        conditions on the replacements.
         """
+        self.tokens: Set[Token] = set(rules.keys())
+        self.constants: Dict[str, Number] = constants if constants is not None else dict()
+        self.ignore: Set[Token] = ignore if ignore is not None else set()
+
+    def rewrite(self, tokens: Iterable[Token]) -> Iterable[Token]:
+        """Apply the production rules to the given string to rewrite it."""
+        # Need to keep track of the cursor location so that we can look up context on either side.
+        # Either that, or we iterate over the tokens three at a time, with an edge case for the first
+
+    def loop(self, axiom: Iterable[Token]) -> Generator[Iterable[Token], None, None]:
+        """Infinitely apply the production rules to the given starting axiom."""
         while True:
             # Depending on the implementation of _apply_once, it may compute the entire iteration
             # and cache the results, or compute them on the fly.
@@ -48,86 +101,8 @@ class LSystemGrammar(abc.ABC):
             # We must also avoid yielding an exhausted generator. The itertools.tee docs say that
             # if one iterable uses most or all the data before another iterator starts (precisely
             # this case) it is faster to use a list.
-            axiom = list(self._apply_once(axiom))
+            axiom = list(self.rewrite(axiom))
             yield axiom
 
-    def apply(self, axiom: Tokens, times: int = 1) -> Iterable[Token]:
-        """Apply the production rules to the given axiom a fixed number of times.
-
-        The production rules are applied left-to-right for every token once per iteration.
-
-        :param axiom: The axiom to apply the production rules to.
-        :param times: The number of times to sequentially apply the rules.
-        :returns: An iterable of tokens.
-        """
-        return next(itertools.islice(self.iapply(axiom), times - 1, None))
-
-
-class ContextFreeGrammar(LSystemGrammar):
-    """A context free L-System grammar.
-
-    Each production rule in a context-free grammar has a single nonterminal token on the LHS of
-    the rule. That is, it is not necessary to consider the surrounding context when applying the
-    production rules.
-    """
-
-    def _apply_once(self, text: Tokens) -> Tokens:
-        # Each token (hopefully) results in more than one result token.
-        # So chain the rewrites together so that the result in a single iterator of tokens.
-        rewrites = (self.rules.get(token, token) for token in text)
-        return itertools.chain.from_iterable(rewrites)
-
-
-class ContextSensitiveGrammar(LSystemGrammar):
-    """A context sensitive L-System grammar.
-
-    In context sensitive grammars, each production rule might require context matching on either
-    side of the LHS nonterminal symbol. This is annotated by
-
-        a < x > b -> y
-
-    where by, in order to apply the rule 'x -> y', 'x' must be surrounded by the left context 'a',
-    and the right context 'b'. Both left, and right contexts are optional.
-
-    This can be rewritten into the rule
-
-        axb -> ayb
-
-    TODO: I don't know how to write a context-sensitive grammar parser.
-    """
-
-
-class StochasticGrammar(LSystemGrammar):
-    """A stochastic L-System grammar.
-
-    A stochastic grammar is one where there might be multiple RHS productions for a given LHS
-    nonterminal symbol. When parsing/applying the grammar, the RHS productions are chosen with
-    some probability specified in the rule.
-
-    Example:
-        In the following grammar, 'x' could be replaced by either 'y' or 'z' with equal probability.
-
-        x: 0.5 -> y
-        x: 0.5 -> z
-
-        It's likely that this will require the representation
-
-        x -> [(y, 0.5), (z, 0.5)]
-
-    TODO: This will require changing how the rules are specified.
-    """
-
-
-class ParametricGrammar(LSystemGrammar):
-    """A parametric L-System grammar.
-
-    In a parametric grammar, nonterminal symbols may be followed by a condition and a parameter
-    list. For example, you might have the rule
-
-        a(x, y): x == 0 -> a(1, y + 1)b(x + 1, y)
-
-    These parameters maybe considered by both the application of the production rules, and by the
-    drawing system responsible for rendering a given L-System.
-
-    TODO: This will require changing how the rules are specified.
-    """
+    def loopn(self, axiom: Iterable[Token], n: int = 1) -> Iterable[Token]:
+        return next(itertools.islice(self.loop(axiom), n - 1, None))

@@ -1,3 +1,4 @@
+multidict
 numpy
 pyglet
 pytest
