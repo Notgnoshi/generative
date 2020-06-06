@@ -1,28 +1,57 @@
 import itertools
+import logging
+import random
 from dataclasses import dataclass
-from typing import Callable, Dict, Generator, Iterable, Set, Tuple, Union
+from typing import Callable, Dict, Generator, Iterable, List, NewType, Set, Tuple, Union
 
+import numpy as np
+from more_itertools import peekable
 from multidict import MultiDict
 
+logger = logging.getLogger(__name__)
+
 Number = Union[int, float]
+TokenName = NewType("TokenName", str)
+VariableName = NewType("VariableName", str)
+Constants = Dict[VariableName, Number]
 
 
+# Python 3.7+
 @dataclass
 class Token:
+    """A token in the language defined by the L-System grammar."""
+
     name: str
-    parameters: Dict[str, Number]
+    parameters: Union[None, Tuple[Number]] = None
 
 
 @dataclass
 class RuleMapping:
-    production: Tuple[Token]
-    probability: Union[None, Number]
-    condition: Callable[[Dict[str, Number], Tuple, Tuple, Tuple], bool]
-    left_context: Token
-    right_context: Token
+    """Each rule is the mapping of a token to a tuple of values; this is the tuple of values.
+
+    Care should be made in creating the production function, and the condition.
+    """
+
+    # Call this function to get the replacement tokens.
+    # Constants, token being rewritten, left context, right context
+    production: Callable[[Constants, Token, Union[None, Token], Union[None, Token]], Tuple[Token]]
+    # If not None, and between 0 and 1, apply this rule with the given probability.
+    probability: Union[None, Number] = None
+    # Call this function to determine if the condition is met. Same arguments as the production.
+    condition: Union[None, Callable[[Constants, Token, Token, Token], bool]] = None
+    # Note that the tokens include their parameter values, but for the purpose of context, the
+    # parameters are ignored.
+    left_context: Union[None, Token] = None
+    right_context: Union[None, Token] = None
 
 
-Rule = Tuple[Token, RuleMapping]
+def triplewise(iterable):
+    """Iterate over the given iterable in triples."""
+    a, b, c = itertools.tee(iterable, 3)
+    next(b, None)
+    next(c, None)
+    next(c, None)
+    return zip(a, b, c)
 
 
 class LSystemGrammar:
@@ -74,27 +103,113 @@ class LSystemGrammar:
 
     def __init__(
         self,
-        rules: Dict[Token, RuleMapping],
-        constants: Dict[str, Number] = None,
-        ignore: Set[Token] = None,
+        rules: MultiDict[TokenName, RuleMapping],
+        constants: Constants = None,
+        ignore: Set[TokenName] = None,
+        seed: int = None,
     ):
         """Initialize a Lindenmayer-System grammar parser with the given rules.
+
+        NOTE: We assume all parameters given are valid. This includes things like the callables
+        in the RuleMappings, expressions referring to things that exist, there being a rule for
+        every token, etc.
+
+        TODO: I do not expect direct user interaction with this class, but the details of wrapping
+        it still need to be figured out.
 
         :param rules: A set of production rules. A mapping of token -> replacements, along with
         conditions on the replacements.
         """
-        self.tokens: Set[Token] = set(rules.keys())
-        self.constants: Dict[str, Number] = constants if constants is not None else dict()
-        self.ignore: Set[Token] = ignore if ignore is not None else set()
+        self.tokens: Set[TokenName] = set(rules.keys())
+        self.constants: Constants = constants if constants is not None else dict()
+        self.ignore: Set[TokenName] = ignore if ignore is not None else set()
+        self.rules: MultiDict[TokenName, RuleMapping] = rules
+
+        self.seed = seed if seed is not None else random.randint(0, 2 ** 32 - 1)
+        np.random.seed(self.seed)
+        logger.info(f"Using random seed: {self.seed}")
+
+    def pick_rule(self, rules: List[RuleMapping]) -> RuleMapping:
+        """If there are multiple matching rules for a given token, pick one randomly.
+
+        Only pick randomly if all rules have a probability value assigned that sum to 1.
+        Otherwise just pick the first.
+        """
+        if len(rules) == 1:
+            return rules[0]
+
+        for rule in rules:
+            if rule.probability is None:
+                return rule
+        p = [r.probability for r in rules]
+        if sum(p) > 1.0:
+            raise ValueError("Probabilities cannot sum over 1.0")
+
+        choice = np.random.choice(rules, p=p)
+        return choice[0]
+
+    def apply_rules(
+        self, token: Token, left_ctx: Token = None, right_ctx: Token = None
+    ) -> Iterable[Token]:
+        """Apply the production rules to the given token with the specified context.
+
+        Note that the left and right context are optional to facilitate the edge cases for the
+        first and last tokens in the string.
+        """
+        # Get all rules that match the given token
+        rules = self.rules.getall(token.name)
+
+        # Filter rules by context. Either there's no context in the rule, or the context matches
+        rules = [r for r in rules if r.left_context is None or r.left_context == left_ctx]
+        rules = [r for r in rules if r.right_context is None or r.right_context == right_ctx]
+
+        # Of the remaining rules, pick one randomly.
+        rule = self.pick_rule(rules)
+
+        replacement = rule.production(self.constants, token, left_ctx, right_ctx)
+        logger.debug(f"Rewriting {token} -> {replacement}")
+        return replacement
 
     def rewrite(self, tokens: Iterable[Token]) -> Iterable[Token]:
         """Apply the production rules to the given string to rewrite it."""
-        # Need to keep track of the cursor location so that we can look up context on either side.
-        # Either that, or we iterate over the tokens three at a time, with an edge case for the first
+        # more-itertools is _awesome_.
+        tokens = peekable(tokens)
+        first: Token = next(tokens)
+        second: Token = next(tokens, None)
+
+        # Handle the edge case at the beginning (the first token doesn't have left context).
+        for token in self.apply_rules(first, left_ctx=None, right_ctx=second):
+            yield token
+
+        # Add the first two tokens back
+        if second is not None:
+            tokens.prepend(second)
+        tokens.prepend(first)
+        # Handle the rest like a sane person.
+        for left_ctx, token, right_ctx in triplewise(tokens):
+            for token in self.apply_rules(token, left_ctx, right_ctx):
+                yield token
+
+        # I don't know how else to handle the additional edge case of the tokens iterable
+        # only containing two tokens.
+        try:
+            left_ctx = token
+            token = right_ctx
+        except UnboundLocalError:  # The loop never executed, so the loop vars don't exist.
+            left_ctx = first
+            token = second
+
+        if token is not None:
+            # Handle the edge case at the end (the last token doesn't have right context).
+            for token in self.apply_rules(token, left_ctx, right_ctx=None):
+                yield token
 
     def loop(self, axiom: Iterable[Token]) -> Generator[Iterable[Token], None, None]:
         """Infinitely apply the production rules to the given starting axiom."""
+        i = 0
+        logger.debug(f"Iteration 0: {axiom}")
         while True:
+            i += 1
             # Depending on the implementation of _apply_once, it may compute the entire iteration
             # and cache the results, or compute them on the fly.
             #
@@ -102,7 +217,9 @@ class LSystemGrammar:
             # if one iterable uses most or all the data before another iterator starts (precisely
             # this case) it is faster to use a list.
             axiom = list(self.rewrite(axiom))
+            logger.debug(f"Iteration {i}: {axiom}")
             yield axiom
 
     def loopn(self, axiom: Iterable[Token], n: int = 1) -> Iterable[Token]:
+        """Apply the productions rules n times to the given axiom, and return the result."""
         return next(itertools.islice(self.loop(axiom), n - 1, None))
