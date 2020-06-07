@@ -135,18 +135,20 @@ class LSystemGrammar:
         Only pick randomly if all rules have a probability value assigned that sum to 1.
         Otherwise just pick the first.
         """
+        # If there's not choice, no need to make it a random choice.
         if len(rules) == 1:
             return rules[0]
 
         for rule in rules:
             if rule.probability is None:
                 return rule
-        p = [r.probability for r in rules]
-        if sum(p) > 1.0:
-            raise ValueError("Probabilities cannot sum over 1.0")
 
-        choice = np.random.choice(rules, p=p)
-        return choice[0]
+        p = [r.probability for r in rules]
+        total = sum(p)
+        if total > 1.0:
+            raise ValueError("Total probability {total} over 1.0")
+
+        return np.random.choice(rules, p=p)
 
     def apply_rules(
         self, token: Token, left_ctx: Token = None, right_ctx: Token = None
@@ -159,15 +161,30 @@ class LSystemGrammar:
         # Get all rules that match the given token
         rules = self.rules.getall(token.name)
 
-        # Filter rules by context. Either there's no context in the rule, or the context matches
-        rules = [r for r in rules if r.left_context is None or r.left_context == left_ctx]
-        rules = [r for r in rules if r.right_context is None or r.right_context == right_ctx]
+        # Filter rules by context. Either there's no context in the rule, no context available (string edges) or the context matches
+        # Also, screw this formatting.
+        rules = [
+            r
+            for r in rules
+            if r.left_context is None or left_ctx is None or r.left_context.name == left_ctx.name
+        ]
+        rules = [
+            r
+            for r in rules
+            if r.right_context is None
+            or right_ctx is None
+            or r.right_context.name == right_ctx.name
+        ]
+
+        # If we don't have a matching rule, just passthrough the token.
+        if not rules:
+            return (token,)
 
         # Of the remaining rules, pick one randomly.
         rule = self.pick_rule(rules)
 
         replacement = rule.production(self.constants, token, left_ctx, right_ctx)
-        logger.debug(f"Rewriting {token} -> {replacement}")
+        logger.debug(f"Applying rule {token} -> {replacement}")
         return replacement
 
     def rewrite(self, tokens: Iterable[Token]) -> Iterable[Token]:
@@ -176,10 +193,12 @@ class LSystemGrammar:
         tokens = peekable(tokens)
         first: Token = next(tokens)
         second: Token = next(tokens, None)
-
+        logger.debug("rewrite")
+        logger.debug(f"replacing token: {first} right: {second}")
         # Handle the edge case at the beginning (the first token doesn't have left context).
-        for token in self.apply_rules(first, left_ctx=None, right_ctx=second):
-            yield token
+        for replacement in self.apply_rules(first, left_ctx=None, right_ctx=second):
+            logger.debug(f"replacement: {replacement}")
+            yield replacement
 
         # Add the first two tokens back
         if second is not None:
@@ -187,8 +206,10 @@ class LSystemGrammar:
         tokens.prepend(first)
         # Handle the rest like a sane person.
         for left_ctx, token, right_ctx in triplewise(tokens):
-            for token in self.apply_rules(token, left_ctx, right_ctx):
-                yield token
+            logger.debug(f"replacing token: {token} left: {left_ctx} right: {right_ctx}")
+            for replacement in self.apply_rules(token, left_ctx, right_ctx):
+                logger.debug(f"replacement: {replacement}")
+                yield replacement
 
         # I don't know how else to handle the additional edge case of the tokens iterable
         # only containing two tokens.
@@ -200,9 +221,11 @@ class LSystemGrammar:
             token = second
 
         if token is not None:
+            logger.debug(f"replacing token: {token} left: {left_ctx}")
             # Handle the edge case at the end (the last token doesn't have right context).
-            for token in self.apply_rules(token, left_ctx, right_ctx=None):
-                yield token
+            for replacement in self.apply_rules(token, left_ctx, right_ctx=None):
+                logger.debug(f"replacement: {replacement}")
+                yield replacement
 
     def loop(self, axiom: Iterable[Token]) -> Generator[Iterable[Token], None, None]:
         """Infinitely apply the production rules to the given starting axiom."""
