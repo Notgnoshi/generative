@@ -222,26 +222,8 @@ class LSystemGrammar:
             if token.name not in self.ignore:
                 left = token
 
-    def loop(self, axiom: Iterable[Token]) -> Generator[Iterable[Token], None, None]:
-        """Infinitely apply the production rules to the given starting axiom."""
-        i = 0
-        logger.debug(f"Iteration 0: {axiom}")
-        while True:
-            i += 1
-            # TODO: Rewrite this (pun not intended) so that we don't need to convert the generator to a list
-            # It should be possible, if we don't require access to each iteration on the way to the end.
-            # That is, remove this method, and rewrite loopn.
-
-            # Depending on the implementation of _apply_once, it may compute the entire iteration
-            # and cache the results, or compute them on the fly.
-            #
-            # We must also avoid yielding an exhausted generator. The itertools.tee docs say that
-            # if one iterable uses most or all the data before another iterator starts (precisely
-            # this case) it is faster to use a list.
-            axiom = list(self.rewrite(axiom))
-            logger.debug(f"Iteration {i}: {axiom}")
-            yield axiom
-
-    def loopn(self, axiom: Iterable[Token], n: int = 1) -> Iterable[Token]:
+    def loop(self, axiom: Iterable[Token], n: int = 1) -> Iterable[Token]:
         """Apply the productions rules n times to the given axiom, and return the result."""
-        return next(itertools.islice(self.loop(axiom), n - 1, None))
+        for _ in range(n):
+            axiom = self.rewrite(axiom)
+        return axiom

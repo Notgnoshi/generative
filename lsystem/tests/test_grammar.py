@@ -56,16 +56,8 @@ class ContextFreeParsing(unittest.TestCase):
 
     def test_loop(self):
         axiom = tokenize("a")
-        g = self.system.loop(axiom)
-        expected = ["ab", "aba", "abaab", "abaababa"]
-        expected = [tokenize(a) for a in expected]
-        for actual, expectation in zip(g, expected):
-            self.assertSequenceEqual(actual, expectation)
-
-    def test_loopn(self):
-        axiom = tokenize("a")
         expected = tokenize("abaababa")
-        actual = self.system.loopn(axiom, 4)
+        actual = list(self.system.loop(axiom, 4))
         self.assertSequenceEqual(actual, expected)
 
 
