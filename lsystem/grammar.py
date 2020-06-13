@@ -12,17 +12,13 @@ logger = logging.getLogger(__name__)
 
 Number = Union[int, float]
 TokenName = NewType("TokenName", str)
-VariableName = NewType("VariableName", str)
-Constants = Dict[VariableName, Number]
 
 
-# Python 3.7+
 @dataclass
 class Token:
     """A token in the language defined by the L-System grammar."""
 
     name: str
-    parameters: Union[None, Tuple[Number]] = None
 
 
 @dataclass
@@ -32,15 +28,9 @@ class RuleMapping:
     Care should be made in creating the production function, and the condition.
     """
 
-    # Call this function to get the replacement tokens.
-    # Constants, token being rewritten, left context, right context
-    production: Callable[[Constants, Token, Union[None, Token], Union[None, Token]], Tuple[Token]]
+    production: Tuple[Token]
     # If not None, and between 0 and 1, apply this rule with the given probability.
     probability: Union[None, Number] = None
-    # Call this function to determine if the condition is met. Same arguments as the production.
-    condition: Union[None, Callable[[Constants, Token, Token, Token], bool]] = None
-    # Note that the tokens include their parameter values, but for the purpose of context, the
-    # parameters are ignored.
     left_context: Union[None, Token] = None
     right_context: Union[None, Token] = None
 
@@ -55,7 +45,7 @@ def triplewise(iterable):
 
 
 class LSystemGrammar:
-    """A context-sensitive, stochastic, and parametric Lindenmayer System grammar parser.
+    """A context-sensitive and stochastic Lindenmayer System grammar parser.
 
     Parses strings of tokens using a set of production rules.
     Unlike traditional parsing, the rules are applied on the _entire_ string of tokens from left to
@@ -77,51 +67,24 @@ class LSystemGrammar:
     If multiple replacements for the same token are parsed, but probabilities are not given, we
     assume uniform probability.
 
-    The rules may be parametric, and applied only if a certain condition is met, and the
-    replacements may modify per-token parameters for consideration the next iteration.
-    There may also be global constants (not parameters) that may be used in the condition evaluation
-    or the replacement.
-
-    The context matching only matches the token, and not the parameters.
-
-    Thus, production rules are the following mapping:
-        token -> tuple(left_context, right_context, probability, condition, production)
-
-    The left and right contexts are single tokens, possibly parametric.
+    The left and right contexts are single tokens.
     The probability may be None, or a float in (0, 1].
-    The condition is a boolean expression using Python syntax. Available variables are:
-        * Any global constants
-        * Any context parameters
-        * Any parameters for the token being replaced
-    The production is a series of tokens, possible parametric with mathematical operations performed
-    using Python syntax on the parameters. The productions have the same access as the conditions.
 
     There may be multiple rules for the same token.
-    If, after considering context and the condition expression, there are multiple matching rules,
+    If, after considering context, there are multiple matching rules,
     one will be picked randomly with the probability distribution specified in the rule definitions.
     """
 
     def __init__(
         self,
         rules: MultiDict[TokenName, RuleMapping],
-        constants: Constants = None,
         ignore: Set[TokenName] = None,
         seed: int = None,
     ):
         """Initialize a Lindenmayer-System grammar parser with the given rules.
 
-        NOTE: We assume all parameters given are valid. This includes things like the callables
-        in the RuleMappings, expressions referring to things that exist, there being a rule for
-        every token, etc.
-
-        TODO: I do not expect direct user interaction with this class, but the details of wrapping
-        it still need to be figured out.
-
-        :param rules: A set of production rules. A mapping of token -> replacements, along with
-        conditions on the replacements.
+        :param rules: A set of production rules. A mapping of token -> replacements.
         """
-        self.tokens: Set[TokenName] = set(rules.keys())
-        self.constants: Constants = constants if constants is not None else dict()
         self.ignore: Set[TokenName] = ignore if ignore is not None else set()
         self.rules: MultiDict[TokenName, RuleMapping] = rules
 
@@ -129,12 +92,8 @@ class LSystemGrammar:
         np.random.seed(self.seed)
         logger.info(f"Using random seed: {self.seed}")
 
-    def pick_rule(self, rules: List[RuleMapping]) -> RuleMapping:
-        """If there are multiple matching rules for a given token, pick one randomly.
-
-        Only pick randomly if all rules have a probability value assigned that sum to 1.
-        Otherwise just pick the first.
-        """
+    def pick_rule(self, rules: List[RuleMapping], token, left_ctx, right_ctx) -> RuleMapping:
+        """Pick the right rule based off the probability values or the parametric condition."""
         # If there's not choice, no need to make it a random choice.
         if len(rules) == 1:
             return rules[0]
@@ -143,12 +102,7 @@ class LSystemGrammar:
             if rule.probability is None:
                 return rule
 
-        p = [r.probability for r in rules]
-        total = sum(p)
-        if total > 1.0:
-            raise ValueError("Total probability {total} over 1.0")
-
-        return np.random.choice(rules, p=p)
+        return np.random.choice(rules, p=[r.probability for r in rules])
 
     def apply_rules(
         self, token: Token, left_ctx: Token = None, right_ctx: Token = None
@@ -191,11 +145,9 @@ class LSystemGrammar:
             return (token,)
 
         # Of the remaining rules, pick one randomly.
-        rule = self.pick_rule(rules)
-
-        replacement = rule.production(self.constants, token, left_ctx, right_ctx)
-        logger.debug(f"Applying rule {token} -> {replacement}")
-        return replacement
+        rule = self.pick_rule(rules, token, left_ctx, right_ctx)
+        logger.debug(f"Applying rule {token} -> {rule.production}")
+        return rule.production
 
     def rewrite(self, tokens: Iterable[Token]) -> Iterable[Token]:
         """Apply the production rules to the given string to rewrite it."""

@@ -19,8 +19,8 @@ class ContextFreeParsing(unittest.TestCase):
     def setUp(self):
         self.rules = MultiDict(
             {
-                "a": RuleMapping(lambda c, t, l, r: (Token("a"), Token("b"))),
-                "b": RuleMapping(lambda c, t, l, r: (Token("a"),)),
+                "a": RuleMapping((Token("a"), Token("b"))),
+                "b": RuleMapping((Token("a"),)),
             }
         )
         self.system = LSystemGrammar(self.rules)
@@ -67,28 +67,28 @@ class StochasticParsing(unittest.TestCase):
     def setUp(self):
         self.rules = MultiDict(
             [
-                ("a", RuleMapping(lambda c, t, l, r: tokenize("a"), probability=0.33)),
-                ("a", RuleMapping(lambda c, t, l, r: tokenize("aa"), probability=0.33)),
-                ("a", RuleMapping(lambda c, y, l, r: tokenize("aaa"), probability=0.34)),
+                ("a", RuleMapping(tokenize("a"), probability=0.33)),
+                ("a", RuleMapping(tokenize("aa"), probability=0.33)),
+                ("a", RuleMapping(tokenize("aaa"), probability=0.34)),
             ]
         )
 
     def test_pick_rule_a(self):
         system = LSystemGrammar(self.rules, seed=0x420)
-        rule = system.pick_rule(self.rules.getall("a"))
-        rewrite = rule.production(None, None, None, None)
+        rule = system.pick_rule(self.rules.getall("a"), None, None, None)
+        rewrite = rule.production
         self.assertSequenceEqual(rewrite, tokenize("aa"))
 
     def test_pick_rule_b(self):
         system = LSystemGrammar(self.rules, seed=0x626C61)
-        rule = system.pick_rule(self.rules.getall("a"))
-        rewrite = rule.production(None, None, None, None)
+        rule = system.pick_rule(self.rules.getall("a"), None, None, None)
+        rewrite = rule.production
         self.assertSequenceEqual(rewrite, tokenize("aaa"))
 
     def test_pick_rule_c(self):
         system = LSystemGrammar(self.rules, seed=0xA656974)
-        rule = system.pick_rule(self.rules.getall("a"))
-        rewrite = rule.production(None, None, None, None)
+        rule = system.pick_rule(self.rules.getall("a"), None, None, None)
+        rewrite = rule.production
         self.assertSequenceEqual(rewrite, tokenize("a"))
 
 
@@ -98,9 +98,9 @@ class ContextSensitiveParsing(unittest.TestCase):
     def test_left_context(self):
         rules = MultiDict(
             [
-                ("a", RuleMapping(lambda c, t, l, r: tokenize("ab"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("b"), left_context=Token("a"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("a"), left_context=Token("b"))),
+                ("a", RuleMapping(tokenize("ab"))),
+                ("b", RuleMapping(tokenize("b"), left_context=Token("a"))),
+                ("b", RuleMapping(tokenize("a"), left_context=Token("b"))),
             ]
         )
         system = LSystemGrammar(rules)
@@ -115,9 +115,9 @@ class ContextSensitiveParsing(unittest.TestCase):
     def test_left_context_edge(self):
         rules = MultiDict(
             [
-                ("a", RuleMapping(lambda c, t, l, r: tokenize("ab"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("b"), left_context=Token("a"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("a"), left_context=Token("b"))),
+                ("a", RuleMapping(tokenize("ab"))),
+                ("b", RuleMapping(tokenize("b"), left_context=Token("a"))),
+                ("b", RuleMapping(tokenize("a"), left_context=Token("b"))),
             ]
         )
         system = LSystemGrammar(rules)
@@ -129,9 +129,9 @@ class ContextSensitiveParsing(unittest.TestCase):
     def test_right_context(self):
         rules = MultiDict(
             [
-                ("a", RuleMapping(lambda c, t, l, r: tokenize("ba"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("b"), right_context=Token("a"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("a"), right_context=Token("b"))),
+                ("a", RuleMapping(tokenize("ba"))),
+                ("b", RuleMapping(tokenize("b"), right_context=Token("a"))),
+                ("b", RuleMapping(tokenize("a"), right_context=Token("b"))),
             ]
         )
         system = LSystemGrammar(rules)
@@ -146,9 +146,9 @@ class ContextSensitiveParsing(unittest.TestCase):
     def test_right_context_edge(self):
         rules = MultiDict(
             [
-                ("a", RuleMapping(lambda c, t, l, r: tokenize("ba"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("b"), right_context=Token("a"))),
-                ("b", RuleMapping(lambda c, t, l, r: tokenize("a"), right_context=Token("b"))),
+                ("a", RuleMapping(tokenize("ba"))),
+                ("b", RuleMapping(tokenize("b"), right_context=Token("a"))),
+                ("b", RuleMapping(tokenize("a"), right_context=Token("b"))),
             ]
         )
         system = LSystemGrammar(rules)
@@ -159,11 +159,11 @@ class ContextSensitiveParsing(unittest.TestCase):
     def test_context_both_sides(self):
         rules = MultiDict(
             [
-                ("a", RuleMapping(lambda c, t, l, r: tokenize("aba"))),
+                ("a", RuleMapping(tokenize("aba"))),
                 (
                     "b",
                     RuleMapping(
-                        lambda c, t, l, r: tokenize("bb"),
+                        tokenize("bb"),
                         left_context=Token("a"),
                         right_context=Token("a"),
                     ),
@@ -171,7 +171,7 @@ class ContextSensitiveParsing(unittest.TestCase):
                 (
                     "b",
                     RuleMapping(
-                        lambda c, t, l, r: tokenize("ab"),
+                        tokenize("ab"),
                         left_context=Token("b"),
                         right_context=Token("a"),
                     ),
@@ -192,8 +192,8 @@ class ContextSensitiveParsing(unittest.TestCase):
     def test_locomotion(self):
         rules = MultiDict(
             {
-                "a": RuleMapping(lambda c, t, l, r: tokenize("b"), left_context=Token("b")),
-                "b": RuleMapping(lambda c, t, l, r: tokenize("a")),
+                "a": RuleMapping(tokenize("b"), left_context=Token("b")),
+                "b": RuleMapping(tokenize("a")),
             }
         )
         system = LSystemGrammar(rules)
@@ -215,12 +215,12 @@ class ContextSensitiveParsing(unittest.TestCase):
         rules = MultiDict(
             {
                 "0": RuleMapping(
-                    lambda c, t, l, r: tokenize("1f1"),
+                    tokenize("1f1"),
                     left_context=Token("1"),
                     right_context=Token("1"),
                 ),
                 "1": RuleMapping(
-                    lambda c, t, l, r: tokenize("0"),
+                    tokenize("0"),
                     left_context=Token("1"),
                     right_context=Token("1"),
                 ),
