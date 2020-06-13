@@ -159,7 +159,10 @@ class LSystemGrammar:
         first and last tokens in the string.
         """
         # Get all rules that match the given token
-        rules = self.rules.getall(token.name)
+        if token.name in self.rules:
+            rules = self.rules.getall(token.name)
+        else:
+            return (token,)
 
         # Filter rules by context. Either there's no context in the rule, or the context matches
         # Note the edge cases at the ends of the string where there is only context to one side.
@@ -196,43 +199,28 @@ class LSystemGrammar:
 
     def rewrite(self, tokens: Iterable[Token]) -> Iterable[Token]:
         """Apply the production rules to the given string to rewrite it."""
-        # more-itertools is _awesome_.
         tokens = peekable(tokens)
-        first: Token = next(tokens)
-        second: Token = next(tokens, None)
-        logger.debug("rewrite")
-        logger.debug(f"replacing token: {first} right: {second}")
-        # Handle the edge case at the beginning (the first token doesn't have left context).
-        for replacement in self.apply_rules(first, left_ctx=None, right_ctx=second):
-            logger.debug(f"replacement: {replacement}")
-            yield replacement
+        left = None
+        right = None
 
-        # Add the first two tokens back
-        if second is not None:
-            tokens.prepend(second)
-        tokens.prepend(first)
-        # Handle the rest like a sane person.
-        for left_ctx, token, right_ctx in triplewise(tokens):
-            logger.debug(f"replacing token: {token} left: {left_ctx} right: {right_ctx}")
-            for replacement in self.apply_rules(token, left_ctx, right_ctx):
-                logger.debug(f"replacement: {replacement}")
+        for token in tokens:
+            # Peek until you find a right token that isn't ignored.
+            # The peekable indices are centered on the current item.
+            for i in itertools.count(0):
+                try:
+                    if tokens[i].name not in self.ignore:
+                        right = tokens[i]
+                        break
+                except IndexError:
+                    right = None
+                    break
+
+            for replacement in self.apply_rules(token, left_ctx=left, right_ctx=right):
                 yield replacement
 
-        # I don't know how else to handle the additional edge case of the tokens iterable
-        # only containing two tokens.
-        try:
-            left_ctx = token
-            token = right_ctx
-        except UnboundLocalError:  # The loop never executed, so the loop vars don't exist.
-            left_ctx = first
-            token = second
-
-        if token is not None:
-            logger.debug(f"replacing token: {token} left: {left_ctx}")
-            # Handle the edge case at the end (the last token doesn't have right context).
-            for replacement in self.apply_rules(token, left_ctx, right_ctx=None):
-                logger.debug(f"replacement: {replacement}")
-                yield replacement
+            # Update the left context for the next iteration.
+            if token.name not in self.ignore:
+                left = token
 
     def loop(self, axiom: Iterable[Token]) -> Generator[Iterable[Token], None, None]:
         """Infinitely apply the production rules to the given starting axiom."""
@@ -240,6 +228,10 @@ class LSystemGrammar:
         logger.debug(f"Iteration 0: {axiom}")
         while True:
             i += 1
+            # TODO: Rewrite this (pun not intended) so that we don't need to convert the generator to a list
+            # It should be possible, if we don't require access to each iteration on the way to the end.
+            # That is, remove this method, and rewrite loopn.
+
             # Depending on the implementation of _apply_once, it may compute the entire iteration
             # and cache the results, or compute them on the fly.
             #

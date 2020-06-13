@@ -2,8 +2,9 @@ import itertools
 import logging
 import unittest
 
-from lsystem.grammar import LSystemGrammar, RuleMapping, Token, triplewise
 from multidict import MultiDict
+
+from lsystem.grammar import LSystemGrammar, RuleMapping, Token, triplewise
 
 logger = logging.getLogger(__name__)
 
@@ -204,19 +205,43 @@ class ContextSensitiveParsing(unittest.TestCase):
             }
         )
         system = LSystemGrammar(rules)
-        axiom = tokenize('baaaaaa')
+        axiom = tokenize("baaaaaa")
         rewrite = list(system.rewrite(axiom))
-        self.assertSequenceEqual(rewrite, tokenize('abaaaaa'))
+        self.assertSequenceEqual(rewrite, tokenize("abaaaaa"))
         rewrite = list(system.rewrite(rewrite))
-        self.assertSequenceEqual(rewrite, tokenize('aabaaaa'))
+        self.assertSequenceEqual(rewrite, tokenize("aabaaaa"))
         rewrite = list(system.rewrite(rewrite))
-        self.assertSequenceEqual(rewrite, tokenize('aaabaaa'))
+        self.assertSequenceEqual(rewrite, tokenize("aaabaaa"))
         rewrite = list(system.rewrite(rewrite))
-        self.assertSequenceEqual(rewrite, tokenize('aaaabaa'))
+        self.assertSequenceEqual(rewrite, tokenize("aaaabaa"))
         rewrite = list(system.rewrite(rewrite))
-        self.assertSequenceEqual(rewrite, tokenize('aaaaaba'))
+        self.assertSequenceEqual(rewrite, tokenize("aaaaaba"))
         rewrite = list(system.rewrite(rewrite))
-        self.assertSequenceEqual(rewrite, tokenize('aaaaaab'))
+        self.assertSequenceEqual(rewrite, tokenize("aaaaaab"))
+
+    def test_context_ignore(self):
+        rules = MultiDict(
+            {
+                "0": RuleMapping(
+                    lambda c, t, l, r: tokenize("1f1"),
+                    left_context=Token("1"),
+                    right_context=Token("1"),
+                ),
+                "1": RuleMapping(
+                    lambda c, t, l, r: tokenize("0"),
+                    left_context=Token("1"),
+                    right_context=Token("1"),
+                ),
+            }
+        )
+        system = LSystemGrammar(rules, ignore={"f"})
+        axiom = tokenize("f1f1f1")
+        rewrite = list(system.rewrite(axiom))
+        self.assertSequenceEqual(rewrite, tokenize("f1f0f1"))
+        rewrite = list(system.rewrite(rewrite))
+        self.assertSequenceEqual(rewrite, tokenize("f1f1f1f1"))
+        rewrite = list(system.rewrite(rewrite))
+        self.assertSequenceEqual(rewrite, tokenize("f1f0f0f1"))
 
 
 class ParametricParsing(unittest.TestCase):
