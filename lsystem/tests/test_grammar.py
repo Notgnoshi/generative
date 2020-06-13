@@ -75,19 +75,19 @@ class StochasticParsing(unittest.TestCase):
 
     def test_pick_rule_a(self):
         system = LSystemGrammar(self.rules, seed=0x420)
-        rule = system.pick_rule(self.rules.getall("a"))
+        rule = system.pick_rule(self.rules.getall("a"), None, None, None)
         rewrite = rule.production(None, None, None, None)
         self.assertSequenceEqual(rewrite, tokenize("aa"))
 
     def test_pick_rule_b(self):
         system = LSystemGrammar(self.rules, seed=0x626C61)
-        rule = system.pick_rule(self.rules.getall("a"))
+        rule = system.pick_rule(self.rules.getall("a"), None, None, None)
         rewrite = rule.production(None, None, None, None)
         self.assertSequenceEqual(rewrite, tokenize("aaa"))
 
     def test_pick_rule_c(self):
         system = LSystemGrammar(self.rules, seed=0xA656974)
-        rule = system.pick_rule(self.rules.getall("a"))
+        rule = system.pick_rule(self.rules.getall("a"), None, None, None)
         rewrite = rule.production(None, None, None, None)
         self.assertSequenceEqual(rewrite, tokenize("a"))
 

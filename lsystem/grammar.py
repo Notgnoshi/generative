@@ -129,26 +129,23 @@ class LSystemGrammar:
         np.random.seed(self.seed)
         logger.info(f"Using random seed: {self.seed}")
 
-    def pick_rule(self, rules: List[RuleMapping]) -> RuleMapping:
-        """If there are multiple matching rules for a given token, pick one randomly.
-
-        Only pick randomly if all rules have a probability value assigned that sum to 1.
-        Otherwise just pick the first.
-        """
+    def pick_rule(self, rules: List[RuleMapping], token, left_ctx, right_ctx) -> RuleMapping:
+        """Pick the right rule based off the probability values or the parametric condition."""
         # If there's not choice, no need to make it a random choice.
         if len(rules) == 1:
             return rules[0]
 
+        # Don't try to handle the mess that would occur if we mixed conditions with probability.
+        # If necessary, I can add a p() function to the syntax that will generate a uniform random
+        # number between 0 and 1 that is usable in the condition parsing.
         for rule in rules:
             if rule.probability is None:
-                return rule
+                if rule.condition is not None and rule.condition(self.constants, token, left_ctx, right_ctx):
+                    return rule
+                elif rule.condition is None:
+                    return rule
 
-        p = [r.probability for r in rules]
-        total = sum(p)
-        if total > 1.0:
-            raise ValueError("Total probability {total} over 1.0")
-
-        return np.random.choice(rules, p=p)
+        return np.random.choice(rules, p=[r.probability for r in rules])
 
     def apply_rules(
         self, token: Token, left_ctx: Token = None, right_ctx: Token = None
@@ -191,7 +188,7 @@ class LSystemGrammar:
             return (token,)
 
         # Of the remaining rules, pick one randomly.
-        rule = self.pick_rule(rules)
+        rule = self.pick_rule(rules, token, left_ctx, right_ctx)
 
         replacement = rule.production(self.constants, token, left_ctx, right_ctx)
         logger.debug(f"Applying rule {token} -> {replacement}")
