@@ -161,19 +161,26 @@ class LSystemGrammar:
         # Get all rules that match the given token
         rules = self.rules.getall(token.name)
 
-        # Filter rules by context. Either there's no context in the rule, no context available (string edges) or the context matches
-        # Also, screw this formatting.
+        # Filter rules by context. Either there's no context in the rule, or the context matches
+        # Note the edge cases at the ends of the string where there is only context to one side.
+
+        # Filter by left context
         rules = [
             r
             for r in rules
-            if r.left_context is None or left_ctx is None or r.left_context.name == left_ctx.name
+            # Either there is no left context in the rule
+            if r.left_context is None
+            # Or there is, and the left context is available and matches.
+            or (left_ctx is not None and r.left_context.name == left_ctx.name)
         ]
+        # Filter by right context
         rules = [
             r
             for r in rules
+            # Either there is no right context in the rule
             if r.right_context is None
-            or right_ctx is None
-            or r.right_context.name == right_ctx.name
+            # Or there is, and the right context is available and matches.
+            or (right_ctx is not None and r.right_context.name == right_ctx.name)
         ]
 
         # If we don't have a matching rule, just passthrough the token.

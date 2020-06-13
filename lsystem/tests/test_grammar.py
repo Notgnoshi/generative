@@ -2,9 +2,8 @@ import itertools
 import logging
 import unittest
 
-from multidict import MultiDict
-
 from lsystem.grammar import LSystemGrammar, RuleMapping, Token, triplewise
+from multidict import MultiDict
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +195,28 @@ class ContextSensitiveParsing(unittest.TestCase):
         # So the test asserts that the unmatched token just gets left alone ( 'b' -> 'b' ).
         rewrite3 = list(system.rewrite(rewrite2))
         self.assertSequenceEqual(rewrite3, tokenize("ababbabababababbaba"))
+
+    def test_locomotion(self):
+        rules = MultiDict(
+            {
+                "a": RuleMapping(lambda c, t, l, r: tokenize("b"), left_context=Token("b")),
+                "b": RuleMapping(lambda c, t, l, r: tokenize("a")),
+            }
+        )
+        system = LSystemGrammar(rules)
+        axiom = tokenize('baaaaaa')
+        rewrite = list(system.rewrite(axiom))
+        self.assertSequenceEqual(rewrite, tokenize('abaaaaa'))
+        rewrite = list(system.rewrite(rewrite))
+        self.assertSequenceEqual(rewrite, tokenize('aabaaaa'))
+        rewrite = list(system.rewrite(rewrite))
+        self.assertSequenceEqual(rewrite, tokenize('aaabaaa'))
+        rewrite = list(system.rewrite(rewrite))
+        self.assertSequenceEqual(rewrite, tokenize('aaaabaa'))
+        rewrite = list(system.rewrite(rewrite))
+        self.assertSequenceEqual(rewrite, tokenize('aaaaaba'))
+        rewrite = list(system.rewrite(rewrite))
+        self.assertSequenceEqual(rewrite, tokenize('aaaaaab'))
 
 
 class ParametricParsing(unittest.TestCase):
