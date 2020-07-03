@@ -2,6 +2,7 @@ more-itertools
 multidict
 numpy
 pyglet
+pyparsing
 pytest
 scipy
 svgwrite
