@@ -12,6 +12,7 @@ import sys
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from lsystem.grammar import LSystemGrammar  # isort:skip
+from lsystem.rule_parser import RuleParser  # isort:skip
 
 
 def parse_args():
