@@ -1,0 +1,10 @@
+{
+    "iterations": 7,
+    "seed": null,
+    "axiom": "F",
+    // Produces a tree with the sierpinski triangle for leaves, if the turtle uses 120 degree turns
+    "rules": [
+        "F -> G,G,G,[,-,F,],[,F,],[,+,F,]",
+        "G -> G,G"
+    ]
+}
