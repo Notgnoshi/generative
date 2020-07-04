@@ -2,7 +2,7 @@ import itertools
 import logging
 import random
 from dataclasses import dataclass
-from typing import Callable, Dict, Generator, Iterable, List, NewType, Set, Tuple, Union
+from typing import Iterable, List, NewType, Set, Tuple, Union
 
 import numpy as np
 from more_itertools import peekable
@@ -116,6 +116,7 @@ class LSystemGrammar:
         if token.name in self.rules:
             rules = self.rules.getall(token.name)
         else:
+            logger.debug(f"No rules found for {token}")
             return (token,)
 
         # Filter rules by context. Either there's no context in the rule, or the context matches
@@ -142,6 +143,7 @@ class LSystemGrammar:
 
         # If we don't have a matching rule, just passthrough the token.
         if not rules:
+            logger.debug(f"No rule matching context found for {token}. Passing through.")
             return (token,)
 
         # Of the remaining rules, pick one randomly.

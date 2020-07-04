@@ -1,7 +1,11 @@
+black
+commentjson
 more-itertools
 multidict
 numpy
+pydocstyle
 pyglet
+pylint
 pyparsing
 pytest
 scipy

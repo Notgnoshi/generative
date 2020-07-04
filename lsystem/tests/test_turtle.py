@@ -78,7 +78,7 @@ class TurtleTests(unittest.TestCase):
         assert_allclose(turtle.position, (0.5, -0.5, np.sqrt(2) / 2))
 
     def test_initial_rotation_roll(self):
-        rotation = Rotation.from_euler('x', [45], degrees=True)
+        rotation = Rotation.from_euler("x", [45], degrees=True)
         turtle = Turtle(rotation=rotation)
         turtle.forward()
         assert_allclose(turtle.position, (0, -np.sqrt(2) / 2, np.sqrt(2) / 2))
@@ -87,7 +87,7 @@ class TurtleTests(unittest.TestCase):
         assert_allclose(turtle.position, (0, -np.sqrt(2) / 2 - 1, np.sqrt(2) / 2))
 
     def test_initial_rotation_pitch(self):
-        rotation = Rotation.from_euler('y', [45], degrees=True)
+        rotation = Rotation.from_euler("y", [45], degrees=True)
         turtle = Turtle(rotation=rotation)
         turtle.forward()
         assert_allclose(turtle.position, (np.sqrt(2) / 2, 0, np.sqrt(2) / 2))

@@ -81,6 +81,9 @@ class RuleParser:
         The production rules have the format
 
             [left_context <] lhs [> right_context] [: probability] -> rhs[,rhs[...]]
+
+    TODO: Provide an alternate parser that works on single-character tokens to avoid the infernal
+    death by comma.
     """
 
     def __init__(self):
