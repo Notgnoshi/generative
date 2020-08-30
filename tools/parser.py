@@ -26,7 +26,14 @@ sys.path.insert(0, str(root))
 from lsystem.grammar import LSystemGrammar, Token, TokenName, RuleMapping  # isort:skip
 from lsystem.rule_parser import RuleParser  # isort:skip
 
-_LOG_LEVEL_STRINGS = ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]
+LOG_LEVELS = {
+    "CRITICAL": logging.CRITICAL,
+    "ERROR": logging.ERROR,
+    "WARNING": logging.WARNING,
+    "INFO": logging.INFO,
+    "DEBUG": logging.DEBUG,
+}
+DEFAULT_LEVEL = "WARNING"
 
 
 def parse_args():
@@ -79,8 +86,10 @@ def parse_args():
     parser.add_argument(
         "-l",
         "--log-level",
-        default="WARNING",
-        help="Set the logging output level. {0}".format(_LOG_LEVEL_STRINGS),
+        type=str,
+        default=DEFAULT_LEVEL,
+        choices=LOG_LEVELS.keys(),
+        help=f"Set the logging output level. Defaults to {DEFAULT_LEVEL}.",
     )
 
     return parser.parse_args()
@@ -95,6 +104,7 @@ def parse_rules(rules: List[str]) -> Tuple[MultiDict[TokenName, RuleMapping], Se
 
 
 def main(args):
+    logger.debug(f"args: {args}")
     rules, ignore = parse_rules(args.rule)
     logger.debug(f"Parsed rules: {rules}")
     grammar = LSystemGrammar(rules, ignore, args.seed)
@@ -112,22 +122,9 @@ def main(args):
 
 if __name__ == "__main__":
     args = parse_args()
-    levels = {
-        "critical": logging.CRITICAL,
-        "error": logging.ERROR,
-        "warn": logging.WARNING,
-        "warning": logging.WARNING,
-        "info": logging.INFO,
-        "debug": logging.DEBUG,
-    }
-    level = levels.get(args.log_level.lower())
-    if level is None:
-        raise ValueError(
-            f"log level given: {args.log} -- must be one of: {' | '.join(levels.keys())}"
-        )
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=level,
+        level=LOG_LEVELS.get(args.log_level),
         stream=sys.stderr,
     )
     logger = logging.getLogger(name="parser.py")
@@ -150,7 +147,5 @@ if __name__ == "__main__":
             args.seed = config.get("iterations", None)
     if args.axiom is None:
         args.axiom = ""
-
-    logger.debug(f"args: {args}")
 
     main(args)
