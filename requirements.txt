@@ -9,4 +9,5 @@ pylint
 pyparsing
 pytest
 scipy
+shapely
 svgwrite
