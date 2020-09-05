@@ -1,5 +1,9 @@
+import logging
+
 import numpy as np
 from scipy.spatial.transform import Rotation
+
+logger = logging.getLogger(__name__)
 
 
 class Turtle:
@@ -38,16 +42,26 @@ class Turtle:
         orientation = (0, 0, 1)
         orientation = self.rotation.apply(orientation)
         self.position = self.position + stepsize * orientation
+        logger.debug(f"stepping forward to {self.position}")
 
     def yaw(self, angle):
         """Yaw the turtle around its local Z axis."""
         # NOTE: Capital axes indicate intrinsic Euler angles.
-        self.rotation = self.rotation * Rotation.from_euler("Z", [angle], degrees=True)
+        # Apparently, it's normal to indicate the normal and longitudinal axes with X and Z respectively
+        # I still want to keep the mental model of "Z is up, duh."
+        self.rotation = self.rotation * Rotation.from_euler("X", [angle], degrees=True)
+        logger.debug(f"yaw {angle}deg")
 
     def pitch(self, angle):
         """Pitch the turtle around its local Y axis."""
         self.rotation = self.rotation * Rotation.from_euler("Y", [angle], degrees=True)
+        logger.debug(f"pitch {angle}deg")
 
     def roll(self, angle):
-        """Roll the turtle around its local X axis."""
-        self.rotation = self.rotation * Rotation.from_euler("X", [angle], degrees=True)
+        """Roll the turtle around its local X axis.
+
+        Just a roll is enough to affect direction, since it's a rotation around the longitudinal
+        axis. That is, a rotation around the axis you're facing.
+        """
+        self.rotation = self.rotation * Rotation.from_euler("Z", [angle], degrees=True)
+        logger.debug(f"roll {angle}deg")

@@ -48,17 +48,15 @@ class TurtleTests(unittest.TestCase):
         assert_allclose(turtle.position, (2, 0, 0), atol=1e-15)
 
     def test_roll(self):
+        # Roll is about the longitudinal axis, so roll() + forward() won't change direction.
         turtle = Turtle()
         assert_allclose(turtle.position, (0, 0, 0))
         turtle.roll(45)
-        # roll, pitch, yaw don't effect position.
-        assert_allclose(turtle.position, (0, 0, 0))
         turtle.forward()
-        assert_allclose(turtle.position, (0, -np.sqrt(2) / 2, np.sqrt(2) / 2))
-        # Another roll will level out the turtle, leaving it to travel one unit in the -y direction
-        turtle.roll(45)
+        assert_allclose(turtle.position, (0, 0, 1))
+        turtle.yaw(45)
         turtle.forward()
-        assert_allclose(turtle.position, (0, -np.sqrt(2) / 2 - 1, np.sqrt(2) / 2))
+        assert_allclose(turtle.position, (1 / 2, -1 / 2, 1 + np.sqrt(2) / 2))
 
     def test_pitch(self):
         turtle = Turtle()
@@ -70,21 +68,10 @@ class TurtleTests(unittest.TestCase):
         assert_allclose(turtle.position, (1 + np.sqrt(2) / 2, 0, np.sqrt(2) / 2))
 
     def test_yaw(self):
-        # The initial turtle orientation is (0, 0, 1), so we need to jump through hoops to test.
         turtle = Turtle()
         turtle.yaw(45)
-        turtle.roll(45)
-        turtle.forward()
-        assert_allclose(turtle.position, (0.5, -0.5, np.sqrt(2) / 2))
-
-    def test_initial_rotation_roll(self):
-        rotation = Rotation.from_euler("x", [45], degrees=True)
-        turtle = Turtle(rotation=rotation)
         turtle.forward()
         assert_allclose(turtle.position, (0, -np.sqrt(2) / 2, np.sqrt(2) / 2))
-        turtle.roll(45)
-        turtle.forward()
-        assert_allclose(turtle.position, (0, -np.sqrt(2) / 2 - 1, np.sqrt(2) / 2))
 
     def test_initial_rotation_pitch(self):
         rotation = Rotation.from_euler("y", [45], degrees=True)
