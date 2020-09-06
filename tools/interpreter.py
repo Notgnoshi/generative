@@ -83,8 +83,6 @@ def parse_args():
         "-f",
         type=str,
         default="wkt",
-        # TODO: Decide if WKB will actually output raw binary, or hex/base64 encoded.
-        # TODO: Does WKB require binary stdout?
         choices=["wkt", "wkb"],
         help="The output format for the turtle path. Defaults to WKT.",
     )
