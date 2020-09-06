@@ -3,6 +3,7 @@ import logging
 from typing import Iterable, NewType
 
 from shapely.geometry import LineString
+from shapely import wkb, wkt
 
 from .turtle import Turtle
 
@@ -125,11 +126,17 @@ class LSystemInterpeter:
 
         :param output: The output buffer to write the turtle's path to.
         :param format: One of 'wkt', 'wkb'.
-
-        TODO: Use hex, base64, or raw bytes for wkb?
-        TODO: Use something other than io.TextIOWrapper for WKB.
         """
-        if format != "wkt":
-            raise ValueError(f"{format=} is unsupported. Use 'wkt'")
-        for line in lines:
-            output.write(line.wkt + "\n")
+        if format == "wkt":
+            for line in lines:
+                wkt.dump(line, output, trim=True)
+                output.write("\n")
+            return
+
+        if format == "wkb":
+            for line in lines:
+                wkb.dump(line, output, hex=True)
+                output.write("\n")
+            return
+
+        raise ValueError(f"{format=} is unsupported. Use 'wkt' or 'wkb'")
