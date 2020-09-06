@@ -31,15 +31,15 @@ def parse_args():
     )
 
     parser.add_argument(
-        "input",
-        nargs="?",
+        "--input",
+        "-i",
         type=argparse.FileType("r"),
         default=sys.stdin,
         help="A file containing the L-String to interpret. Defaults to stdin.",
     )
     parser.add_argument(
-        "output",
-        nargs="?",
+        "--output",
+        "-o",
         # TODO: I seem to not be able to open stdout in binary mode.
         # See: https://github.com/python/cpython/pull/13165
         # Potential workaround: open in 'wb' mode, and default to sys.stdout.buffer.
@@ -54,6 +54,20 @@ def parse_args():
         default="default",
         choices=LSystemInterpeter.commandsets,
         help="The commandset to use to interpret the given L-String. Defaults to 'default'.",
+    )
+    parser.add_argument(
+        "--stepsize",
+        "-s",
+        type=float,
+        default=1.0,
+        help="The step size for the turtle's forward motion. Defaults to 1.0.",
+    )
+    parser.add_argument(
+        "--angle",
+        "-a",
+        type=float,
+        default=45.0,
+        help="The angle in degrees used for the turtle's orientation modifications. Defaults to 45.",
     )
     parser.add_argument(
         "--format",
@@ -80,7 +94,7 @@ def parse_args():
 def main(args):
     logger.debug(f"args: {args}")
 
-    interpreter = LSystemInterpeter(args.commandset)
+    interpreter = LSystemInterpeter(args.commandset, args.stepsize, args.angle)
     tokens = interpreter.tokenize(args.input)
     lines = interpreter.interpret(tokens)
     interpreter.serialize(lines, output=args.output, format=args.format)

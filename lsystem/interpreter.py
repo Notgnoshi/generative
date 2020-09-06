@@ -23,14 +23,13 @@ class LSystemInterpeter:
 
     commandsets = frozenset(["default"])
 
-    def __init__(self, commandset):
+    def __init__(self, commandset, stepsize, angle):
         if commandset not in self.commandsets:
             raise ValueError(f"{commandset=} not in {self.commandsets}.")
         self.commandset = commandset
         self.turtle = Turtle()
-        # TODO: Make these configurable.
-        self.stepsize = 1.0
-        self.angle = 30  # deg
+        self.stepsize = stepsize
+        self.angle = angle
         self.drawing = True
         self.active_line = []
         self.stack = []
