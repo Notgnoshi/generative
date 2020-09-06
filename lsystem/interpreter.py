@@ -16,9 +16,16 @@ Lines = Iterable[LineString]
 class LSystemInterpeter:
     """Interpret L-System strings as turtle commands.
 
-    Will need to carefully define the L-System language.
-    Note that https://github.com/Objelisks/lsystembot uses placebo letters that don't correspond to
-    drawing primitives, but still allow for grammatical transformations.
+    Default commandset:
+
+        F,G - Step forward while drawing
+        f,g - Step forward without drawing
+        -,+ - Yaw around the normal axis
+        v,^ - Pitch around the transverse axis
+        <,> - Roll around the longitudinal axis
+        |   - Flip orientation 180 degrees
+        d,D - Turn drawing on, off
+        [,] - Push, pop position and orientation onto a stack
     """
 
     commandsets = frozenset(["default"])

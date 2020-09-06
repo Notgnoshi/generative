@@ -3,7 +3,16 @@
 
 Multiple lines of input will be treated as a continuation of a single L-String.
 
-TODO: Describe the L-String commands.
+Default commandset:
+
+    F,G - Step forward while drawing
+    f,g - Step forward without drawing
+    -,+ - Yaw around the normal axis
+    v,^ - Pitch around the transverse axis
+    <,> - Roll around the longitudinal axis
+    |   - Flip orientation 180 degrees
+    d,D - Turn drawing on, off
+    [,] - Push, pop position and orientation onto a stack
 """
 import argparse
 import logging
