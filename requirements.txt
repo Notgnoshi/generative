@@ -8,6 +8,7 @@ pyglet
 pylint
 pyparsing
 pytest
+scikit-learn
 scipy
 shapely
 svgwrite
