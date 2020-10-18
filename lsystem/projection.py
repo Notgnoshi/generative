@@ -1,6 +1,5 @@
 import itertools
 import logging
-import sys
 from enum import Enum, auto
 from typing import Iterable, Tuple, Union
 
@@ -16,7 +15,8 @@ from shapely.geometry import (
     Point,
     Polygon,
 )
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.manifold import MDS, TSNE, Isomap, LocallyLinearEmbedding
 
 logger = logging.getLogger(name=__name__)
 Geometry = shapely.geometry.base.BaseGeometry
@@ -248,13 +248,13 @@ class PointConversion:
 def project(geometries: Iterable[Geometry], kind="pca") -> Iterable[Geometry]:
     """Project the given geometries to 2D.
 
-    :param kind: The type of projection to use. Can be one of 'pca', 'xy', 'xz', or 'yz'.
+    :param kind: The type of projection to use. Can be one of 'pca', 'svd', 'isometric', 'isometric-auto', 'xy', 'xz', or 'yz'.
     """
     tagged_point_sequence = PointConversion.to_points(geometries)
     if kind in ("xy", "xz", "yz"):
         transformed_point_sequence = _drop_coord(tagged_point_sequence, basis=kind)
-    elif kind == "pca":
-        transformed_point_sequence = _fit_transform(tagged_point_sequence)
+    elif kind in ("pca", "svd", "mds", "isomap", "tsne", "lle", "isometric", "isometric-auto"):
+        transformed_point_sequence = _fit_transform(tagged_point_sequence, kind=kind)
     # Really only useful for pretending projection works while working on it.
     elif kind == "I":
         transformed_point_sequence = tagged_point_sequence
@@ -268,19 +268,33 @@ def unzip(iterable):
     return zip(*iterable)
 
 
-def _fit_transform(tagged_points: TaggedPointSequence) -> TaggedPointSequence:
+def _fit_transform(tagged_points: TaggedPointSequence, kind) -> TaggedPointSequence:
     """Perform PCA on the given geometries."""
     points, tags = unzip(tagged_points)
 
     # Convert the generator of points to an array of points.
     # This will consume the generator, and keep the points loaded in memory.
     points = np.array(list(_zeropad_3d(points)))
-    logger.debug(f"fit_transform on shape {points.shape}")
 
-    # PCA.fit must take shape (n_samples, n_features), and will return (n_samples, n_components)
-    pca = PCA(n_components=2)
-    transformed = pca.fit_transform(points)
-    logger.debug(f"fit_transformed returned shape {transformed.shape}")
+    points *= 10
+
+    # TruncatedSVD picked a sideways view
+    # PCA picked a top-down view
+    if kind == "pca":
+        decomp = PCA(n_components=2)
+    elif kind == "svd":
+        decomp = TruncatedSVD(n_components=2, n_iter=5)
+    elif kind == "mds":
+        decomp = MDS(n_components=2)
+    elif kind == "tsne":
+        decomp = TSNE(n_components=2, perplexity=30)
+    elif kind == "isomap":
+        decomp = Isomap(n_components=2, n_neighbors=5)
+    elif kind == "lle":
+        decomp = LocallyLinearEmbedding(n_components=2, n_neighbors=5, eigen_solver="dense")
+    else:
+        raise ValueError(f"Unsupported projection '{kind}'")
+    transformed = decomp.fit_transform(points)
 
     for point, tag in zip(transformed, tags):
         yield point, tag
