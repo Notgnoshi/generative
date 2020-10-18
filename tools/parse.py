@@ -144,7 +144,7 @@ if __name__ == "__main__":
         if args.seed is None:
             args.seed = config.get("seed", None)
         if args.iterations is None:
-            args.seed = config.get("iterations", None)
+            args.iterations = config.get("iterations", None)
     if args.axiom is None:
         args.axiom = ""
 
