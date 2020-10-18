@@ -2,8 +2,8 @@ import io
 import logging
 from typing import Iterable, NewType
 
+import numpy as np
 from shapely.geometry import LineString
-from shapely import wkb, wkt
 
 from .turtle import Turtle
 
@@ -25,7 +25,7 @@ class LSystemInterpeter:
         v,^ - Pitch around the transverse axis
         <,> - Roll around the longitudinal axis
         |   - Flip orientation 180 degrees
-        d,D - Turn drawing on, off
+        d,D - Turn drawing off, on
         [,] - Push, pop position and orientation onto a stack
     """
 
@@ -61,82 +61,81 @@ class LSystemInterpeter:
 
     def interpret(self, tokens: Tokens) -> Lines:
         """Interpret the given tokens as 3D Turtle commands."""
-        for token in tokens:
-            self._interpret_t(token)
-            # Record the turtle path
-            if self.drawing:
-                self.active_line.append(self.turtle.position)
-            # We stopped drawing, and we have a line fragment to pass on.
-            elif len(self.active_line) > 1:
-                line = LineString(self.active_line)
-                logger.debug("Finished drawing line.")
-                self.active_line = []
+        for line in self._interpret(tokens):
+            if line is not None:
                 yield line
-        if len(self.active_line) > 1:
-            line = LineString(self.active_line)
-            logger.debug("Ran out of tokens before line finished.")
-            return line
 
-    def _interpret_t(self, token):
-        logger.debug(f"Interpreting {token=}")
+    def _interpret(self, tokens: Tokens) -> Lines:
         if self.commandset == "default":
-            self._interpret_t_default(token)
+            yield from self._interpret_default(tokens)
         else:
             raise ValueError(f"commandset '{self.commandset}' unsupported")
 
-    def _interpret_t_default(self, token: Token):
-        if token in {"F", "G"}:
-            self.turtle.forward(self.stepsize)
-            self.drawing = True
-        elif token in {"f", "g"}:
-            self.turtle.forward(self.stepsize)
-            self.drawing = False
-        elif token == "-":
-            self.turtle.yaw(-self.angle)
-        elif token == "+":
-            self.turtle.yaw(+self.angle)
-        elif token == "v":
-            self.turtle.pitch(-self.angle)
-        elif token == "^":
-            self.turtle.pitch(+self.angle)
-        elif token == "<":
-            self.turtle.roll(-self.angle)
-        elif token == ">":
-            self.turtle.roll(+self.angle)
-        elif token == "|":
-            # TODO: Determine if we should also roll 180deg.
-            self.turtle.yaw(180)
-        elif token == "d":
-            self.drawing = True
-        elif token == "D":
-            self.drawing = False
-        elif token == "[":
-            self.stack.append((self.turtle.position, self.turtle.rotation))
-            logger.debug("pushing turtle position, orientation.")
-        elif token == "]":
-            logger.debug("popping turtle position, orientation.")
-            if not self.stack:
-                logger.warning("Stack empty. Can't pop.")
-            else:
-                self.turtle.position, self.turtle.rotation = self.stack.pop()
-            self.drawing = False
+    def _flush_active_line(self) -> LineString:
+        if not self.active_line or not self.drawing:
+            return None
 
-    def serialize(self, lines: Lines, output: io.TextIOWrapper, format: str):
-        """Serialize the turtle's path in the given format.
+        self._append_position()
+        if len(self.active_line) < 2:
+            logger.error(f"Tried to flush incomplete line {self.active_line}")
+            return None
 
-        :param output: The output buffer to write the turtle's path to.
-        :param format: One of 'wkt', 'wkb'.
-        """
-        if format == "wkt":
-            for line in lines:
-                wkt.dump(line, output, trim=True)
-                output.write("\n")
-            return
+        line = LineString(self.active_line)
+        self.active_line = []
 
-        if format == "wkb":
-            for line in lines:
-                wkb.dump(line, output, hex=True)
-                output.write("\n")
-            return
+        logger.debug(f"Flushing active line {line.wkt}")
+        return line
 
-        raise ValueError(f"{format=} is unsupported. Use 'wkt' or 'wkb'")
+    def _append_position(self):
+        # If any coordinate isn't equal to the last recorded position.
+        if self.drawing and (not self.active_line or np.any(self.active_line[-1] != self.turtle.position)):
+            self.active_line.append(self.turtle.position)
+
+    def _interpret_default(self, tokens: Tokens):
+        for token in tokens:
+            if token in {"F", "G"}:
+                if self.drawing and len(self.active_line) == 0:
+                    logger.debug(f"Making first step forwards since last flush. pos: {self.turtle.position}")
+                    self.active_line.append(self.turtle.position)
+                self.turtle.forward(self.stepsize)
+            elif token in {"f", "g"}:
+                yield self._flush_active_line()
+                self.turtle.forward(self.stepsize)
+            elif token == "-":
+                self._append_position()
+                self.turtle.yaw(-self.angle)
+            elif token == "+":
+                self._append_position()
+                self.turtle.yaw(+self.angle)
+            elif token == "v":
+                self._append_position()
+                self.turtle.pitch(-self.angle)
+            elif token == "^":
+                self._append_position()
+                self.turtle.pitch(+self.angle)
+            elif token == "<":
+                self._append_position()
+                self.turtle.roll(-self.angle)
+            elif token == ">":
+                self._append_position()
+                self.turtle.roll(+self.angle)
+            elif token == "|":
+                self._append_position()
+                # TODO: Determine if we should also roll 180deg.
+                self.turtle.yaw(180)
+            elif token == "d":
+                yield self._flush_active_line()
+                self.drawing = False
+            elif token == "D":
+                self.drawing = True
+            elif token == "[":
+                self.stack.append((self.turtle.position, self.turtle.rotation))
+                logger.debug("pushing turtle position, orientation.")
+            elif token == "]":
+                yield self._flush_active_line()
+                logger.debug("popping turtle position, orientation.")
+                if not self.stack:
+                    logger.warning("Stack empty. Can't pop.")
+                else:
+                    self.turtle.position, self.turtle.rotation = self.stack.pop()
+        yield self._flush_active_line()

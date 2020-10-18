@@ -146,6 +146,7 @@ def main(args):
     dwg.fill(opacity=0.0)
     dwg.stroke(color="black", width=1)
 
+    # TODO: Flip the y-axis because screen coordinates.
     for geom in deserialize_geometries(args.input, args.format):
         mx, my, Mx, My = geom.bounds
         min_x = min(mx, min_x)

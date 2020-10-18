@@ -22,6 +22,7 @@ import sys
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from lsystem.interpreter import LSystemInterpeter  # isort:skip
+from lsystem.wkio import serialize_geometries  # isort:skip
 
 
 LOG_LEVELS = {
@@ -104,7 +105,7 @@ def main(args):
     interpreter = LSystemInterpeter(args.commandset, args.stepsize, args.angle)
     tokens = interpreter.tokenize(args.input)
     lines = interpreter.interpret(tokens)
-    interpreter.serialize(lines, output=args.output, format=args.format)
+    serialize_geometries(lines, args.output, args.format)
 
 
 if __name__ == "__main__":
