@@ -3,7 +3,7 @@
     "seed": null,
     "axiom": "G",
     "rules": [
-        "G -> F,-,[,[,G,],+,G,],+,F,[,+,F,G,],-G",
+        "G -> F,-,[,[,G,],+,G,],+,F,[,+,F,G,],-,G",
         "F -> F,F"
     ],
     // These params are for the turtle interpretation, but that script doesn't read in this config file
