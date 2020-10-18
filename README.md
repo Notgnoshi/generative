@@ -12,7 +12,7 @@ A (re)exploration of Lindenmayer Systems.
 - [L-String Interpretation](#l-string-interpretation)
 - [Line Simplification and Joining](#line-simplification-and-joining)
 - [3D Perspective Tweaking](#3d-perspective-tweaking)
-- [SVG Generation](#svg-generation)
+- [SVG Generation and 3D Projections](#svg-generation-and-3d-projections)
 - [SVG Transformations](#svg-transformations)
 - [Pen Plotting](#pen-plotting)
 
@@ -138,9 +138,62 @@ See `tools/interpret.py --help` for more information on how the L-Strings are in
 
 **TODO:** View the collection of segments (or polygonal lines) in a 3D viewer that allows for modifying the camera perspective.
 
-# SVG Generation
+# SVG Generation and 3D Projections
 
-**TODO:** Simple for the 2D case, but 3D isn't so trivial.
+```shell
+$ tools/parse.py --config examples/sierpinski-tree.json > tree.lstring
+$ tools/interpret.py < tree.lstring > tree.wkt
+$ tail tree.wkt -n 1
+LINESTRING Z (0 -17.31370849898476 29.65685424949237, 0 -16.60660171779822 29.36396103067892)
+```
+
+Notice that the generated WKT is three-dimensional with a constant zero x-coordinate.
+This means we'll have to transform the WKT data before we can convert to an SVG.
+Sometimes you may need to drop coordinates, or sometimes you may have 3D geometries that you need to project to 2D before you can generate an SVG.
+`tools/project.py` handles both of these cases.
+
+```shell
+$ tools/project.py --kind=yz < tree.wkt > tree-transformed.wkt
+$ tail tree-transformed.wkt -n1
+LINESTRING (-17.31370849898476 29.65685424949237, -16.60660171779822 29.36396103067892)
+$ tools/wkt2svg.py < tree-transformed.wkt -o examples/sierpinski-tree.svg
+$ xdg-open examples/sierpinski-tree.svg
+```
+
+![the sierpinski tree](examples/sierpinski-tree.svg)
+
+We can also use PCA to reduce the dimensionality of our 3D geometries as shown below:
+
+```shell
+$ tools/project.py --kind=pca < tree.wkt > tree-transformed.wkt
+$ tools/wkt2svg.py < tree-transformed.wkt -o examples/sierpinski-tree-pca.svg
+$ xdg-open examples/sierpinski-tree-pca.svg
+```
+
+Interestingly, this flips the tree right-side-up.
+I don't (yet) know if that's a bug, or a feature of PCA.
+
+![the sierpinski tree](examples/sierpinski-tree-pca.svg)
+
+Here's another example, showing how all of the scripts in `tools/` were designed to work in a pipeline.
+```shell
+$ tools/parse.py --config examples/fractal-plant-1.json |
+  tools/interpret.py --format=wkb --stepsize=3 --angle=22.5 |
+  tools/project.py --format=wkb --kind=pca |
+  tools/wkt2svg.py --format=wkb -o examples/fractal-plant-1-pca.svg
+$ tools/parse.py --config examples/fractal-plant-1.json |
+  tools/interpret.py --stepsize=3 --angle=22.5 |
+  tools/project.py --kind=yz |
+  tools/wkt2svg.py -o examples/fractal-plant-1.svg
+$ xdg-open examples/fractal-plant-1-pca.svg
+$ xdg-open examples/fractal-plant-1.svg
+```
+
+![One of Lindenmayer's original fractal plants](examples/fractal-plant-1-pca.svg)
+
+Notice how PCA rotates the image!
+
+![One of Lindenmayer's original fractal plants](examples/fractal-plant-1.svg)
 
 # SVG Transformations
 
