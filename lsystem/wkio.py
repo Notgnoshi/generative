@@ -7,10 +7,6 @@ import shapely.geometry
 from shapely import wkb, wkt
 
 Geometry = shapely.geometry.base.BaseGeometry
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    stream=sys.stderr,
-)
 logger = logging.getLogger(name=__name__)
 
 

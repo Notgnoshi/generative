@@ -5,8 +5,6 @@ import logging
 import pathlib
 import sys
 
-import shapely.geometry
-
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from lsystem import deserialize_geometries, serialize_geometries  # isort:skip
@@ -82,6 +80,6 @@ if __name__ == "__main__":
         level=LOG_LEVELS.get(args.log_level),
         stream=sys.stderr,
     )
-    logger = logging.getLogger(name="wkt2svg.py")
+    logger = logging.getLogger(name="project.py")
 
     main(args)

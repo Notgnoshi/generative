@@ -18,10 +18,6 @@ from shapely.geometry import (
 )
 from sklearn.decomposition import PCA
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    stream=sys.stderr,
-)
 logger = logging.getLogger(name=__name__)
 Geometry = shapely.geometry.base.BaseGeometry
 
