@@ -142,14 +142,14 @@ def main(args):
             edge_color=None,
             edge_width=0,
             edge_width_rel=None,
-            face_color=(0.8, 0.8, 0.8, 1),
+            face_color=(0.8, 0.8, 0.8, 0.4),
             size=8,
             scaling=False,
         )
 
     if len(segments) != 0:
         vispy.scene.visuals.Line(
-            segments, color=(0.8, 0.8, 0.8, 1), connect="segments", parent=view.scene
+            segments, color=(0.8, 0.8, 0.8, 0.4), connect="segments", parent=view.scene
         )
 
     if args.axis:
