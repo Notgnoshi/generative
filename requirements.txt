@@ -9,6 +9,6 @@ pylint
 pyparsing
 pytest
 scikit-learn
-scipy
 shapely
 svgwrite
+vispy
