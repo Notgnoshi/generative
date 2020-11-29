@@ -1,0 +1,10 @@
+{
+    "iterations": 4,
+    "seed": null,
+    "axiom": "F",
+    "rules": [
+        "F -> F,[,+,F,],[,<,<,<,<,+,F,],[,>,>,>,>,+,F,]"
+    ],
+    "stepsize": 1,
+    "angle": 30
+}
