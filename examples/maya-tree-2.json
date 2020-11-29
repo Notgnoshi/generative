@@ -1,0 +1,11 @@
+{
+    "iterations": 4,
+    "seed": null,
+    "axiom": "F,X",
+    "rules": [
+        // Results in the same tree as maya-tree.json, but with much fewer line segments.
+        "X -> [,+,F,X,],[,<,<,<,<,+,F,X,],[,>,>,>,>,+,F,X,]"
+    ],
+    "stepsize": 1,
+    "angle": 30
+}
