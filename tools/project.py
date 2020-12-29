@@ -8,7 +8,7 @@ import sys
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from lsystem import deserialize_geometries, serialize_geometries  # isort:skip
-from lsystem import project  # isort:skip
+from lsystem import flatten, project, unflatten  # isort:skip
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
@@ -69,8 +69,10 @@ def parse_args():
 def main(args):
     logger.debug(args)
     geometries = deserialize_geometries(args.input, args.format)
-    transformed = project(geometries, args.kind)
-    serialize_geometries(transformed, args.output, args.format)
+    tagged_points = flatten(geometries)
+    transformed_points = project(tagged_points, args.kind)
+    transformed_geoms = unflatten(transformed_points)
+    serialize_geometries(transformed_geoms, args.output, args.format)
 
 
 if __name__ == "__main__":
