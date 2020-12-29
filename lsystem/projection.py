@@ -23,6 +23,14 @@ Geometry = shapely.geometry.base.BaseGeometry
 
 
 class PointTag(Enum):
+    """Tags to mark points in a coordinate sequence.
+
+    Note that each _END tag _must_ be the corresponding _BEGIN tag +1.
+
+    Further, note that there is no tag for POINTs, because a point is any coordinate that's not
+    wrapped between two _BEGIN and _END tags.
+    """
+
     LINESTRING_BEGIN = auto()
     LINESTRING_END = auto()
 
@@ -46,222 +54,216 @@ class PointTag(Enum):
     COLLECTION_END = auto()
 
 
-TaggedPoint = Tuple[Tuple[float], Union[None, PointTag, Tuple[PointTag]]]
+Tag = Tuple[PointTag]
+TaggedPoint = Tuple[Tuple[float], Tag]
 TaggedPointSequence = Iterable[TaggedPoint]
 
 
-class PointConversion:
-    @classmethod
-    def to_points(cls, geometries: Iterable[Geometry]) -> TaggedPointSequence:
-        """Convert the given geometries to a sequence of tagged points."""
-        for geometry in geometries:
-            yield from cls._to_points(geometry)
+def flatten(geometries: Iterable[Geometry]) -> TaggedPointSequence:
+    """Convert the given geometries to a sequence of tagged points."""
+    for geometry in geometries:
+        yield from flatten_single(geometry)
 
-    @classmethod
-    def _to_points(cls, geometry: Geometry, recursion_level=0) -> TaggedPointSequence:
-        indent = "  " * recursion_level
-        logger.debug(indent + f"Converting {geometry.geom_type} to tagged points.")
 
-        if isinstance(geometry, Point):
-            yield geometry.coords[0], None
-        elif isinstance(geometry, LineString):
-            yield from cls._coord_sequence(geometry.coords, PointTag.LINESTRING_BEGIN)
-        elif isinstance(geometry, Polygon):
-            shell = cls._coord_sequence(geometry.exterior.coords, PointTag.SHELL_BEGIN)
-            holes = itertools.chain.from_iterable(
-                cls._coord_sequence(h.coords, PointTag.HOLE_BEGIN) for h in geometry.interiors
-            )
-            points = itertools.chain(shell, holes)
-            yield from cls._wrap_sequence(points, PointTag.POLYGON_BEGIN)
-        elif isinstance(geometry, MultiPoint):
-            points = itertools.chain.from_iterable(
-                cls._to_points(g, recursion_level + 1) for g in geometry.geoms
-            )
-            yield from cls._wrap_sequence(points, PointTag.MULTIPOINT_BEGIN)
-        elif isinstance(geometry, MultiLineString):
-            points = itertools.chain.from_iterable(
-                cls._to_points(g, recursion_level + 1) for g in geometry.geoms
-            )
-            yield from cls._wrap_sequence(points, PointTag.MULTILINESTRING_BEGIN)
-        elif isinstance(geometry, MultiPolygon):
-            points = itertools.chain.from_iterable(
-                cls._to_points(g, recursion_level + 1) for g in geometry.geoms
-            )
-            yield from cls._wrap_sequence(points, PointTag.MULTIPOLYGON_BEGIN)
-        elif isinstance(geometry, GeometryCollection):
-            points = itertools.chain.from_iterable(
-                cls._to_points(g, recursion_level + 1) for g in geometry.geoms
-            )
-            yield from cls._wrap_sequence(points, PointTag.COLLECTION_BEGIN)
-        else:
-            logger.error(f"Unsupported geometry type '{type(geometry)}'")
+def flatten_single(geometry: Geometry, recursion_level=0) -> TaggedPointSequence:
+    """Recursively convert a single geometry to a sequence of tagged points."""
+    indent = "  " * recursion_level
+    logger.debug(indent + "Converting %s to tagged points.", geometry.geom_type)
 
-    @staticmethod
-    def _coord_sequence(coords: Iterable[Tuple[float]], begin_tag: PointTag) -> TaggedPointSequence:
-        yield coords[0], begin_tag
-        for point in coords[1:-1]:
-            yield point, None
-        yield coords[-1], PointTag(begin_tag.value + 1)
+    if isinstance(geometry, Point):
+        yield geometry.coords[0], ()
+    elif isinstance(geometry, LineString):
+        yield from wrap_bare(geometry.coords, PointTag.LINESTRING_BEGIN)
+    elif isinstance(geometry, Polygon):
 
-    @classmethod
-    def _wrap_sequence(
-        cls, points: TaggedPointSequence, begin_tag: PointTag
-    ) -> TaggedPointSequence:
-        # Assume there will always be at least two points.
-        first_point, first_tag = next(points)
-        first_tag = cls._prepend_tag(begin_tag, first_tag)
-        yield first_point, first_tag
+        shell = wrap_bare(geometry.exterior.coords, PointTag.SHELL_BEGIN)
+        holes = itertools.chain.from_iterable(
+            wrap_bare(h.coords, PointTag.HOLE_BEGIN) for h in geometry.interiors
+        )
+        points = itertools.chain(shell, holes)
+        yield from wrap_tagged(points, PointTag.POLYGON_BEGIN)
+    elif isinstance(geometry, MultiPoint):
+        points = itertools.chain.from_iterable(
+            flatten_single(g, recursion_level + 1) for g in geometry.geoms
+        )
+        yield from wrap_tagged(points, PointTag.MULTIPOINT_BEGIN)
+    elif isinstance(geometry, MultiLineString):
+        points = itertools.chain.from_iterable(
+            flatten_single(g, recursion_level + 1) for g in geometry.geoms
+        )
+        yield from wrap_tagged(points, PointTag.MULTILINESTRING_BEGIN)
+    elif isinstance(geometry, MultiPolygon):
+        points = itertools.chain.from_iterable(
+            flatten_single(g, recursion_level + 1) for g in geometry.geoms
+        )
+        yield from wrap_tagged(points, PointTag.MULTIPOLYGON_BEGIN)
+    elif isinstance(geometry, GeometryCollection):
+        points = itertools.chain.from_iterable(
+            flatten_single(g, recursion_level + 1) for g in geometry.geoms
+        )
+        yield from wrap_tagged(points, PointTag.COLLECTION_BEGIN)
+    else:
+        logger.error(indent + "Unsupported geometry type '%s'", type(geometry))
 
-        last_point, last_tag = next(points)
 
-        for point, tag in points:
-            yield last_point, last_tag
-            last_point, last_tag = point, tag
+def wrap_bare(coords: Iterable[Tuple[float]], begin_tag: PointTag) -> TaggedPointSequence:
+    """Wrap the given coordinate seqence in the given tag type.
 
-        last_tag = cls._append_tag(PointTag(begin_tag.value + 1), last_tag)
+    You pass in the _BEGIN tag, with the assumption that the _END tag is _BEGIN+1.
+    """
+    yield coords[0], (begin_tag,)
+    for point in coords[1:-1]:
+        yield point, ()
+    yield coords[-1], (PointTag(begin_tag.value + 1),)
+
+
+def wrap_tagged(points: TaggedPointSequence, begin_tag: PointTag) -> TaggedPointSequence:
+    """Wrap an already tagged point sequence in another layer of _BEGIN and _END tags."""
+    # Assume there will always be at least two points.
+    first_point, first_tag = next(points)
+    first_tag = (begin_tag,) + first_tag
+    yield first_point, first_tag
+
+    last_point, last_tag = next(points)
+
+    for point, tag in points:
         yield last_point, last_tag
+        last_point, last_tag = point, tag
 
-    @staticmethod
-    def _append_tag(
-        tag: PointTag, tags: Union[None, PointTag, Tuple[PointTag]]
-    ) -> Union[PointTag, Tuple[PointTag]]:
-        if tags is None:
-            return tag
-        if isinstance(tags, PointTag):
-            return (tags, tag)
-        if isinstance(tags, tuple):
-            return (*tags, tag)
-        raise TypeError("Unsupported tags type")
+    last_tag = last_tag + (PointTag(begin_tag.value + 1),)
+    yield last_point, last_tag
 
-    @staticmethod
-    def _prepend_tag(
-        tag: PointTag, tags: Union[None, PointTag, Tuple[PointTag]]
-    ) -> Union[PointTag, Tuple[PointTag]]:
-        if tags is None:
-            return tag
-        if isinstance(tags, PointTag):
-            return (tag, tags)
-        if isinstance(tags, tuple):
-            return (tag, *tags)
-        raise TypeError("Unsupported tags type")
 
-    @classmethod
-    def from_points(cls, points: TaggedPointSequence) -> Iterable[Geometry]:
-        """Convert the sequence of tagged points back into a sequence of geometries."""
-        points = peekable(points)
-        while points:
-            geometry, _ = cls._get_geometry(points)
-            yield geometry
+def unflatten(points: TaggedPointSequence) -> Iterable[Geometry]:
+    """Convert the sequence of tagged points back into a sequence of geometries."""
+    # We need to be able to peek at the next point in the sequence without consuming it.
+    points = peekable(points)
+    while points:
+        geometry, _ = unflatten_single(points)
+        yield geometry
 
-    @classmethod
-    def _get_geometry(cls, points: TaggedPointSequence, recursion_level=0) -> Geometry:
-        indent = "  " * recursion_level
-        point, tags = points.peek()
 
-        first_tag, _ = cls._unwrap_first_tag(tags)
-        if (
-            first_tag is None
-            or first_tag == PointTag.MULTIPOINT_END
-            or first_tag == PointTag.COLLECTION_END
-        ):
-            logger.debug(indent + f"Base case: Point{point}")
-            point, tags = next(points)
-            return Point(point), tags
-        if first_tag in (PointTag.LINESTRING_BEGIN, PointTag.SHELL_BEGIN, PointTag.HOLE_BEGIN):
-            logger.debug(indent + f"Base case: {points.peek()}")
-            return cls._unwrap_coordinate_sequence(points, recursion_level + 1)
+def unflatten_single(points: TaggedPointSequence, recursion_level=0) -> Geometry:
+    """Get the next geometry from the given sequence of tagged points.
 
-        logger.debug(indent + f"Getting multi-part geometry: {points.peek()}")
-        geometry, remaining = cls._get_multipart_geometry(points, recursion_level + 1)
-        logger.debug(indent + f"Got multi-part geometry: {geometry.wkt}")
-        return geometry, remaining
+    All nested geometries will be reconstructed and returned.
+    In order to nicely handle the recursive cases, this method, along with __unflatten_multipart(),
+    and __unwrap_coordinate_sequence() take in their recursion level to facilitate nicer looking
+    logging, and return any remaining tags left to unwrap.
 
-    @classmethod
-    def _get_multipart_geometry(cls, points: TaggedPointSequence, recursion_level=0) -> Geometry:
-        indent = "  " * recursion_level
+    These remaining tags only occur when unflattening a multipart geometry. That is, a MULTI*
+    geometry, a POLYGON, or a GEOMETRYCOLLECTION, but note that __unflatten_multipart() internally
+    calls unflatten_single() to get each component of a multipart geometry.
+    """
+    indent = "  " * recursion_level
+    point, tags = points.peek()
+
+    first_tag, _ = __unwrap_first_tag(tags)
+    if (
+        not first_tag
+        or first_tag == PointTag.MULTIPOINT_END
+        or first_tag == PointTag.COLLECTION_END
+    ):
+        logger.debug(indent + "Base case: Point%s", point)
         point, tags = next(points)
+        return Point(point), tags
+    if first_tag in (PointTag.LINESTRING_BEGIN, PointTag.SHELL_BEGIN, PointTag.HOLE_BEGIN):
+        logger.debug(indent + "Base case: %s", points.peek())
+        return __unflatten_coordinate_sequence(points, recursion_level + 1)
 
-        # Unwrap outer tag, and _get_geometry() until we find the matching end tag.
-        begin_tag, remaining_tags = cls._unwrap_first_tag(tags)
-        end_tag = PointTag(begin_tag.value + 1)
-        points.prepend((point, remaining_tags))
+    logger.debug(indent + "Getting multi-part geometry: %s", points.peek())
+    geometry, remaining = __unflatten_multipart(points, recursion_level + 1)
+    logger.debug(indent + "Got multi-part geometry: %s", geometry.wkt)
+    return geometry, remaining
 
-        outer_tag = None
-        primitives = []
-        while outer_tag != end_tag:
-            logger.debug(indent + f"Getting primitive: {points.peek()}")
-            primitive, remaining_tags = cls._get_geometry(points, recursion_level + 1)
-            logger.debug(indent + f"Got primitive {primitive.wkt}")
-            primitives.append(primitive)
-            outer_tag, remaining_tags = cls._unwrap_first_tag(remaining_tags)
 
-        # Reconstruct the multi-part geometry from the primitives we parsed.
-        if begin_tag == PointTag.POLYGON_BEGIN:
-            shell = primitives.pop(0)
-            holes = primitives
-            return Polygon(shell, holes), remaining_tags
-        if begin_tag == PointTag.MULTIPOINT_BEGIN:
-            return MultiPoint(primitives), remaining_tags
-        if begin_tag == PointTag.MULTILINESTRING_BEGIN:
-            return MultiLineString(primitives), remaining_tags
-        if begin_tag == PointTag.MULTIPOLYGON_BEGIN:
-            return MultiPolygon(primitives), remaining_tags
-        if begin_tag == PointTag.COLLECTION_BEGIN:
-            return GeometryCollection(primitives), remaining_tags
+def __unflatten_multipart(points: TaggedPointSequence, recursion_level=0) -> Geometry:
+    """Recursively handle the multipart case for unflatten_single().
 
-    @staticmethod
-    def _unwrap_first_tag(
-        tags: Union[PointTag, Tuple[PointTag]]
-    ) -> Tuple[PointTag, Union[None, PointTag, Tuple[PointTag]]]:
-        """Unwrap the first and any remaining tags."""
-        if tags is None:
-            return None, None
-        if isinstance(tags, PointTag):
-            return tags, None
-        return tags[0], tags[1:] if len(tags) > 2 else tags[1]
+    The multipart case is separate because it requires recursion to unwrap nested tags that result
+    from multipart geometries (where a single point could be the begin to multiple geometries, or
+    and end to multiple).
+    """
+    indent = "  " * recursion_level
+    point, tags = next(points)
 
-    @classmethod
-    def _unwrap_coordinate_sequence(
-        cls, points: TaggedPointSequence, recursion_level=0
-    ) -> Tuple[Geometry, Union[None, PointTag, Tuple[PointTag]]]:
-        indent = "  " * recursion_level
-        point, tag = next(points)
-        logger.debug(indent + f"Unwrapping CS Point{point}")
-        unwrapped = [point]
+    # Unwrap outer tag, and _get_geometry() until we find the matching end tag.
+    begin_tag, remaining_tags = __unwrap_first_tag(tags)
+    end_tag = PointTag(begin_tag.value + 1)
+    points.prepend((point, remaining_tags))
 
-        point, tag = next(points)
-        logger.debug(indent + f"Unwrapping CS Point{point}")
-        while tag is None:
-            unwrapped.append(point)
-            point, tag = next(points)
-            logger.debug(indent + f"Unwrapping CS Point{point}")
+    outer_tag = None
+    primitives = []
+    while outer_tag != end_tag:
+        logger.debug(indent + "Getting primitive: %s", points.peek())
+        primitive, remaining_tags = unflatten_single(points, recursion_level + 1)
+        logger.debug(indent + "Got primitive %s", primitive.wkt)
+        primitives.append(primitive)
+        outer_tag, remaining_tags = __unwrap_first_tag(remaining_tags)
+
+    # Reconstruct the multi-part geometry from the primitives we parsed.
+    if begin_tag == PointTag.POLYGON_BEGIN:
+        shell = primitives.pop(0)
+        holes = primitives
+        return Polygon(shell, holes), remaining_tags
+    if begin_tag == PointTag.MULTIPOINT_BEGIN:
+        return MultiPoint(primitives), remaining_tags
+    if begin_tag == PointTag.MULTILINESTRING_BEGIN:
+        return MultiLineString(primitives), remaining_tags
+    if begin_tag == PointTag.MULTIPOLYGON_BEGIN:
+        return MultiPolygon(primitives), remaining_tags
+    if begin_tag == PointTag.COLLECTION_BEGIN:
+        return GeometryCollection(primitives), remaining_tags
+
+
+def __unwrap_first_tag(tags: Tag) -> Tuple[PointTag, Tag]:
+    """Unwrap the first and any remaining tags."""
+    if not tags:
+        return (), ()
+    return tags[0], tags[1:]
+
+
+def __unflatten_coordinate_sequence(
+    points: TaggedPointSequence, recursion_level=0
+) -> Tuple[Geometry, Tag]:
+    """Unwrap a coordinate sequence as a LINESTRING.
+
+    This can also be used to unwrap polygon shells and holes.
+    TODO: There has _got_ to be a better implementation than this.
+    """
+    indent = "  " * recursion_level
+    point, tag = next(points)
+    logger.debug(indent + "Unwrapping CS Point%s", point)
+    unwrapped = [point]
+
+    point, tag = next(points)
+    logger.debug(indent + "Unwrapping CS Point%s", point)
+    while not tag:
         unwrapped.append(point)
+        point, tag = next(points)
+    logger.debug(indent + "Unwrapping CS Point%s", point)
+    unwrapped.append(point)
 
-        if isinstance(tag, PointTag):
-            remaining_tags = None
-        if isinstance(tag, tuple):
-            remaining_tags = tag[1:] if len(tag) > 2 else tag[1]
-
-        return LineString(unwrapped), remaining_tags
+    _, remaining_tags = __unwrap_first_tag(tag)
+    return LineString(unwrapped), remaining_tags
 
 
-def project(geometries: Iterable[Geometry], kind="pca") -> Iterable[Geometry]:
+def project(tagged_points: TaggedPointSequence, kind="pca") -> TaggedPointSequence:
     """Project the given geometries to 2D.
 
     :param kind: The type of projection to use. Can be one of 'pca', 'svd', 'isometric', 'isometric-auto', 'xy', 'xz', or 'yz'.
     """
-    tagged_point_sequence = PointConversion.to_points(geometries)
     if kind in ("xy", "xz", "yz"):
-        transformed_point_sequence = _drop_coord(tagged_point_sequence, basis=kind)
-    elif kind in ("pca", "svd", "mds", "isomap", "tsne", "lle", "isometric", "isometric-auto"):
-        transformed_point_sequence = _fit_transform(tagged_point_sequence, kind=kind)
+        transformed_point_sequence = _drop_coord(tagged_points, basis=kind)
+    elif kind in ("pca", "svd", "mds", "isomap", "tsne", "lle"):
+        transformed_point_sequence = _fit_transform(tagged_points, kind=kind)
     # Really only useful for pretending projection works while working on it.
     elif kind == "I":
-        transformed_point_sequence = tagged_point_sequence
+        transformed_point_sequence = tagged_points
     else:
         raise ValueError(f"Unsupported projection type '{kind=}'")
 
-    return PointConversion.from_points(transformed_point_sequence)
+    return transformed_point_sequence
 
 
 def unzip(iterable):
@@ -269,7 +271,7 @@ def unzip(iterable):
 
 
 def _fit_transform(tagged_points: TaggedPointSequence, kind) -> TaggedPointSequence:
-    """Perform PCA on the given geometries."""
+    """Project the given geometries."""
     points, tags = unzip(tagged_points)
 
     # Convert the generator of points to an array of points.
