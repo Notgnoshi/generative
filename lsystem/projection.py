@@ -1,6 +1,7 @@
 import itertools
 import logging
 from enum import Enum, auto
+from math import radians
 from typing import Iterable, Tuple, Union
 
 import numpy as np
@@ -250,7 +251,7 @@ def __unflatten_coordinate_sequence(
 def project(tagged_points: TaggedPointSequence, kind="pca", dimensions=2) -> TaggedPointSequence:
     """Project the given geometries to 2D.
 
-    :param kind: The type of projection to use. Can be one of 'pca', 'svd', 'isometric', 'xy', 'xz', or 'yz'.
+    :param kind: The type of projection to use. Can be one of 'pca', 'svd', 'isometric', 'auto', 'xy', 'xz', or 'yz'.
     :param dimensions: The target dimensionality of the projection for PCA, SVD, or isometric.
     """
     if kind in ("xy", "xz", "yz"):
@@ -258,7 +259,21 @@ def project(tagged_points: TaggedPointSequence, kind="pca", dimensions=2) -> Tag
     elif kind in ("pca", "svd"):
         transformed_point_sequence = _fit_transform(tagged_points, kind, dimensions)
     elif kind == "isometric":
-        raise NotImplementedError("Isometric projections not implemented")
+        transformed_point_sequence = _isometric(tagged_points, dimensions)
+    elif kind == "auto":
+        # PCA has tended to flip things upside down, to flip about the x axis by 180 and rotate a
+        # a bit to ensure no symmetry
+        decomp = PCA(n_components=3)
+        points, tags = unzip(tagged_points)
+        points = np.array(list(_zeropad_3d(points)))
+        # TODO: Add tool to scale/resize output. Issue #29.
+        # The OpenGL renderer works just find at small scales, but not the SVG generation.
+        points *= 10
+        transformed = decomp.fit_transform(points)
+        logger.error(transformed.shape)
+        rotation = _rot_x(radians(180)) @ _rot_z(radians(13))
+        transformed = transformed @ rotation
+        return zip(transformed[:, :dimensions], tags)
     # Really only useful for pretending projection works while working on it.
     elif kind == "I":
         transformed_point_sequence = tagged_points
@@ -279,6 +294,8 @@ def _fit_transform(tagged_points: TaggedPointSequence, kind, dimensions) -> Tagg
     # Convert the generator of points to an array of points.
     # This will consume the generator, and keep the points loaded in memory.
     points = np.array(list(_zeropad_3d(points)))
+    # TODO: Remove in favor of resolving #29.
+    points *= 10
 
     # TruncatedSVD picked a sideways view
     # PCA picked a top-down view
@@ -293,6 +310,49 @@ def _fit_transform(tagged_points: TaggedPointSequence, kind, dimensions) -> Tagg
     transformed = decomp.fit_transform(points)
 
     return zip(transformed, tags)
+
+
+def _rot_x(theta):
+    """X axis rotation matrix."""
+    return np.array(
+        [
+            [1, 0, 0],
+            [0, np.cos(theta), -np.sin(theta)],
+            [0, np.sin(theta), np.cos(theta)],
+        ]
+    )
+
+
+def _rot_y(theta):
+    """Y axis rotation matrix."""
+    return np.array(
+        [
+            [np.cos(theta), 0, np.sin(theta)],
+            [0, 1, 0],
+            [-np.sin(theta), 0, np.cos(theta)],
+        ]
+    )
+
+
+def _rot_z(theta):
+    """Z axis rotation matrix."""
+    return np.array(
+        [
+            [np.cos(theta), -np.sin(theta), 0],
+            [np.sin(theta), np.cos(theta), 0],
+            [0, 0, 1],
+        ]
+    )
+
+
+def _isometric(tagged_points: TaggedPointSequence, dimensions) -> TaggedPointSequence:
+    """Perform an isometric projection with rotation matrices."""
+    # TODO: This isometric projection hasn't given very good results so far. It needs more work.
+    rotation = _rot_x(radians(35.264)) @ _rot_y(radians(45))
+    points, tags = unzip(tagged_points)
+    for point, tag in zip(_zeropad_3d(points), tags):
+        # TODO: Remove scalar in favor of resolving #29.
+        yield (10 * np.array(point) @ rotation)[:dimensions], tag
 
 
 def _zeropad_3d(points: Iterable[Tuple[float]]) -> Iterable[Tuple[float]]:
