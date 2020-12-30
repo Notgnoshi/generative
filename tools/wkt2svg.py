@@ -158,6 +158,7 @@ def main(args):
 
     width = max_x - min_x
     height = max_y - min_y
+    # TODO: Units?
     dwg.viewbox(min_x, min_y, width, height)
     args.output.write(dwg.tostring() + "\n")
 
