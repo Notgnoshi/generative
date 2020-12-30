@@ -51,7 +51,7 @@ def parse_args():
         "--kind",
         "-k",
         default="pca",
-        choices=["xy", "xz", "yz", "pca", "svd", "mds", "isomap", "tsne", "lle", "I", "isometric", "isometric-auto"],
+        choices=["xy", "xz", "yz", "pca", "svd", "I", "isometric", "isometric-auto"],
         help="What kind of projection to use. Defaults to using PCA to pick a 2D basis.",
     )
     parser.add_argument(

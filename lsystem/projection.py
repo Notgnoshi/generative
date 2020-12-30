@@ -16,7 +16,6 @@ from shapely.geometry import (
     Polygon,
 )
 from sklearn.decomposition import PCA, TruncatedSVD
-from sklearn.manifold import MDS, TSNE, Isomap, LocallyLinearEmbedding
 
 logger = logging.getLogger(name=__name__)
 Geometry = shapely.geometry.base.BaseGeometry
@@ -255,7 +254,7 @@ def project(tagged_points: TaggedPointSequence, kind="pca") -> TaggedPointSequen
     """
     if kind in ("xy", "xz", "yz"):
         transformed_point_sequence = _drop_coord(tagged_points, basis=kind)
-    elif kind in ("pca", "svd", "mds", "isomap", "tsne", "lle"):
+    elif kind in ("pca", "svd"):
         transformed_point_sequence = _fit_transform(tagged_points, kind=kind)
     # Really only useful for pretending projection works while working on it.
     elif kind == "I":
@@ -286,14 +285,6 @@ def _fit_transform(tagged_points: TaggedPointSequence, kind) -> TaggedPointSeque
         decomp = PCA(n_components=2)
     elif kind == "svd":
         decomp = TruncatedSVD(n_components=2, n_iter=5)
-    elif kind == "mds":
-        decomp = MDS(n_components=2)
-    elif kind == "tsne":
-        decomp = TSNE(n_components=2, perplexity=30)
-    elif kind == "isomap":
-        decomp = Isomap(n_components=2, n_neighbors=5)
-    elif kind == "lle":
-        decomp = LocallyLinearEmbedding(n_components=2, n_neighbors=5, eigen_solver="dense")
     else:
         raise ValueError(f"Unsupported projection '{kind}'")
     transformed = decomp.fit_transform(points)
