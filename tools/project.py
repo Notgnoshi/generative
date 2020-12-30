@@ -51,8 +51,16 @@ def parse_args():
         "--kind",
         "-k",
         default="pca",
-        choices=["xy", "xz", "yz", "pca", "svd", "I", "isometric", "isometric-auto"],
+        choices=["xy", "xz", "yz", "pca", "svd", "I", "isometric"],
         help="What kind of projection to use. Defaults to using PCA to pick a 2D basis.",
+    )
+    parser.add_argument(
+        "--dimensions",
+        "-n",
+        type=int,
+        default=2,
+        choices=[2, 3],
+        help="The target dimensionality for the PCA, SVD, or Isometric projections.",
     )
     parser.add_argument(
         "-l",
@@ -70,7 +78,7 @@ def main(args):
     logger.debug(args)
     geometries = deserialize_geometries(args.input, args.format)
     tagged_points = flatten(geometries)
-    transformed_points = project(tagged_points, args.kind)
+    transformed_points = project(tagged_points, args.kind, args.dimensions)
     transformed_geoms = unflatten(transformed_points)
     serialize_geometries(transformed_geoms, args.output, args.format)
 

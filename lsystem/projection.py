@@ -247,15 +247,18 @@ def __unflatten_coordinate_sequence(
     return LineString(unwrapped), remaining_tags
 
 
-def project(tagged_points: TaggedPointSequence, kind="pca") -> TaggedPointSequence:
+def project(tagged_points: TaggedPointSequence, kind="pca", dimensions=2) -> TaggedPointSequence:
     """Project the given geometries to 2D.
 
-    :param kind: The type of projection to use. Can be one of 'pca', 'svd', 'isometric', 'isometric-auto', 'xy', 'xz', or 'yz'.
+    :param kind: The type of projection to use. Can be one of 'pca', 'svd', 'isometric', 'xy', 'xz', or 'yz'.
+    :param dimensions: The target dimensionality of the projection for PCA, SVD, or isometric.
     """
     if kind in ("xy", "xz", "yz"):
         transformed_point_sequence = _drop_coord(tagged_points, basis=kind)
     elif kind in ("pca", "svd"):
-        transformed_point_sequence = _fit_transform(tagged_points, kind=kind)
+        transformed_point_sequence = _fit_transform(tagged_points, kind, dimensions)
+    elif kind == "isometric":
+        raise NotImplementedError("Isometric projections not implemented")
     # Really only useful for pretending projection works while working on it.
     elif kind == "I":
         transformed_point_sequence = tagged_points
@@ -269,7 +272,7 @@ def unzip(iterable):
     return zip(*iterable)
 
 
-def _fit_transform(tagged_points: TaggedPointSequence, kind) -> TaggedPointSequence:
+def _fit_transform(tagged_points: TaggedPointSequence, kind, dimensions) -> TaggedPointSequence:
     """Project the given geometries."""
     points, tags = unzip(tagged_points)
 
@@ -277,20 +280,19 @@ def _fit_transform(tagged_points: TaggedPointSequence, kind) -> TaggedPointSeque
     # This will consume the generator, and keep the points loaded in memory.
     points = np.array(list(_zeropad_3d(points)))
 
-    points *= 10
-
     # TruncatedSVD picked a sideways view
     # PCA picked a top-down view
     if kind == "pca":
-        decomp = PCA(n_components=2)
+        decomp = PCA(n_components=dimensions)
     elif kind == "svd":
-        decomp = TruncatedSVD(n_components=2, n_iter=5)
+        if dimensions >= 3:
+            raise ValueError("SVD cannot be used for 3D -> 3D projections")
+        decomp = TruncatedSVD(n_components=dimensions, n_iter=5)
     else:
         raise ValueError(f"Unsupported projection '{kind}'")
     transformed = decomp.fit_transform(points)
 
-    for point, tag in zip(transformed, tags):
-        yield point, tag
+    return zip(transformed, tags)
 
 
 def _zeropad_3d(points: Iterable[Tuple[float]]) -> Iterable[Tuple[float]]:
