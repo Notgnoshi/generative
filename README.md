@@ -200,10 +200,8 @@ See `tools/project.py --help` for details. The script supports the following pro
 * Drop the X, Y, or Z coordinates
 * [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#sklearn.decomposition.PCA)
 * [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD)
-* [MDS](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.MDS.html#sklearn.manifold.MDS)
-* [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html#sklearn.manifold.TSNE)
-* [Isomap](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.Isomap.html#sklearn.manifold.Isomap)
-* [Local Linear Embedding](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.locally_linear_embedding.html#sklearn.manifold.locally_linear_embedding)
+* **TODO:** Isometric
+* **TODO:** 3D variants of the above
 
 I intend on implementing a few more techniques because for this kind of geometric data, none of the above techniques work well with 3D data.
 PCA and SVD work pretty well on 3D data with a missing component (like the Sierpinski tree example).
@@ -257,17 +255,12 @@ Let's try each of the projection techniques on the following plant.
 
 ![Rendering a 3D fractal plant](examples/wkt-renderer-2.png)
 
-Note that some of the manifold learning techniques are _slooow_.
 ```shell
 tools/parse.py --config examples/fractal-plant-3d.json | tools/interpret.py --stepsize=3 --angle=22.5 >/tmp/plant.wkt
-for projection in pca svd mds tsne isomap lle; do
+for projection in pca svd; do
     tools/project.py --kind=$projection --input /tmp/plant.wkt | tools/wkt2svg.py -o examples/plant-$projection.svg
 done
 ```
 
 * PCA ![PCA](examples/plant-pca.svg)
 * SVD ![SVD](examples/plant-svd.svg)
-* MDS ![MDS](examples/plant-mds.svg)
-* t-SNE ![tSNE](examples/plant-tsne.svg)
-* Isomap ![Isomap](examples/plant-isomap.svg)
-* Locally Linear Embedding ![LLE](examples/plant-lle.svg) (The points were all collapsed around the origin, and the SVG is scaled up by GitHub).
