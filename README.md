@@ -1,6 +1,6 @@
-# Lindenmayer Systems
+# Generative Art
 
-A (re)exploration of Lindenmayer Systems.
+A (re)exploration of 3D Lindenmayer Systems, with the intent of building a composable set of scripts useful for general purpose generative artwork.
 
 I worked on a [class project](https://github.com/macattackftw/fractal_trees) to implement 3D context-free Lindenmayer systems in graduate school.
 This is an attempt on doing the same, but with the following improvements:
@@ -25,7 +25,7 @@ This is an attempt on doing the same, but with the following improvements:
   - [Why not Parametric?](#why-not-parametric)
 - [L-String Interpretation](#l-string-interpretation)
 - [Visualization](#visualization)
-- [2D Projections](#2d-projections)
+- [Projections](#projections)
 - [SVG Generation](#svg-generation)
   - [Example 1](#example-1)
   - [Example 2](#example-2)
@@ -170,7 +170,7 @@ tools/parse.py --config examples/fractal-plant-3d.json |
 
 This appears to be a top-down view, which is undesirable. I'd rather have an isometric-ish side view.
 
-# 2D Projections
+# Projections
 
 Notice that even 2D L-Systems generate 3D geometric data.
 Before this data can be plotted, it must be projected onto a plane.
