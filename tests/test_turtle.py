@@ -4,7 +4,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation
 
-from ..turtle import Turtle
+from generative.lsystem.turtle import Turtle
 
 
 class TurtleTests(unittest.TestCase):

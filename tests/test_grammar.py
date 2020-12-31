@@ -4,7 +4,7 @@ import unittest
 
 from multidict import MultiDict
 
-from lsystem.grammar import LSystemGrammar, RuleMapping, Token, triplewise
+from generative.lsystem.grammar import LSystemGrammar, RuleMapping, Token, triplewise
 
 logger = logging.getLogger(__name__)
 

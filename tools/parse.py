@@ -23,8 +23,8 @@ from multidict import MultiDict
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from lsystem.grammar import LSystemGrammar, Token, TokenName, RuleMapping  # isort:skip
-from lsystem.rule_parser import RuleParser  # isort:skip
+from generative.lsystem.grammar import LSystemGrammar, Token, TokenName, RuleMapping  # isort:skip
+from generative.lsystem.production import RuleParser  # isort:skip
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,

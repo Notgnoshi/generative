@@ -1,7 +1,7 @@
 import unittest
 
-from lsystem.grammar import RuleMapping, Token
-from lsystem.rule_parser import RuleParser
+from generative.lsystem.grammar import RuleMapping, Token
+from generative.lsystem.production import RuleParser
 
 
 class RuleParsingParser(unittest.TestCase):

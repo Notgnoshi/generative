@@ -21,8 +21,8 @@ import sys
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from lsystem.interpreter import LSystemInterpeter  # isort:skip
-from lsystem.wkio import serialize_geometries  # isort:skip
+from generative.lsystem.interpreter import LSystemInterpeter  # isort:skip
+from generative.wkio import serialize_geometries  # isort:skip
 
 
 LOG_LEVELS = {
