@@ -22,7 +22,7 @@ from shapely.geometry import (
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from lsystem import deserialize_geometries  # isort:skip
+from generative.wkio import deserialize_geometries  # isort:skip
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,

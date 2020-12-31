@@ -3,7 +3,7 @@ import unittest
 
 from shapely.geometry import LineString
 
-from lsystem.interpreter import LSystemInterpeter
+from generative.lsystem.interpreter import LSystemInterpeter
 
 # Debugging failing tests is impossible when all you get is
 # '<shapely.geometry.linestring.LineString object at 0x7f10d52ea880>'

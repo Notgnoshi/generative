@@ -10,7 +10,7 @@ from shapely.geometry import (
     Point,
     Polygon,
 )
-from lsystem import deserialize_geometries
+from generative.wkio import deserialize_geometries
 
 test_geometries = [
     Point(0, 0),

@@ -1,6 +1,6 @@
 import unittest
 
-from lsystem.projection import PointTag, flatten, flatten_single, unflatten, wrap_tagged
+from generative.projection import PointTag, flatten, flatten_single, unflatten, wrap_tagged
 from shapely.geometry import (
     GeometryCollection,
     LineString,
