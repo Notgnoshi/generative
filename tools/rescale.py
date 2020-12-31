@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 """Resize/Rescale geometries.
 
-If only one dimension is set, the rest will be scaled in order to respect the aspect ratio.
+Resize
+    Set the size of one or more dimensions.
+    If only one dimension is set, the rest will be scaled in order to preserve the aspect ratio.
+    Units may be specified in 'px' (default), 'in', or 'cm'.
+
+Rescale
+    Scale up or down one or more dimensions.
+    If only one dimension is specified, the others will be scaled by the same amount to preserve
+    the aspect ratio. To get a scale in only one dimensions, specify a scale factor of 1.0 for the
+    others.
+
+Sizes and scales may be mixed and matched. E.g., you can set the scale in one dimension, and a size
+in another.
 """
 import argparse
 import logging
@@ -58,12 +70,14 @@ def parse_args():
         help=f"Set the logging output level. Defaults to {DEFAULT_LEVEL}.",
     )
 
-    # TODO: Units?
+    # TODO: Need to work with wkt2svg.py to make this _acutally_ PPI.
+    parser.add_argument("--ppi", type=int, default=72, help="Pixels per inch. Defaults to 72")
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "--dimx",
+        "--sizex",
         "-dx",
-        type=float,
+        type=str,
         default=None,
         help="The size in the x dimension",
     )
@@ -77,9 +91,9 @@ def parse_args():
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "--dimy",
+        "--sizey",
         "-dy",
-        type=float,
+        type=str,
         default=None,
         help="The size in the y dimension",
     )
@@ -93,9 +107,9 @@ def parse_args():
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "--dimz",
+        "--sizez",
         "-dz",
-        type=float,
+        type=str,
         default=None,
         help="The size in the z dimension",
     )
@@ -110,11 +124,32 @@ def parse_args():
     return parser.parse_args()
 
 
+def to_pixels(size: str, ppi: int):
+    """Parse the size strings from the commandline into a common unit."""
+
+
+def parse_sizes(args):
+    return (
+        to_pixels(args.sizex, args.ppi),
+        to_pixels(args.sizey, args.ppi),
+        to_pixels(args.sizez, args.ppi),
+    )
+
+
 def main(args):
     geometries = deserialize_geometries(args.input, args.format)
     tagged_points = flatten(geometries)
     points, tags = unzip(tagged_points)
-    # TODO: Rescale/resize
+
+    # TODO: Load all of the points into memory, assuming 2D until a 3D point is encountered.
+    # If a 3D point is encountered, previous 2D points should be zero-padded.
+
+    # TODO: Find the axis-aligned bounding box for the geometries.
+
+    # TODO: Find the scale factors needed if any resizes are requested.
+
+    # TODO: Rescale by elementwise multiplication by a 3-tuple of scale factors.
+
     tagged_points = zip(points, tags)
     transformed_geoms = unflatten(tagged_points)
     serialize_geometries(transformed_geoms, args.output, args.format)
