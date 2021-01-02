@@ -48,6 +48,14 @@ def parse_args():
         help="The input and output format. Defaults to WKT.",
     )
     parser.add_argument(
+        "-l",
+        "--log-level",
+        type=str,
+        default=DEFAULT_LEVEL,
+        choices=LOG_LEVELS.keys(),
+        help=f"Set the logging output level. Defaults to {DEFAULT_LEVEL}.",
+    )
+    parser.add_argument(
         "--kind",
         "-k",
         default="pca",
@@ -63,12 +71,7 @@ def parse_args():
         help="The target dimensionality for the PCA, SVD, or Isometric projections.",
     )
     parser.add_argument(
-        "-l",
-        "--log-level",
-        type=str,
-        default=DEFAULT_LEVEL,
-        choices=LOG_LEVELS.keys(),
-        help=f"Set the logging output level. Defaults to {DEFAULT_LEVEL}.",
+        "--scale", "-s", type=float, default=1, help="A multiplicative scale factor"
     )
 
     return parser.parse_args()
@@ -78,7 +81,7 @@ def main(args):
     logger.debug(args)
     geometries = deserialize_geometries(args.input, args.format)
     tagged_points = flatten(geometries)
-    transformed_points = project(tagged_points, args.kind, args.dimensions)
+    transformed_points = project(tagged_points, args.kind, args.dimensions, args.scale)
     transformed_geoms = unflatten(transformed_points)
     serialize_geometries(transformed_geoms, args.output, args.format)
 

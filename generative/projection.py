@@ -2,7 +2,7 @@ import itertools
 import logging
 from enum import Enum, auto
 from math import radians
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Tuple
 
 import numpy as np
 import shapely.geometry
@@ -248,32 +248,35 @@ def __unflatten_coordinate_sequence(
     return LineString(unwrapped), remaining_tags
 
 
-def project(tagged_points: TaggedPointSequence, kind="pca", dimensions=2) -> TaggedPointSequence:
+def project(tagged_points: TaggedPointSequence, kind="pca", dimensions=2, scale=1.0) -> TaggedPointSequence:
     """Project the given geometries to 2D.
 
-    :param kind: The type of projection to use. Can be one of 'pca', 'svd', 'isometric', 'auto', 'xy', 'xz', or 'yz'.
+    :param kind: The type of projection to use. Can be one of 'I', 'pca', 'svd', 'isometric', 'auto', 'xy', 'xz', or 'yz'.
     :param dimensions: The target dimensionality of the projection for PCA, SVD, or isometric.
+    :param scale: A multiplicative scale factor.
     """
     if kind in ("xy", "xz", "yz"):
-        transformed_point_sequence = _drop_coord(tagged_points, basis=kind)
+        transformed_point_sequence = _drop_coord(tagged_points, kind, scale)
     elif kind in ("pca", "svd"):
-        transformed_point_sequence = _fit_transform(tagged_points, kind, dimensions)
+        transformed_point_sequence = _fit_transform(tagged_points, kind, dimensions, scale)
     elif kind == "isometric":
-        transformed_point_sequence = _isometric(tagged_points, dimensions)
+        transformed_point_sequence = _isometric(tagged_points, dimensions, scale)
     elif kind == "auto":
         # PCA has tended to flip things upside down, to flip about the x axis by 180 and rotate a
         # a bit to ensure no symmetry
         decomp = PCA(n_components=3)
         points, tags = unzip(tagged_points)
-        points = np.array(list(_zeropad_3d(points)))
+        points = scale * np.array(list(_zeropad_3d(points)))
         transformed = decomp.fit_transform(points)
         logger.error(transformed.shape)
         rotation = _rot_x(radians(180)) @ _rot_z(radians(13))
         transformed = transformed @ rotation
         return zip(transformed[:, :dimensions], tags)
-    # Really only useful for pretending projection works while working on it.
     elif kind == "I":
-        transformed_point_sequence = tagged_points
+        points, tags = unzip(tagged_points)
+        if scale != 1.0:
+            points = (tuple(scale * c for c in point) for point in points)
+        transformed_point_sequence = zip(points, tags)
     else:
         raise ValueError(f"Unsupported projection type '{kind=}'")
 
@@ -284,13 +287,13 @@ def unzip(iterable):
     return zip(*iterable)
 
 
-def _fit_transform(tagged_points: TaggedPointSequence, kind, dimensions) -> TaggedPointSequence:
+def _fit_transform(tagged_points: TaggedPointSequence, kind, dimensions, scale) -> TaggedPointSequence:
     """Project the given geometries."""
     points, tags = unzip(tagged_points)
 
     # Convert the generator of points to an array of points.
     # This will consume the generator, and keep the points loaded in memory.
-    points = np.array(list(_zeropad_3d(points)))
+    points = scale * np.array(list(_zeropad_3d(points)))
 
     # TruncatedSVD picked a sideways view
     # PCA picked a top-down view
@@ -340,23 +343,21 @@ def _rot_z(theta):
     )
 
 
-def _isometric(tagged_points: TaggedPointSequence, dimensions) -> TaggedPointSequence:
+def _isometric(tagged_points: TaggedPointSequence, dimensions, scale) -> TaggedPointSequence:
     """Perform an isometric projection with rotation matrices."""
     # TODO: This isometric projection hasn't given very good results so far. It needs more work.
     rotation = _rot_x(radians(35.264)) @ _rot_y(radians(45))
     points, tags = unzip(tagged_points)
     for point, tag in zip(_zeropad_3d(points), tags):
-        yield (np.array(point) @ rotation)[:dimensions], tag
+        yield (scale * np.array(point) @ rotation)[:dimensions], tag
 
 
 def _zeropad_3d(points: Iterable[Tuple[float]]) -> Iterable[Tuple[float]]:
     padding = (0, 0, 0)
-    # NOTE: Setting the interpreter --stepsize to 10 is equivalent.
-    # points = (tuple(10 * c for c in point) for point in points)
     return ((*point, *padding)[:3] for point in points)
 
 
-def _drop_coord(tagged_points: TaggedPointSequence, basis: str) -> TaggedPointSequence:
+def _drop_coord(tagged_points: TaggedPointSequence, basis: str, scale) -> TaggedPointSequence:
     """Project the given 3D geometry objects onto one of the standard 2D bases."""
     # Do not allow flips. That is, you cannot reorder coordinates, only drop.
     if basis == "xy":
@@ -369,4 +370,6 @@ def _drop_coord(tagged_points: TaggedPointSequence, basis: str) -> TaggedPointSe
         raise ValueError(f"Unsupported basis for dropping coordinates '{basis=}'")
     points, tags = unzip(tagged_points)
     for point, tag in zip(_zeropad_3d(points), tags):
-        yield (*point[:coord], *point[coord + 1 :]), tag
+        point = (*point[:coord], *point[coord+1 :])
+        point = tuple(scale * c for c in point)
+        yield point, tag
