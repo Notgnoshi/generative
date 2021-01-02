@@ -266,9 +266,6 @@ def project(tagged_points: TaggedPointSequence, kind="pca", dimensions=2) -> Tag
         decomp = PCA(n_components=3)
         points, tags = unzip(tagged_points)
         points = np.array(list(_zeropad_3d(points)))
-        # TODO: Add tool to scale/resize output. Issue #29.
-        # The OpenGL renderer works just find at small scales, but not the SVG generation.
-        points *= 10
         transformed = decomp.fit_transform(points)
         logger.error(transformed.shape)
         rotation = _rot_x(radians(180)) @ _rot_z(radians(13))
@@ -294,8 +291,6 @@ def _fit_transform(tagged_points: TaggedPointSequence, kind, dimensions) -> Tagg
     # Convert the generator of points to an array of points.
     # This will consume the generator, and keep the points loaded in memory.
     points = np.array(list(_zeropad_3d(points)))
-    # TODO: Remove in favor of resolving #29.
-    points *= 10
 
     # TruncatedSVD picked a sideways view
     # PCA picked a top-down view
@@ -351,12 +346,13 @@ def _isometric(tagged_points: TaggedPointSequence, dimensions) -> TaggedPointSeq
     rotation = _rot_x(radians(35.264)) @ _rot_y(radians(45))
     points, tags = unzip(tagged_points)
     for point, tag in zip(_zeropad_3d(points), tags):
-        # TODO: Remove scalar in favor of resolving #29.
-        yield (10 * np.array(point) @ rotation)[:dimensions], tag
+        yield (np.array(point) @ rotation)[:dimensions], tag
 
 
 def _zeropad_3d(points: Iterable[Tuple[float]]) -> Iterable[Tuple[float]]:
     padding = (0, 0, 0)
+    # NOTE: Setting the interpreter --stepsize to 10 is equivalent.
+    # points = (tuple(10 * c for c in point) for point in points)
     return ((*point, *padding)[:3] for point in points)
 
 
