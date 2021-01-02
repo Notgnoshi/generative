@@ -8,8 +8,8 @@ import logging
 import pathlib
 import sys
 
-import svgwrite
 import shapely.geometry
+import svgwrite
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
@@ -66,7 +66,7 @@ def parse_args():
 def insert_point(
     dwg: svgwrite.Drawing, geom: shapely.geometry.Point, group: svgwrite.container.Group = None
 ):
-    logger.debug(f"Adding {geom}")
+    logger.debug("Adding %s", geom)
     p = svgwrite.shapes.Circle(center=geom.coords[0][:2], r=0.5)
     if group is not None:
         group.add(p)
@@ -77,7 +77,7 @@ def insert_point(
 def insert_linestring(
     dwg: svgwrite.Drawing, geom: shapely.geometry.LineString, group: svgwrite.container.Group = None
 ):
-    logger.debug(f"Adding {geom}")
+    logger.debug("Adding %s", geom)
     l = svgwrite.shapes.Polyline(points=[c[:2] for c in geom.coords])
     if group is not None:
         group.add(l)
@@ -88,7 +88,7 @@ def insert_linestring(
 def insert_polygon(
     dwg: svgwrite.Drawing, geom: shapely.geometry.Polygon, group: svgwrite.container.Group = None
 ):
-    logger.debug(f"Adding {geom}")
+    logger.debug("Adding %s", geom)
     p = svgwrite.shapes.Polygon(points=[c[:2] for c in geom.exterior.coords])
     if group is not None:
         group.add(p)
@@ -101,11 +101,11 @@ def insert_collection(
     geoms: shapely.geometry.base.BaseMultipartGeometry,
     group: svgwrite.container.Group = None,
 ):
-    logger.debug(f"Entering group for {geoms.geom_type}")
+    logger.debug("Entering group for %s", geoms.geom_type)
     g = svgwrite.container.group()
     for geom in geoms.geoms:
         insert_geometry(dwg, geom, g)
-    logger.debug(f"Ending group for {geoms.geom_type}")
+    logger.debug("Ending group for %s", geoms.geom_type)
     if group is not None:
         group.add(g)
     else:
@@ -130,13 +130,10 @@ def insert_geometry(
     group: svgwrite.container.Group = None,
 ):
     t = geom.geom_type
-    # TODO: A lot of these inserters could be collapsed together
     inserters[t](dwg, geom, group)
 
 
 def main(args):
-    logger.debug(args)
-
     min_x = 0
     max_x = 0
     min_y = 0
@@ -144,6 +141,7 @@ def main(args):
 
     dwg = svgwrite.Drawing()
     dwg.fill(opacity=0.0)
+    # NOTE: The default stepsize is also 1, which means it's as long as the lines are wide.
     dwg.stroke(color="black", width=1)
 
     # TODO: Flip the y-axis because screen coordinates.
@@ -158,6 +156,8 @@ def main(args):
 
     width = max_x - min_x
     height = max_y - min_y
+    # The viewbox is in user space (unitless).
+    # Any size, if specified, has to be set in the Drawing initializer.
     dwg.viewbox(min_x, min_y, width, height)
     args.output.write(dwg.tostring() + "\n")
 
@@ -169,6 +169,6 @@ if __name__ == "__main__":
         level=LOG_LEVELS.get(args.log_level),
         stream=sys.stderr,
     )
-    logger = logging.getLogger(name="wkt2svg.py")
+    logger = logging.getLogger(name=__file__)
 
     main(args)
