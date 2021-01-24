@@ -10,5 +10,6 @@ pyparsing
 pytest
 scikit-learn
 shapely
+sortedcontainers
 svgwrite
 vispy
