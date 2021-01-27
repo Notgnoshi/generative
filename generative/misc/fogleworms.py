@@ -109,16 +109,57 @@ Again, we'll pop worm segments off one-by-one and try to place a new worm at the
 
     ...
 """
-from typing import List, Tuple, Union
+from typing import Tuple
 
+import numpy as np
 from sortedcontainers import SortedSet
 
 Worm = Tuple[int]
+Grid = np.ndarray
 
 
-def place_worm(grid, unmarked: SortedSet) -> Union[Worm, None]:
+def neighbors(index, size) -> Tuple[Tuple[int]]:
+    """Get the neighbors of the given 1D index of a 2D square matrix.
+
+    The neighbors do _not_ wrap around, so there could be 2, 3, or 4 neighbors yielded.
+    """
+    north = index - size
+    east = index + 1
+    south = index + size
+    west = index - 1
+
+    # Return an ordered tuple as a micro optimization that won't matter in the scheme of things.
+    if north >= 0:
+        yield north
+    edge = index % size
+    if edge != 0:
+        yield west
+    if edge != (size - 1):
+        yield east
+    if south < size ** 2:
+        yield south
+
+
+def place_worm(size, unfilled: SortedSet) -> Worm:
     """Place a valid worm on the given grid.
 
     Starts with the lowest unfilled index, and flood fills in the four cardinal directions with
     priority given to the lowest remaining unfilled index.
+
+    The unfilled object will be updated with the new worm, and a tuple of indices
+    will be returned for the newly added worm.
+
+    Note that the worm may container fewer than 'size' segments.
     """
+    current = unfilled.pop(0)
+    worm = [current]
+
+    for _ in range(size - 1):
+        # Look for the next current index
+        for neighbor in neighbors(current, size):
+            if neighbor in unfilled:
+                worm.append(neighbor)
+                unfilled.remove(neighbor)
+                current = neighbor
+                break
+    return tuple(worm)
