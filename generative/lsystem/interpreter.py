@@ -88,14 +88,18 @@ class LSystemInterpeter:
 
     def _append_position(self):
         # If any coordinate isn't equal to the last recorded position.
-        if self.drawing and (not self.active_line or np.any(self.active_line[-1] != self.turtle.position)):
+        if self.drawing and (
+            not self.active_line or np.any(self.active_line[-1] != self.turtle.position)
+        ):
             self.active_line.append(self.turtle.position)
 
     def _interpret_default(self, tokens: Tokens):
         for token in tokens:
             if token in {"F", "G"}:
                 if self.drawing and len(self.active_line) == 0:
-                    logger.debug(f"Making first step forwards since last flush. pos: {self.turtle.position}")
+                    logger.debug(
+                        f"Making first step forwards since last flush. pos: {self.turtle.position}"
+                    )
                     self.active_line.append(self.turtle.position)
                 self.turtle.forward(self.stepsize)
             elif token in {"f", "g"}:

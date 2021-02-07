@@ -5,6 +5,7 @@ from shapely.geometry import LineString
 
 from generative.lsystem.interpreter import LSystemInterpeter
 
+
 # Debugging failing tests is impossible when all you get is
 # '<shapely.geometry.linestring.LineString object at 0x7f10d52ea880>'
 def better_repr(self):
@@ -70,7 +71,9 @@ class InterpreterTests(unittest.TestCase):
         lines = list(self.i.interpret(tokens))
         self.assertEqual(len(lines), len(expected))
         for actual, desired in zip(lines, expected):
-            self.assertTrue(actual.almost_equals(desired), f"actual: {actual.wkt} expected: {desired.wkt}")
+            self.assertTrue(
+                actual.almost_equals(desired), f"actual: {actual.wkt} expected: {desired.wkt}"
+            )
 
     def test_pitch(self):
         commands = io.StringIO("^FFvF")

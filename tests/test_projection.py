@@ -1,6 +1,5 @@
 import unittest
 
-from generative.projection import PointTag, flatten, flatten_single, unflatten, wrap_tagged
 from shapely.geometry import (
     GeometryCollection,
     LineString,
@@ -10,6 +9,8 @@ from shapely.geometry import (
     Point,
     Polygon,
 )
+
+from generative.projection import PointTag, flatten, flatten_single, unflatten, wrap_tagged
 
 
 class TestToTaggedPoints(unittest.TestCase):

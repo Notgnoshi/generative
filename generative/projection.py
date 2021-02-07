@@ -248,7 +248,9 @@ def __unflatten_coordinate_sequence(
     return LineString(unwrapped), remaining_tags
 
 
-def project(tagged_points: TaggedPointSequence, kind="pca", dimensions=2, scale=1.0) -> TaggedPointSequence:
+def project(
+    tagged_points: TaggedPointSequence, kind="pca", dimensions=2, scale=1.0
+) -> TaggedPointSequence:
     """Project the given geometries to 2D.
 
     :param kind: The type of projection to use. Can be one of 'I', 'pca', 'svd', 'isometric', 'auto', 'xy', 'xz', or 'yz'.
@@ -287,7 +289,9 @@ def unzip(iterable):
     return zip(*iterable)
 
 
-def _fit_transform(tagged_points: TaggedPointSequence, kind, dimensions, scale) -> TaggedPointSequence:
+def _fit_transform(
+    tagged_points: TaggedPointSequence, kind, dimensions, scale
+) -> TaggedPointSequence:
     """Project the given geometries."""
     points, tags = unzip(tagged_points)
 
@@ -370,6 +374,6 @@ def _drop_coord(tagged_points: TaggedPointSequence, basis: str, scale) -> Tagged
         raise ValueError(f"Unsupported basis for dropping coordinates '{basis=}'")
     points, tags = unzip(tagged_points)
     for point, tag in zip(_zeropad_3d(points), tags):
-        point = (*point[:coord], *point[coord+1 :])
+        point = (*point[:coord], *point[coord + 1 :])
         point = tuple(scale * c for c in point)
         yield point, tag
