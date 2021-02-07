@@ -166,7 +166,7 @@ class RuleParsingParser(unittest.TestCase):
         parser = RuleParser(True)
         result = parser._parse(rule2)
 
-        self.assertSequenceEqual(result["rhs"], rule.split()[-1].replace(',', ''))
+        self.assertSequenceEqual(result["rhs"], rule.split()[-1].replace(",", ""))
 
 
 def tokenize(s: str):

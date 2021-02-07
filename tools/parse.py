@@ -102,7 +102,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def parse_rules(rules: List[str], long_tokens) -> Tuple[MultiDict[TokenName, RuleMapping], Set[TokenName]]:
+def parse_rules(
+    rules: List[str], long_tokens
+) -> Tuple[MultiDict[TokenName, RuleMapping], Set[TokenName]]:
     parser = RuleParser(long_tokens)
     for rule in rules:
         parser.add_rule(rule)
@@ -117,11 +119,11 @@ def main(args):
 
     n = args.iterations or 4
     if args.long_tokens:
-        axiom = args.axiom.replace(',', ' ')
+        axiom = args.axiom.replace(",", " ")
         axiom = axiom.split()
         axiom = [Token(t) for t in axiom]
     else:
-        axiom = args.axiom.replace(',', ' ')
+        axiom = args.axiom.replace(",", " ")
         axiom = "".join(axiom.split())
         axiom = [Token(c) for c in axiom]
 
@@ -129,7 +131,7 @@ def main(args):
 
     for token in result:
         # TODO: Build an internal buffer and write the output in chunks
-        args.output.write(token.name + ' ' * args.long_tokens)
+        args.output.write(token.name + " " * args.long_tokens)
     args.output.write("\n")
 
 

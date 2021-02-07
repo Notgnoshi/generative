@@ -1,6 +1,6 @@
 import io
-import pytest
 
+import pytest
 from shapely.geometry import (
     GeometryCollection,
     LineString,
@@ -10,6 +10,7 @@ from shapely.geometry import (
     Point,
     Polygon,
 )
+
 from generative.wkio import deserialize_geometries
 
 test_geometries = [
