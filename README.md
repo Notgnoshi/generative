@@ -45,39 +45,46 @@ This project implements a [parser](tools/parse.py) for the first three kinds of 
 
 ## Basic Usage
 
-Tokens can be multiple characters, and therefore must be comma-separated.
-The rules and axiom are white-space insensitive.
-
-**TODO:** Support whitespace-separated tokens.
+The default mode supports single character tokens.
 
 ```shell
+$ tools/parse.py --rule 'a -> ab' --rule 'b -> a' --axiom=a --iterations=3
+abaab
+$ # The default mode also supports comma/whitespace separated tokens if you _really_ like commas
 $ tools/parse.py --rule 'a -> a, b' --rule 'b -> a' --axiom=a --iterations=3
 abaab
-$ tools/parse.py --rule 'a -> ab' --rule 'b -> a' --axiom=a --iterations=30
-ab
-$ tools/parse.py --rule 'a -> ab' --rule 'ab -> a, a' --axiom=a --iterations=3
-abab
 ```
 
+There's also parser support for longer tokens, but note this is just an academic exercise in premature flexibility.
+The interpreter does not support long tokens, so you almost always want to use the default mode.
+
+```shell
+$ tools/parse.py --rule 'a -> a, b' --rule 'b -> a' --axiom=a --iterations=3 --long-tokens
+a b a a b
+$ tools/parse.py --rule 'a -> ab' --rule 'b -> a' --axiom=a --iterations=30 --long-tokens
+ab
+$ tools/parse.py --rule 'a -> ab' --rule 'ab -> a, a' --axiom=a --iterations=3 --long-tokens
+ab ab
+```
 ## Stochastic Grammars
 
 If more than one production rule is given for a single token, the first rule given will be chosen.
 
 ```shell
-$ tools/parse.py --rule 'a -> a' --rule 'a -> b' --axiom='a,a' --iterations=100
+$ tools/parse.py --rule 'a -> a' --rule 'a -> b' --axiom='aa' --iterations=100
 aa
 ```
 
 Probabilities can be specified like so:
 
 ```shell
-$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='a,a' --iterations=1 --log-level INFO
+$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='aa' --iterations=1 --log-level INFO
 2020-08-30 11:36:24,129 - lsystem.grammar - INFO - Using random seed: 4162256033
 aa
-$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='a,a' --iterations=1 --log-level INFO
+$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='aa' --iterations=1 --log-level INFO
 2020-08-30 11:36:26,368 - lsystem.grammar - INFO - Using random seed: 635680691
 ba
-$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='a,a' --iterations=1 --log-level INFO
+$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='aa' --iterations=1 --log-level INFO
 2020-08-30 11:36:28,439 - lsystem.grammar - INFO - Using random seed: 2707414783
 bb
 ```
@@ -89,11 +96,11 @@ A random seed may be given via `--seed`.
 One token of left or right (or both) context may be specified.
 
 ```shell
-$ tools/parse.py --rule 'a>b -> c' --axiom='a,b' --iterations=1
+$ tools/parse.py --rule 'a>b -> c' --axiom='ab' --iterations=1
 cb
-$ tools/parse.py --rule 'b<a -> c' --axiom='b,a' --iterations=1
+$ tools/parse.py --rule 'b<a -> c' --axiom='ba' --iterations=1
 bc
-$ tools/parse.py --rule 'b<a>b -> c' --axiom='b,a,b' --iterations=1
+$ tools/parse.py --rule 'b<a>b -> c' --axiom='bab' --iterations=1
 bcb
 ```
 
@@ -102,7 +109,7 @@ Note that tokens without any matching rules are simply passed-through.
 You can also specify a list of tokens to ignore when considering context.
 
 ```shell
-$ tools/parse.py --rule 'b<a>b -> c' --rule='#ignore:a' --axiom='b,a,a,b' --iterations=1
+$ tools/parse.py --rule 'b<a>b -> c' --rule='#ignore:a' --axiom='baab' --iterations=1
 bccb
 ```
 

@@ -116,7 +116,14 @@ def main(args):
     grammar = LSystemGrammar(rules, ignore, args.seed)
 
     n = args.iterations or 4
-    axiom = [Token(t) for t in args.axiom.split(",")]
+    if args.long_tokens:
+        axiom = args.axiom.replace(',', ' ')
+        axiom = axiom.split()
+        axiom = [Token(t) for t in axiom]
+    else:
+        axiom = args.axiom.replace(',', ' ')
+        axiom = "".join(axiom.split())
+        axiom = [Token(c) for c in axiom]
 
     result = grammar.loop(axiom, n)
 
