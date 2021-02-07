@@ -102,7 +102,7 @@ def insert_collection(
     group: svgwrite.container.Group = None,
 ):
     logger.debug("Entering group for %s", geoms.geom_type)
-    g = svgwrite.container.group()
+    g = svgwrite.container.Group()
     for geom in geoms.geoms:
         insert_geometry(dwg, geom, g)
     logger.debug("Ending group for %s", geoms.geom_type)
