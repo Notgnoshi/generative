@@ -7,7 +7,46 @@ from generative.lsystem.production import RuleParser
 class RuleParsingParser(unittest.TestCase):
     def test_simple(self):
         parser = RuleParser()
+        rule = "a -> ab"
+        result = parser._parse(rule)
+
+        self.assertEqual(result["lhs"], "a")
+        self.assertSequenceEqual(result["rhs"], ["a", "b"])
+
+        # You can still use commas and whitespace to separate tokens.
         rule = "a -> a,b"
+        result = parser._parse(rule)
+
+        self.assertEqual(result["lhs"], "a")
+        self.assertSequenceEqual(result["rhs"], ["a", "b"])
+
+        rule = "a -> a b"
+        result = parser._parse(rule)
+
+        self.assertEqual(result["lhs"], "a")
+        self.assertSequenceEqual(result["rhs"], ["a", "b"])
+
+    def test_simple_delimited(self):
+        parser = RuleParser(True)
+        rule = "a -> a,b"
+        result = parser._parse(rule)
+
+        self.assertEqual(result["lhs"], "a")
+        self.assertSequenceEqual(result["rhs"], ["a", "b"])
+
+        rule = "a -> ab"
+        result = parser._parse(rule)
+
+        self.assertEqual(result["lhs"], "a")
+        self.assertSequenceEqual(result["rhs"], ["ab"])
+
+        rule = "a -> a b"
+        result = parser._parse(rule)
+
+        self.assertEqual(result["lhs"], "a")
+        self.assertSequenceEqual(result["rhs"], ["a", "b"])
+
+        rule = "a ->    a\t\t \nb"
         result = parser._parse(rule)
 
         self.assertEqual(result["lhs"], "a")
@@ -24,6 +63,15 @@ class RuleParsingParser(unittest.TestCase):
 
     def test_left_context(self):
         parser = RuleParser()
+        rule = "a<b -> cde"
+        result = parser._parse(rule)
+
+        self.assertEqual(result["lhs"], "b")
+        self.assertSequenceEqual(result["rhs"], ["c", "d", "e"])
+        self.assertEqual(result["left_context"], "a")
+
+    def test_left_context_delimited(self):
+        parser = RuleParser(True)
         rule = "a<b -> cd,e"
         result = parser._parse(rule)
 
@@ -66,6 +114,24 @@ class RuleParsingParser(unittest.TestCase):
 
     def test_ignore(self):
         parser = RuleParser()
+        rule = "#ignore:ab"
+        result = parser._parse(rule)
+        self.assertSequenceEqual(result["ignore"], ["a", "b"])
+
+        rule = "#ignore ab"
+        result = parser._parse(rule)
+        self.assertSequenceEqual(result["ignore"], ["a", "b"])
+
+        rule = "#ignore: a,b"
+        result = parser._parse(rule)
+        self.assertSequenceEqual(result["ignore"], ["a", "b"])
+
+        rule = "#ignore: a b"
+        result = parser._parse(rule)
+        self.assertSequenceEqual(result["ignore"], ["a", "b"])
+
+    def test_ignore_delimited(self):
+        parser = RuleParser(True)
         rule = "#ignore a,b"
         result = parser._parse(rule)
         self.assertSequenceEqual(result["ignore"], ["a", "b"])
@@ -73,6 +139,34 @@ class RuleParsingParser(unittest.TestCase):
         rule = "#ignore:a,b"
         result = parser._parse(rule)
         self.assertSequenceEqual(result["ignore"], ["a", "b"])
+
+        rule = "#ignore: a b"
+        result = parser._parse(rule)
+        self.assertSequenceEqual(result["ignore"], ["a", "b"])
+
+        rule = "#ignore: a, b"
+        result = parser._parse(rule)
+        self.assertSequenceEqual(result["ignore"], ["a", "b"])
+
+    def test_fractal_plant(self):
+        rule = "G -> F-[[G]+G]+F[+FG]-G"
+        parser = RuleParser()
+        result = parser._parse(rule)
+
+        self.assertSequenceEqual(result["rhs"], rule.split()[-1])
+        # You can still use delimiters in single character mode.
+        rule2 = "G -> F,-,[ [ G\t \n],+,G,]+F[+FG]-    G"
+        result = parser._parse(rule2)
+
+        self.assertSequenceEqual(result["rhs"], rule.split()[-1])
+
+    def test_fractal_plant_delimited(self):
+        rule = "G -> F-[[G]+G]+F[+FG]-G"
+        rule2 = "G -> F,-,[,[,G,]\n+, G,\t\n ],+,F,[,+,F,G,],-,G"
+        parser = RuleParser(True)
+        result = parser._parse(rule2)
+
+        self.assertSequenceEqual(result["rhs"], rule.split()[-1].replace(',', ''))
 
 
 def tokenize(s: str):
@@ -82,7 +176,15 @@ def tokenize(s: str):
 class RuleParsingMappings(unittest.TestCase):
     def test_simple(self):
         parser = RuleParser()
-        rule = "a -> a,b"
+        rule = "a -> ab"
+        lhs, mapping = parser.parse(rule)
+
+        self.assertEqual(lhs, Token("a"))
+        self.assertEqual(mapping, RuleMapping(tokenize("ab")))
+
+    def test_simple_delimited(self):
+        parser = RuleParser(True)
+        rule = "a -> a, b"
         lhs, mapping = parser.parse(rule)
 
         self.assertEqual(lhs, Token("a"))
@@ -96,8 +198,8 @@ class RuleParsingMappings(unittest.TestCase):
         self.assertEqual(lhs, Token("a"))
         self.assertEqual(mapping, RuleMapping(tokenize("b"), probability=0.33))
 
-    def test_context(self):
-        parser = RuleParser()
+    def test_context_delimited(self):
+        parser = RuleParser(True)
         rule = "left < tok>right:0.2->prod,uct"
         lhs, mapping = parser.parse(rule)
 
@@ -112,11 +214,14 @@ class RuleParsingMappings(unittest.TestCase):
             ),
         )
 
-    def test_ignore(self):
-        parser = RuleParser()
+    def test_ignore_delimited(self):
+        parser = RuleParser(True)
         rule = "#ignore a,b"
         result = parser.parse(rule)
         self.assertIsNone(result)
 
         self.assertIn("a", parser.ignore)
         self.assertIn("b", parser.ignore)
+
+    def test_fractal_plant(self):
+        pass

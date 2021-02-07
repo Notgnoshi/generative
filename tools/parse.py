@@ -56,6 +56,13 @@ def parse_args():
         help="A file to output the expanded axiom to. Defaults to stdout.",
     )
     parser.add_argument(
+        "--long-tokens",
+        "-L",
+        action="store_true",
+        default=False,
+        help="Whether to support comma/whitespace separate long tokens. Otherwise assume single character tokens. Parser output will be space-separated in this mode.",
+    )
+    parser.add_argument(
         "-r",
         "--rule",
         type=str,
@@ -95,8 +102,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def parse_rules(rules: List[str]) -> Tuple[MultiDict[TokenName, RuleMapping], Set[TokenName]]:
-    parser = RuleParser()
+def parse_rules(rules: List[str], long_tokens) -> Tuple[MultiDict[TokenName, RuleMapping], Set[TokenName]]:
+    parser = RuleParser(long_tokens)
     for rule in rules:
         parser.add_rule(rule)
 
@@ -104,8 +111,7 @@ def parse_rules(rules: List[str]) -> Tuple[MultiDict[TokenName, RuleMapping], Se
 
 
 def main(args):
-    logger.debug(f"args: {args}")
-    rules, ignore = parse_rules(args.rule)
+    rules, ignore = parse_rules(args.rule, args.long_tokens)
     logger.debug(f"Parsed rules: {rules}")
     grammar = LSystemGrammar(rules, ignore, args.seed)
 
@@ -116,7 +122,7 @@ def main(args):
 
     for token in result:
         # TODO: Build an internal buffer and write the output in chunks
-        args.output.write(token.name)
+        args.output.write(token.name + ' ' * args.long_tokens)
     args.output.write("\n")
 
 
@@ -145,6 +151,14 @@ if __name__ == "__main__":
             args.seed = config.get("seed", None)
         if args.iterations is None:
             args.iterations = config.get("iterations", None)
+
+        # If long tokens are specified (not the default) anywhere, either by the config file or
+        # by commandline arguments, use long tokens.
+        if config.get("long_tokens", None) is not None:
+            args.long_tokens = args.long_tokens or config["long_tokens"]
+        if config.get("long-tokens", None) is not None:
+            args.long_tokens = args.long_tokens or config["long-tokens"]
+
     if args.axiom is None:
         args.axiom = ""
 
