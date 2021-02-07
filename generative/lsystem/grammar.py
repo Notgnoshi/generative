@@ -51,7 +51,7 @@ class LSystemGrammar:
     Unlike traditional parsing, the rules are applied on the _entire_ string of tokens from left to
     right _before_ returning to the first symbol in the string.
 
-    Example
+    Example:
         Given the rules 'a -> ab', 'b -> a', and the starting axiom 'a',
 
         1st iteration: a -> ab

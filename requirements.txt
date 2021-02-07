@@ -1,5 +1,6 @@
 black
 commentjson
+isort
 more-itertools
 multidict
 numpy
