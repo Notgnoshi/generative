@@ -21,3 +21,51 @@ jobs:
                   find generative/ tests/ tools/ -name '*.py' -exec isort {} +
                   find generative/ tests/ tools/ -name '*.py' -exec black --line-length 100 {} +
                   git diff --exit-code
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v1
+              with:
+                  python-version: 3.8
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install --requirement requirements.txt
+            - name: Run pylint
+              # TODO: Use a config file for settings
+              run: |
+                  find generative/ tests/ tools/ -name '*.py' -exec pylint \
+                    --rcfile=/dev/null \
+                    --fail-under 9.0 \
+                    -d invalid-name \
+                    -d fixme \
+                    -d redefined-outer-name \
+                    -d missing-module-docstring \
+                    -d missing-class-docstring \
+                    -d missing-function-docstring \
+                    -d duplicate-code \
+                    -d wrong-import-position \
+                    {} +
+            - name: Run pydocstyle
+              # www.pydocstyle.org/en/stable/error_codes.html
+              # TODO: Move the list of ignored checks to a config file.
+              run: |
+                find generative/ tools/ -name '*.py' -exec pydocstyle \
+                    --ignore=D100,D103,D104,D105,D203,D213,D407,D413 \
+                    {} +
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v1
+              with:
+                  python-version: 3.8
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install --requirement requirements.txt
+            - name: Run tests
+              run: pytest

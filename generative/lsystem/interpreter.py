@@ -32,6 +32,7 @@ class LSystemInterpeter:
     commandsets = frozenset(["default"])
 
     def __init__(self, commandset, stepsize, angle):
+        """Initialize an L-System interpreter with the given commandset and turtle config."""
         if commandset not in self.commandsets:
             raise ValueError(f"{commandset=} not in {self.commandsets}.")
         self.commandset = commandset
