@@ -1,0 +1,15 @@
+[package]
+name = "geom2graph"
+version = "0.1.0"
+authors = ["Austin Gill <Notgnoshi@gmail.com>"]
+edition = "2018"
+description = "A CLI application to convert geometries into a graph data structure"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+geo = "0.17"
+kd-tree = "0.2"
+petgraph = "0.5"
+structopt = "0.3"
+wkt = "0.9"
