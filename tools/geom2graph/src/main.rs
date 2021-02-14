@@ -1,77 +1,8 @@
 use log::{debug, error, info, trace, warn};
-use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Read, Write};
-use std::path::PathBuf;
-use wkt::Wkt;
+use std::io::Write;
 
 mod cmdline;
-
-/// Get a BufWriter for the given path or stdout.
-fn get_writer(output: Option<PathBuf>) -> BufWriter<Box<dyn Write>> {
-    match output {
-        Some(path) => match File::create(&path) {
-            Err(why) => panic!("couldn't create {} because: {}", path.display(), why),
-            Ok(file) => {
-                trace!("Writing to {}", path.display());
-                BufWriter::new(Box::new(file))
-            }
-        },
-        None => {
-            trace!("Writing to stdout");
-            BufWriter::new(Box::new(std::io::stdout()))
-        }
-    }
-}
-
-/// Get a BufReader for the given path or stdin.
-fn get_reader(input: Option<PathBuf>) -> BufReader<Box<dyn Read>> {
-    match input {
-        Some(path) => match File::open(&path) {
-            Err(why) => panic!("couldn't read {} because: {}", path.display(), why),
-            Ok(file) => {
-                trace!("Reading from {}", path.display());
-                BufReader::new(Box::new(file))
-            }
-        },
-        None => {
-            trace!("Reading from stdin");
-            BufReader::new(Box::new(std::io::stdin()))
-        }
-    }
-}
-
-#[derive(Debug)]
-struct WktDeserializer<R: Read> {
-    reader: BufReader<R>,
-}
-
-impl<R: Read> WktDeserializer<R> {
-    fn new(reader: BufReader<R>) -> WktDeserializer<R> {
-        WktDeserializer { reader }
-    }
-}
-
-impl<R: Read> Iterator for WktDeserializer<R> {
-    type Item = Wkt<f64>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let mut buf = String::new();
-        // We were able to read a line.
-        if let Ok(_bytes) = self.reader.read_line(&mut buf) {
-            trace!("Read: {}", buf);
-
-            if let Ok(geom) = Wkt::<f64>::from_str(&buf) {
-                return Some(geom);
-            } else {
-                warn!("Failed to parse '{}' as WKT", buf);
-                // Don't return an error, because we want to keep reading geometries.
-                return None;
-            }
-        } else {
-            return None;
-        }
-    }
-}
+mod wkio;
 
 fn main() {
     let args = cmdline::Options::from_args();
@@ -82,14 +13,13 @@ fn main() {
         .init()
         .unwrap();
 
-    let mut writer = get_writer(args.output);
-    let reader = get_reader(args.input);
-    let deserializer = WktDeserializer::new(reader);
+    let mut writer = args.get_output_writer();
+    let deserializer = wkio::WktDeserializer::new(args.get_input_reader());
 
     writeln!(&mut writer, "sample output").expect("Couldn't write?!");
     writer.flush().unwrap();
 
-    for geom in deserializer {
-        info!("deserialized: {:?}", geom);
+    for _geom in deserializer {
+        // TODO: Do something useful with the geometries.
     }
 }
