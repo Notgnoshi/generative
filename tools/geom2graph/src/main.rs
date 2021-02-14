@@ -7,7 +7,7 @@ use std::io::Write;
 mod cmdline;
 mod wkio;
 
-use wkio::Iterator;
+use wkio::GatIterator; // :/
 
 fn main() {
     let args = cmdline::Options::from_args();

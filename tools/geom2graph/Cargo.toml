@@ -8,9 +8,12 @@ description = "A CLI application to convert geometries into a graph data structu
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-geos = "7.0"
 kdtree = "0.6"
 log = "0.4"
 petgraph = "0.5"
 stderrlog = "0.5"
 structopt = "0.3"
+
+[dependencies.geos]
+version = "7.0"
+features = ["v3_8_0"]
