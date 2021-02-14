@@ -1,39 +1,53 @@
 use geos::Geom;
 
-// TODO: Rename to PointIterator
-pub struct CoordSeqIterator<'c> {
+/// An iterator over the points of a geos::Geometry.
+pub struct PointIterator<'c> {
+    /// The current index of the wrapped coords.
     index: usize,
+
+    /// The backing CoordSeq of the Geometry.
+    /// TODO: Find a way to make this a reference to avoid unnecessarily copying potentially large
+    /// geometries. I never thought I'd miss C++.
     coords: geos::CoordSeq<'c>,
 }
 
-impl<'c> CoordSeqIterator<'c> {
-    // TODO: Is there a way to say this one is private?
-    fn new(cs: geos::CoordSeq) -> CoordSeqIterator {
-        CoordSeqIterator {
+impl<'c> PointIterator<'c> {
+    /// Create a PointIterator from a geos::CoordSeq.
+    /// You likely want to use PointIterator::new() instead.
+    fn new_from_cs(cs: geos::CoordSeq) -> PointIterator {
+        PointIterator {
             index: 0,
             coords: cs,
         }
     }
 
-    fn new_from_geometry(geom: geos::Geometry) -> CoordSeqIterator {
-        // TODO: This only works for select geometry types. Need to match on the GeometryType
-        // Will require recursion to create an iterator for GeometryCollections
-        CoordSeqIterator {
-            index: 0,
-            coords: geom
-                .get_coord_seq()
-                .expect("Failed to create CoordSeq from Geometry"),
-        }
+    /// Create a PointIterator from a geos::Geometry.
+    /// TODO: Handle multi-geometries and geometry collections.
+    /// TODO: Think about the return type.
+    /// NOTE: geos::Geometry::get_coord_seq() clones the underlying CoordSeq because of memory
+    /// management :/
+    fn new(geom: geos::Geometry) -> PointIterator {
+        let coordinate_sequence = match geom.geometry_type() {
+            geos::GeometryTypes::Polygon => {
+                let exterior = geom
+                    .get_exterior_ring()
+                    .expect("Couldn't get POLYGON exterior ring");
+                exterior.get_coord_seq()
+            }
+            _ => geom.get_coord_seq(),
+        };
+
+        return PointIterator::new_from_cs(coordinate_sequence.unwrap());
     }
 }
 
-/// Turn a CoordSeq into an iterator of geos::GeometryTypes::Points.
-impl<'c> Iterator for CoordSeqIterator<'c> {
+impl<'c> Iterator for PointIterator<'c> {
     type Item = geos::Geometry<'c>; // TODO: Is there a way to specify that this is a Point?
 
+    /// Get the next point from the Geometry.
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= self.coords.size().unwrap() {
-            return None;
+            return None; // Indicate the end of the sequence.
         }
 
         // Implicitly convert all geometries to 3D.
@@ -56,8 +70,6 @@ impl<'c> Iterator for CoordSeqIterator<'c> {
 
         // Finally, we can create a new Point from the CoordSequence...
         return Some(geos::Geometry::create_point(cs).expect("Failed to create point"));
-
-        // return None;
     }
 }
 
@@ -68,35 +80,31 @@ mod tests {
     #[test]
     fn test_point_cs() {
         let geom = geos::Geometry::new_from_wkt("POINT(1 2)").expect("Failed to create POINT");
-        // TODO: This should be handled by CoordSeqIterator
-        let coords = geom.get_coord_seq().expect("Failed to get POINT coord seq");
-        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::TwoD));
-        assert_eq!(coords.size(), Ok(1));
+        let points = PointIterator::new(geom);
 
-        let coords = CoordSeqIterator::new(coords);
         // Test the iterable interface.
-        for coord in coords {
-            assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
+        for point in points {
+            assert_eq!(point.geometry_type(), geos::GeometryTypes::Point);
 
-            let x = coord.get_x().expect("Failed to get X");
-            let y = coord.get_y().expect("Failed to get Y");
-            let z = coord.get_z().expect("Failed to get Z");
+            let x = point.get_x().expect("Failed to get X");
+            let y = point.get_y().expect("Failed to get Y");
+            let z = point.get_z().expect("Failed to get Z");
 
             assert_eq!(x, 1.0);
             assert_eq!(y, 2.0);
             assert_eq!(z, 0.0);
 
-            let c = coord.get_num_coordinates();
+            let c = point.get_num_coordinates();
             assert_eq!(c, Ok(1));
 
-            let dim = coord.get_coordinate_dimension();
+            let dim = point.get_coordinate_dimension();
             assert_eq!(dim, Ok(geos::Dimensions::ThreeD));
 
-            let dim = coord.get_num_dimensions();
+            let dim = point.get_num_dimensions();
             assert_eq!(dim, Ok(0)); // WTF?
 
             // BUG: This only checks the first two coordinates.
-            assert!(coord == geos::Geometry::new_from_wkt("POINT Z (1 2 999999999)").unwrap());
+            assert!(point == geos::Geometry::new_from_wkt("POINT Z (1 2 999999999)").unwrap());
         }
     }
 
@@ -104,18 +112,13 @@ mod tests {
     fn test_pointz_cs() {
         let geom =
             geos::Geometry::new_from_wkt("Point Z (1 2 3)").expect("Failed to create POINT Z");
-        let coords = geom
-            .get_coord_seq()
-            .expect("Failed to get POINT Z coord seq");
-        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::ThreeD));
-        assert_eq!(coords.size(), Ok(1));
-        let mut coords = CoordSeqIterator::new(coords);
-        let coord = coords.next().expect("Failed to get the first point");
-        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
+        let mut points = PointIterator::new(geom);
+        let point = points.next().expect("Failed to get the first point");
+        assert_eq!(point.geometry_type(), geos::GeometryTypes::Point);
 
-        let x = coord.get_x().expect("Failed to get X");
-        let y = coord.get_y().expect("Failed to get Y");
-        let z = coord.get_z().expect("Failed to get Z");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
 
         assert_eq!(x, 1.0);
         assert_eq!(y, 2.0);
@@ -126,30 +129,23 @@ mod tests {
     fn test_linestring_cs() {
         let geom = geos::Geometry::new_from_wkt("LINESTRING(1 2, 3 4)")
             .expect("Failed to create LINESTRING");
-        let coords = geom
-            .get_coord_seq()
-            .expect("Couldn't get LINESTRING coord seq");
-        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::TwoD));
-        assert_eq!(coords.size(), Ok(2));
+        let mut points = PointIterator::new(geom);
 
-        // TODO: Why does _this_ have to be mutable when you can loop over the coords just fine?
-        let mut coords = CoordSeqIterator::new(coords);
-
-        let coord = coords.next().expect("Failed to get first point");
-        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
-        let x = coord.get_x().expect("Failed to get X");
-        let y = coord.get_y().expect("Failed to get Y");
-        let z = coord.get_z().expect("Failed to get Z");
+        let point = points.next().expect("Failed to get first point");
+        assert_eq!(point.geometry_type(), geos::GeometryTypes::Point);
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
 
         assert_eq!(x, 1.0);
         assert_eq!(y, 2.0);
         assert_eq!(z, 0.0);
 
-        let coord = coords.next().expect("Failed to get first point");
-        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
-        let x = coord.get_x().expect("Failed to get X");
-        let y = coord.get_y().expect("Failed to get Y");
-        let z = coord.get_z().expect("Failed to get Z");
+        let point = points.next().expect("Failed to get first point");
+        assert_eq!(point.geometry_type(), geos::GeometryTypes::Point);
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
 
         assert_eq!(x, 3.0);
         assert_eq!(y, 4.0);
@@ -160,29 +156,25 @@ mod tests {
     fn test_linestringz_cs() {
         let geom = geos::Geometry::new_from_wkt("LINESTRING Z(1 2 3, 4 5 6)")
             .expect("Failed to create LINESTRING Z");
-        let coords = geom
-            .get_coord_seq()
-            .expect("Failed to get LINESTRING Z coord seq");
-        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::ThreeD));
-        assert_eq!(coords.size(), Ok(2));
+        let mut points = PointIterator::new(geom);
 
-        let mut coords = CoordSeqIterator::new(coords);
+        let point = points.next().expect("Failed to get first point");
+        assert_eq!(point.geometry_type(), geos::GeometryTypes::Point);
 
-        let coord = coords.next().expect("Failed to get first point");
-        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
-        let x = coord.get_x().expect("Failed to get X");
-        let y = coord.get_y().expect("Failed to get Y");
-        let z = coord.get_z().expect("Failed to get Z");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
 
         assert_eq!(x, 1.0);
         assert_eq!(y, 2.0);
         assert_eq!(z, 3.0);
 
-        let coord = coords.next().expect("Failed to get first point");
-        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
-        let x = coord.get_x().expect("Failed to get X");
-        let y = coord.get_y().expect("Failed to get Y");
-        let z = coord.get_z().expect("Failed to get Z");
+        let point = points.next().expect("Failed to get first point");
+        assert_eq!(point.geometry_type(), geos::GeometryTypes::Point);
+
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
 
         assert_eq!(x, 4.0);
         assert_eq!(y, 5.0);
@@ -195,27 +187,55 @@ mod tests {
             "POLYGON((0 0, 1 1, 2 2, 3 3, 4 4, 0 0), (0 0, 1 1, 2 2, 0 0))",
         )
         .expect("Failed to create POLYGON");
-        let exterior = geom
-            .get_exterior_ring()
-            .expect("Couldn't get exterior ring");
-        let coords = exterior
-            .get_coord_seq()
-            .expect("Couldn't get POLYGON coord seq");
+        let mut points = PointIterator::new(geom);
 
-        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::TwoD));
-        assert_eq!(coords.size(), Ok(6));
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
 
-        let num_holes = geom
-            .get_num_interior_rings()
-            .expect("Couldn't get num holes");
-        assert_eq!(num_holes, 1);
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 1.0);
+        assert_eq!(z, 0.0);
 
-        let hole = geom
-            .get_interior_ring_n(0)
-            .expect("Couldn't get first interior hole");
-        let coords = hole.get_coord_seq().expect("Couldn't get hole coord seq");
-        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::TwoD));
-        assert_eq!(coords.size(), Ok(4));
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 2.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 3.0);
+        assert_eq!(y, 3.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 4.0);
+        assert_eq!(y, 4.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
     }
 
     #[test]
