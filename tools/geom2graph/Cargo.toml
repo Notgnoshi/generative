@@ -9,7 +9,7 @@ description = "A CLI application to convert geometries into a graph data structu
 
 [dependencies]
 geo = "0.17"
-kd-tree = "0.2"
+kdtree = "0.6"
 log = "0.4"
 petgraph = "0.5"
 stderrlog = "0.5"
