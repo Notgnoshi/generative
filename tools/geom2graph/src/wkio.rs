@@ -95,9 +95,29 @@ mod tests {
         // to add IntoIter for the GAT version that implements its own Iterator trait.
         // So for now we can't use for loops. Oh well.
         let mut counter = 0;
-        while let Some(_geom) = geoms.next() {
+        while let Some(_) = geoms.next() {
             counter += 1;
         }
         assert_eq!(counter, 2);
+    }
+
+    #[test]
+    fn test_skip_invalid() {
+        // The first LINESTRING isn't on its own line, so it isn't parsed.
+        // ditto for the second POINT.
+        let wkt = "invalid wkt here\tLINESTRING(1 1, 0 0)\nPOINT(0 0)\nasdf POINT(1 1)  \t\n\t POINT(2 2)";
+        let mut geoms = WktDeserializer::from_str(wkt);
+        let mut counter = 0;
+        while let Some(_) = geoms.next() {
+            counter += 1;
+        }
+        assert_eq!(counter, 2);
+    }
+
+    #[test]
+    fn test_no_infinite_recursion() {
+        let wkt = "";
+        let mut geoms = WktDeserializer::from_str(wkt);
+        assert!(geoms.next() == None);
     }
 }
