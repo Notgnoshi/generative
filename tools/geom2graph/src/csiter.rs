@@ -20,7 +20,9 @@ impl<'c> CoordSeqIterator<'c> {
         // Will require recursion to create an iterator for GeometryCollections
         CoordSeqIterator {
             index: 0,
-            coords: geom.get_coord_seq().expect("Failed to create CoordSeq from Geometry"),
+            coords: geom
+                .get_coord_seq()
+                .expect("Failed to create CoordSeq from Geometry"),
         }
     }
 }
@@ -99,6 +101,28 @@ mod tests {
     }
 
     #[test]
+    fn test_pointz_cs() {
+        let geom =
+            geos::Geometry::new_from_wkt("Point Z (1 2 3)").expect("Failed to create POINT Z");
+        let coords = geom
+            .get_coord_seq()
+            .expect("Failed to get POINT Z coord seq");
+        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::ThreeD));
+        assert_eq!(coords.size(), Ok(1));
+        let mut coords = CoordSeqIterator::new(coords);
+        let coord = coords.next().expect("Failed to get the first point");
+        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
+
+        let x = coord.get_x().expect("Failed to get X");
+        let y = coord.get_y().expect("Failed to get Y");
+        let z = coord.get_z().expect("Failed to get Z");
+
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 3.0);
+    }
+
+    #[test]
     fn test_linestring_cs() {
         let geom = geos::Geometry::new_from_wkt("LINESTRING(1 2, 3 4)")
             .expect("Failed to create LINESTRING");
@@ -133,6 +157,39 @@ mod tests {
     }
 
     #[test]
+    fn test_linestringz_cs() {
+        let geom = geos::Geometry::new_from_wkt("LINESTRING Z(1 2 3, 4 5 6)")
+            .expect("Failed to create LINESTRING Z");
+        let coords = geom
+            .get_coord_seq()
+            .expect("Failed to get LINESTRING Z coord seq");
+        assert_eq!(coords.dimensions(), Ok(geos::CoordDimensions::ThreeD));
+        assert_eq!(coords.size(), Ok(2));
+
+        let mut coords = CoordSeqIterator::new(coords);
+
+        let coord = coords.next().expect("Failed to get first point");
+        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
+        let x = coord.get_x().expect("Failed to get X");
+        let y = coord.get_y().expect("Failed to get Y");
+        let z = coord.get_z().expect("Failed to get Z");
+
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 3.0);
+
+        let coord = coords.next().expect("Failed to get first point");
+        assert_eq!(coord.geometry_type(), geos::GeometryTypes::Point);
+        let x = coord.get_x().expect("Failed to get X");
+        let y = coord.get_y().expect("Failed to get Y");
+        let z = coord.get_z().expect("Failed to get Z");
+
+        assert_eq!(x, 4.0);
+        assert_eq!(y, 5.0);
+        assert_eq!(z, 6.0);
+    }
+
+    #[test]
     fn test_polygon_cs() {
         let geom = geos::Geometry::new_from_wkt(
             "POLYGON((0 0, 1 1, 2 2, 3 3, 4 4, 0 0), (0 0, 1 1, 2 2, 0 0))",
@@ -162,17 +219,32 @@ mod tests {
     }
 
     #[test]
-    fn test_linearring_cs() {}
+    #[ignore]
+    fn test_linearring_cs() {
+        assert!(false, "Not implemented");
+    }
 
     #[test]
-    fn test_multipoint_cs() {}
+    #[ignore]
+    fn test_multipoint_cs() {
+        assert!(false, "Not implemented");
+    }
 
     #[test]
-    fn test_multilinestring_cs() {}
+    #[ignore]
+    fn test_multilinestring_cs() {
+        assert!(false, "Not implemented");
+    }
 
     #[test]
-    fn test_multipolygon_cs() {}
+    #[ignore]
+    fn test_multipolygon_cs() {
+        assert!(false, "Not implemented");
+    }
 
     #[test]
-    fn test_geometrycollection_cs() {}
+    #[ignore]
+    fn test_geometrycollection_cs() {
+        assert!(false, "Not implemented");
+    }
 }
