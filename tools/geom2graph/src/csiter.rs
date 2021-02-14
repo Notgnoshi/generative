@@ -239,9 +239,42 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_linearring_cs() {
-        assert!(false, "Not implemented");
+        let geom = geos::Geometry::new_from_wkt("LINEARRING (0 0, 1 1, 2 2, 0 0)")
+            .expect("Failed to create LINEARRING");
+        let mut points = PointIterator::new(geom);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 1.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 2.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
     }
 
     #[test]
