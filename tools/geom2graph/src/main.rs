@@ -1,4 +1,4 @@
-use log::{debug, error, info, trace, warn};
+//use log::{debug, error, info, trace, warn};
 use std::io::Write;
 
 mod cmdline;

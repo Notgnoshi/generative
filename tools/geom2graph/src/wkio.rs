@@ -19,6 +19,7 @@ impl<R: Read> WktDeserializer<R> {
 // TODO: Figure out why the hell I have to specialize for &[u8]
 impl WktDeserializer<&[u8]> {
     /// Create a WktDeserializer from a &[u8]...
+    #[allow(dead_code)]
     fn from_str<'a>(s: &'a str) -> WktDeserializer<&[u8]> {
         // What the actual fuck. This is the most obscene, obtuse, and stupid syntax.
         // My first impression of Rust was that it's death by syntax, and so far that's held up...
