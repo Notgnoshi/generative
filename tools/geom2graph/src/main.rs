@@ -6,6 +6,7 @@ use std::io::Write;
 
 mod cmdline;
 mod wkio;
+mod csiter;
 
 use wkio::GatIterator; // :/
 
