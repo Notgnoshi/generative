@@ -1,4 +1,5 @@
 use log::{debug, warn};
+use std::convert::TryFrom;
 use std::io::{BufRead, BufReader, Read};
 use wkt::Wkt;
 
@@ -18,7 +19,7 @@ impl<R: Read> WktDeserializer<R> {
 // TODO: Figure out why the hell I have to specialize for &[u8]
 impl WktDeserializer<&[u8]> {
     /// Create a WktDeserializer from a &[u8]...
-    pub fn from_string<'a>(s: &'a str) -> WktDeserializer<&[u8]> {
+    fn from_str<'a>(s: &'a str) -> WktDeserializer<&[u8]> {
         // What the actual fuck. This is the most obscene, obtuse, and stupid syntax.
         // My first impression of Rust was that it's death by syntax, and so far that's held up...
         let reader = BufReader::new(s.as_bytes());
@@ -27,7 +28,7 @@ impl WktDeserializer<&[u8]> {
 }
 
 impl<R: Read> Iterator for WktDeserializer<R> {
-    type Item = Wkt<f64>;
+    type Item = geo::Geometry<f64>;
 
     /// Consume as many lines from the internal BufReader as necessary to spit out a new geometry.
     fn next(&mut self) -> Option<Self::Item> {
@@ -38,7 +39,10 @@ impl<R: Read> Iterator for WktDeserializer<R> {
                 let buf = buf.trim();
                 if let Ok(geom) = Wkt::<f64>::from_str(&buf) {
                     debug!("deserialized: '{:?}' from '{}'", geom, buf);
-                    return Some(geom);
+
+                    if let Ok(geom) = geo::Geometry::try_from(geom) {
+                        return Some(geom);
+                    }
                 } else {
                     warn!("Failed to deserialize '{}'", buf);
                     // Keep going until you succeed. This is necessary so that we keep going on bad
@@ -56,7 +60,7 @@ impl<R: Read> Iterator for WktDeserializer<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::convert::TryFrom;
+    use std::convert::TryInto;
 
     #[test]
     fn test_simple() {
@@ -66,36 +70,32 @@ mod tests {
         let reader = BufReader::new(input.as_bytes());
         let mut deserializer = WktDeserializer::new(reader);
 
-        let wkt_geom = deserializer.next().unwrap();
-        assert_eq!(wkt_geom.items.len(), 1);
+        let geom = deserializer.next().unwrap();
 
-        // TODO: How to convert to geo geometry type without knowing the type a priori?
-        let converted = geo::Point::try_from(wkt_geom).unwrap();
-        assert_eq!(converted, expected);
+        assert_eq!(expected, geom.try_into().unwrap());
 
         let wkt_geom = deserializer.next();
         assert!(wkt_geom.is_none());
     }
 
     #[test]
-    fn test_from_string() {
+    fn test_from_str() {
         let input = "POINT( 0 0 )";
+        let expected: geo::Point<f64> = (0.0, 0.0).into(); // The geo type
 
-        let mut deserializer = WktDeserializer::from_string(input);
+        let mut deserializer = WktDeserializer::from_str(input);
 
-        let wkt_geom = deserializer.next().unwrap();
-        assert_eq!(wkt_geom.items.len(), 1);
+        let geom = deserializer.next().unwrap();
+        assert_eq!(expected, geom.try_into().unwrap());
     }
 
     #[test]
     fn test_no_infinite_recursion() {
         let input = "Nothing valid to see here.";
+        let mut deserializer = WktDeserializer::from_str(input);
 
-        let reader = BufReader::new(input.as_bytes());
-        let mut deserializer = WktDeserializer::new(reader);
-
-        let wkt_geom = deserializer.next();
-        assert!(wkt_geom.is_none());
+        let geom = deserializer.next();
+        assert!(geom.is_none());
     }
 
     #[test]
@@ -104,22 +104,48 @@ mod tests {
         let expected1: geo::Point<f64> = (0.0, 0.0).into();
         let expected2: geo::Point<f64> = (1.0, 1.0).into();
 
-        let reader = BufReader::new(input.as_bytes());
-        let mut deserializer = WktDeserializer::new(reader);
+        let mut deserializer = WktDeserializer::from_str(input);
 
-        let wkt_geom = deserializer.next().unwrap();
-        assert_eq!(wkt_geom.items.len(), 1);
+        let geom = deserializer.next().unwrap();
+        assert_eq!(expected1, geom.try_into().unwrap());
 
-        let converted = geo::Point::try_from(wkt_geom).unwrap();
-        assert_eq!(converted, expected1);
+        let geom = deserializer.next().unwrap();
+        assert_eq!(expected2, geom.try_into().unwrap());
 
-        let wkt_geom = deserializer.next().unwrap();
-        assert_eq!(wkt_geom.items.len(), 1);
+        let geom = deserializer.next();
+        assert!(geom.is_none());
+    }
 
-        let converted = geo::Point::try_from(wkt_geom).unwrap();
-        assert_eq!(converted, expected2);
+    #[test]
+    fn test_match() {
+        let input = "POINT( 0 0 )\nLINESTRING(0 0, 1 1)";
+        let mut deserializer = WktDeserializer::from_str(input);
 
-        let wkt_geom = deserializer.next();
-        assert!(wkt_geom.is_none());
+        // Really just testing that it compiles.
+        let geom = deserializer.next().unwrap();
+        match geom {
+            geo::Geometry::Point(_) => {
+                assert!(true);
+            }
+            geo::Geometry::LineString(_) => {
+                assert!(false);
+            }
+            _ => {
+                assert!(false);
+            }
+        }
+
+        let geom = deserializer.next().unwrap();
+        match geom {
+            geo::Geometry::Point(_) => {
+                assert!(false);
+            }
+            geo::Geometry::LineString(_) => {
+                assert!(true);
+            }
+            _ => {
+                assert!(false);
+            }
+        }
     }
 }
