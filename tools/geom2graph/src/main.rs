@@ -2,31 +2,9 @@ use log::{debug, error, info, trace, warn};
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
-use structopt::StructOpt;
 use wkt::Wkt;
 
-#[derive(Debug, StructOpt)]
-#[structopt(
-    name = "geom2graph",
-    about = "A CLI application to convert geometries into a graph data structure."
-)]
-struct CmdLineOptions {
-    /// Silence all logging.
-    #[structopt(short, long)]
-    quiet: bool,
-
-    /// Increase output verbosity.
-    #[structopt(short, long, parse(from_occurrences))]
-    verbose: usize,
-
-    /// Input file to read from. Defaults to stdin.
-    #[structopt(short, long, parse(from_os_str))]
-    input: Option<PathBuf>,
-
-    /// Output file to write to. Defaults to stdout.
-    #[structopt(short, long, parse(from_os_str))]
-    output: Option<PathBuf>,
-}
+mod cmdline;
 
 /// Get a BufWriter for the given path or stdout.
 fn get_writer(output: Option<PathBuf>) -> BufWriter<Box<dyn Write>> {
@@ -96,7 +74,7 @@ impl<R: Read> Iterator for WktDeserializer<R> {
 }
 
 fn main() {
-    let args = CmdLineOptions::from_args();
+    let args = cmdline::Options::from_args();
     stderrlog::new()
         .module(module_path!())
         .quiet(args.quiet)
