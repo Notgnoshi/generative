@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 use structopt::StructOpt;
+use wkt::Wkt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(
@@ -61,6 +62,39 @@ fn get_reader(input: Option<PathBuf>) -> BufReader<Box<dyn Read>> {
     }
 }
 
+#[derive(Debug)]
+struct WktDeserializer<R: Read> {
+    reader: BufReader<R>,
+}
+
+impl<R: Read> WktDeserializer<R> {
+    fn new(reader: BufReader<R>) -> WktDeserializer<R> {
+        WktDeserializer { reader }
+    }
+}
+
+impl<R: Read> Iterator for WktDeserializer<R> {
+    type Item = Wkt<f64>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut buf = String::new();
+        // We were able to read a line.
+        if let Ok(_bytes) = self.reader.read_line(&mut buf) {
+            trace!("Read: {}", buf);
+
+            if let Ok(geom) = Wkt::<f64>::from_str(&buf) {
+                return Some(geom);
+            } else {
+                warn!("Failed to parse '{}' as WKT", buf);
+                // Don't return an error, because we want to keep reading geometries.
+                return None;
+            }
+        } else {
+            return None;
+        }
+    }
+}
+
 fn main() {
     let args = CmdLineOptions::from_args();
     stderrlog::new()
@@ -72,13 +106,12 @@ fn main() {
 
     let mut writer = get_writer(args.output);
     let reader = get_reader(args.input);
+    let deserializer = WktDeserializer::new(reader);
 
     writeln!(&mut writer, "sample output").expect("Couldn't write?!");
     writer.flush().unwrap();
 
-    for line in reader.lines() {
-        if let Ok(geom) = line {
-            trace!("Read: {}", geom);
-        }
+    for geom in deserializer {
+        info!("deserialized: {:?}", geom);
     }
 }
