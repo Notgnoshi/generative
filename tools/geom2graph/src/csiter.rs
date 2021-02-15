@@ -23,6 +23,9 @@ impl<'c> PointIterator<'c> {
 
     /// Create a PointIterator from a geos::Geometry.
     /// TODO: Handle multi-geometries and geometry collections.
+    /// TODO: While it might be nice for the PointIterator to support multi types, it doesn't help
+    /// for the particular problem I'm trying to solve. I _do_ need to be able to _flatten_
+    /// geometries though.
     /// TODO: Think about the return type.
     /// NOTE: geos::Geometry::get_coord_seq() clones the underlying CoordSeq because of memory
     /// management :/
@@ -280,24 +283,217 @@ mod tests {
     #[test]
     #[ignore]
     fn test_multipoint_cs() {
-        assert!(false, "Not implemented");
+        let geom = geos::Geometry::new_from_wkt("MULTIPOINT((0 0), (1 1))")
+            .expect("Failed to create MULTIPOINT");
+        let mut points = PointIterator::new(geom);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 1.0);
+        assert_eq!(z, 0.0);
     }
 
     #[test]
     #[ignore]
     fn test_multilinestring_cs() {
-        assert!(false, "Not implemented");
+        let geom =
+            geos::Geometry::new_from_wkt("MULTILINESTRING((0 0, 1 1, 2 2), (3 3, 4 4, 5 5))")
+                .expect("Failed to create MULTILINESTRING");
+        let mut points = PointIterator::new(geom);
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 1.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 2.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 3.0);
+        assert_eq!(y, 3.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 4.0);
+        assert_eq!(y, 4.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 5.0);
+        assert_eq!(y, 5.0);
+        assert_eq!(z, 0.0);
     }
 
     #[test]
     #[ignore]
     fn test_multipolygon_cs() {
-        assert!(false, "Not implemented");
+        let geom = geos::Geometry::new_from_wkt(
+            "MULTIPOLYGON(((0 0, 1 1, 2 2, 0 0)), ((2 2, 3 3, 4 4, 2 2), (0 0, 1 1, 2 2, 0 0)))",
+        )
+        .expect("Failed to create MULTIPOLYGON");
+        let mut points = PointIterator::new(geom);
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 1.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 2.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 2.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 3.0);
+        assert_eq!(y, 3.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 4.0);
+        assert_eq!(y, 4.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 2.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next();
+        assert!(
+            point == None,
+            "Expected that we don't iterate over the second polygon's hole points"
+        );
     }
 
     #[test]
     #[ignore]
     fn test_geometrycollection_cs() {
-        assert!(false, "Not implemented");
+        let geom = geos::Geometry::new_from_wkt(
+            "GEOMETRYCOLLECTION(POINT(0 0), LINESTRING(0 0, 1 1, 2 2), MULTIPOINT((0 0), (1 1)))",
+        )
+        .expect("Failed to create GEOMETRYCOLLECTION");
+        let mut points = PointIterator::new(geom);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 1.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 2.0);
+        assert_eq!(y, 2.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 0.0);
+        assert_eq!(y, 0.0);
+        assert_eq!(z, 0.0);
+
+        let point = points.next().expect("Failed to get first point");
+        let x = point.get_x().expect("Failed to get X");
+        let y = point.get_y().expect("Failed to get Y");
+        let z = point.get_z().expect("Failed to get Z");
+        assert_eq!(x, 1.0);
+        assert_eq!(y, 1.0);
+        assert_eq!(z, 0.0);
     }
 }
