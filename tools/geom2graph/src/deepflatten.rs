@@ -1,4 +1,4 @@
-trait DeepFlattenIteratorOf<Depth, T> {
+pub trait DeepFlattenIteratorOf<Depth, T> {
     type DeepFlatten: Iterator<Item = T>;
     fn deep_flatten(this: Self) -> Self::DeepFlatten;
 }
@@ -23,7 +23,7 @@ where
 }
 
 // wrapper type to help out type inference
-struct DeepFlatten<Depth, I, T>
+pub struct DeepFlatten<Depth, I, T>
 where
     I: DeepFlattenIteratorOf<Depth, T>,
 {
@@ -32,7 +32,7 @@ where
 
 /// Recursively flattens an iterator
 /// Shamelessly taken from https://users.rust-lang.org/t/trying-to-make-a-recursive-flatten-function/50059
-trait DeepFlattenExt: Iterator + Sized {
+pub trait DeepFlattenExt: Iterator + Sized {
     fn deep_flatten<Depth, T>(self) -> DeepFlatten<Depth, Self, T>
     where
         Self: DeepFlattenIteratorOf<Depth, T>,
