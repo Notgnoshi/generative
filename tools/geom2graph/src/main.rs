@@ -5,8 +5,9 @@ use kdtree::KdTree;
 use std::io::Write;
 
 mod cmdline;
-mod wkio;
 mod csiter;
+mod geomflattener;
+mod wkio;
 
 use wkio::GatIterator; // :/
 

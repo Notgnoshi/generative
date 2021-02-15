@@ -49,7 +49,7 @@ impl<'c> Iterator for PointIterator<'c> {
 
     /// Get the next point from the Geometry.
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.coords.size().unwrap() {
+        if self.index >= self.coords.size().unwrap_or(0) {
             return None; // Indicate the end of the sequence.
         }
 
