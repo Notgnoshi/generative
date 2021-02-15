@@ -7,6 +7,7 @@ use std::io::Write;
 mod cmdline;
 mod csiter;
 mod geomflattener;
+mod deepflatten;
 mod wkio;
 
 use wkio::GatIterator; // :/
