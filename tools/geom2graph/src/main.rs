@@ -1,5 +1,3 @@
-#![feature(generic_associated_types)]
-
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use std::io::Write;
@@ -10,7 +8,6 @@ mod geomflattener;
 mod deepflatten;
 mod wkio;
 
-use wkio::GatIterator; // :/
 
 fn main() {
     let args = cmdline::Options::from_args();

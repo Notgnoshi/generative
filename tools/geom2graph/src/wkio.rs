@@ -1,33 +1,28 @@
 use log::warn;
 use std::io::{BufRead, BufReader, Read};
+use std::marker::PhantomData;
 
 /// Take WKT line-by-line and stream geos::Geometries
 #[derive(Debug)]
-pub struct WktDeserializer<R: Read> {
+pub struct WktDeserializer<'geom, R: Read> {
     reader: BufReader<R>,
+    phantom: PhantomData<&'geom ()>,
 }
 
-impl<R: Read> WktDeserializer<R> {
+impl<'geom, R: Read> WktDeserializer<'geom, R> {
     /// Create a new WktDeserializer from a BufReader
-    pub fn from_reader(reader: BufReader<R>) -> WktDeserializer<R> {
-        WktDeserializer { reader }
+    pub fn from_reader(reader: BufReader<R>) -> WktDeserializer<'geom, R> {
+        WktDeserializer {
+            reader,
+            phantom: PhantomData,
+        }
     }
 }
 
-// Need to use generic associated types (an unstable feature) to implement iterators where the
-// items yielded have a lifetime apart from that of the iterator.
-// See https://lukaskalbertodt.github.io/2018/08/03/solving-the-generalized-streaming-iterator-problem-without-gats.html
-// TODO: This still doesn't play well with IntoIter.
-pub trait GatIterator {
-    type Item<'s>;
-    fn next(&mut self) -> Option<Self::Item<'_>>;
-}
+impl<'geom, R: Read> Iterator for WktDeserializer<'geom, R> {
+    type Item = geos::Geometry<'geom>;
 
-impl<R: Read> GatIterator for WktDeserializer<R> {
-    type Item<'g> = geos::Geometry<'g>;
-
-    /// Get the next valid geos::Geometry from the input stream
-    fn next(&mut self) -> Option<Self::Item<'_>> {
+    fn next(&mut self) -> Option<Self::Item> {
         let mut buffer = String::new();
         if let Ok(_) = self.reader.read_line(&mut buffer) {
             let buffer = buffer.trim();
@@ -50,10 +45,11 @@ mod tests {
     use geos::Geom;
 
     // Just for the tests.
-    impl WktDeserializer<&[u8]> {
+    impl<'geom> WktDeserializer<'geom, &[u8]> {
         pub fn from_str(s: &str) -> WktDeserializer<&[u8]> {
             WktDeserializer {
                 reader: BufReader::new(s.as_bytes()),
+                phantom: PhantomData,
             }
         }
     }
