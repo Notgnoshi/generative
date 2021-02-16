@@ -1,4 +1,5 @@
-*.swp
+# Ignore all vim .sw* files, not just .swp
+.*.sw*
 .vscode/
 
 # Byte-compiled / optimized / DLL files
