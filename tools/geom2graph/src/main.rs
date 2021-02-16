@@ -1,13 +1,16 @@
+use geos::Geom;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
+use log::trace;
 use std::io::Write;
 
 mod cmdline;
 mod csiter;
-mod geomflattener;
 mod deepflatten;
+mod geomflattener;
 mod wkio;
 
+use crate::deepflatten::DeepFlattenExt;
 
 fn main() {
     let args = cmdline::Options::from_args();
@@ -19,7 +22,8 @@ fn main() {
         .unwrap();
 
     let mut writer = args.get_output_writer();
-    let mut geoms = wkio::WktDeserializer::from_reader(args.get_input_reader());
+    let geometries = wkio::WktDeserializer::from_reader(args.get_input_reader());
+    let geometries = geometries.deep_flatten();
 
     writeln!(&mut writer, "sample output").expect("Couldn't write?!");
     writer.flush().unwrap();
@@ -35,13 +39,20 @@ fn main() {
     let query = [0.1, 0.1, 0.2];
     let _result = tree.within(&query, 0.1, &squared_euclidean).unwrap();
 
-    // TODO: The geo::Geometry types are 2D only, so go back to using wkt::Geometry
-    while let Some(_geom) = geoms.next() {
-        // for prev, current in pairwise_points(geom) (implicitly convert to 3D, some edge cases
-        // for closed geometries) TODO: How to handle GeometryCollections?
-        //      lookup point in tree
-        //      insert point in tree if it doesn't exist
-        //      add point to graph
-        //      mark current point as adjacent to previous.
+    for geometry in geometries {
+        let geometries = geomflattener::GeometryIterator::new(&geometry);
+        for geometry in geometries {
+            let points = csiter::PointIterator::new_from_const_geom(geometry);
+            for point in points {
+                let wkt = point.to_wkt().unwrap();
+                trace!("point: {}", wkt);
+                // for prev, current in pairwise_points(geom) (implicitly convert to 3D, some edge cases
+                // for closed geometries) TODO: How to handle GeometryCollections?
+                //      lookup point in tree
+                //      insert point in tree if it doesn't exist
+                //      add point to graph
+                //      mark current point as adjacent to previous.
+            }
+        }
     }
 }

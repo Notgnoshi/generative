@@ -29,7 +29,7 @@ impl<'c> PointIterator<'c> {
     /// TODO: Think about the return type.
     /// NOTE: geos::Geometry::get_coord_seq() clones the underlying CoordSeq because of memory
     /// management :/
-    fn new(geom: geos::Geometry) -> PointIterator {
+    pub fn new(geom: geos::Geometry) -> PointIterator {
         let coordinate_sequence = match geom.geometry_type() {
             geos::GeometryTypes::Polygon => {
                 let exterior = geom
@@ -38,6 +38,22 @@ impl<'c> PointIterator<'c> {
                 exterior.get_coord_seq()
             }
             _ => geom.get_coord_seq(),
+        };
+
+        // TODO: Make this (and below) not crash if you pass it something other than a
+        // POINT, LINESTRING, or LINEARRING.
+        return PointIterator::new_from_cs(coordinate_sequence.unwrap());
+    }
+
+    pub fn new_from_const_geom(geometry: geos::ConstGeometry<'c, '_>) -> PointIterator<'c> {
+        let coordinate_sequence = match geometry.geometry_type() {
+            geos::GeometryTypes::Polygon => {
+                let exterior = geometry
+                    .get_exterior_ring()
+                    .expect("Couldn't get POLYGON exterior ring");
+                exterior.get_coord_seq()
+            }
+            _ => geometry.get_coord_seq(),
         };
 
         return PointIterator::new_from_cs(coordinate_sequence.unwrap());

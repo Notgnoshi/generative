@@ -10,7 +10,7 @@ pub struct GeometryIterator<'subgeom, 'geom> {
 }
 
 impl<'subgeom, 'geom> GeometryIterator<'subgeom, 'geom> {
-    fn new(geometry: &'geom geos::Geometry<'subgeom>) -> GeometryIterator<'subgeom, 'geom> {
+    pub fn new(geometry: &'geom geos::Geometry<'subgeom>) -> GeometryIterator<'subgeom, 'geom> {
         GeometryIterator {
             index: 0,
             geometry: GeometryWrapper { 0: geometry },
