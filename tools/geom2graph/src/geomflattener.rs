@@ -1,4 +1,5 @@
 use geos::Geom;
+use log::trace;
 
 // You have to wrap Geometry in order to implement a trait you don't own on a type you don't own.
 // TODO: How can I hide the fact that this wrapper exists?
@@ -11,6 +12,7 @@ pub struct GeometryIterator<'subgeom, 'geom> {
 
 impl<'subgeom, 'geom> GeometryIterator<'subgeom, 'geom> {
     pub fn new(geometry: &'geom geos::Geometry<'subgeom>) -> GeometryIterator<'subgeom, 'geom> {
+        trace!("GeometryIterator::new()");
         GeometryIterator {
             index: 0,
             geometry: GeometryWrapper { 0: geometry },
@@ -25,8 +27,10 @@ impl<'subgeom, 'geom> Iterator for GeometryIterator<'subgeom, 'geom> {
     // TODO: What to do when the geom is a GeometryCollection containing another multi geometry?
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= self.geometry.0.get_num_geometries().unwrap_or(0) {
+            trace!("GeometryIterator::next(end)");
             return None;
         }
+        trace!("GeometryIterator::next({})", self.index);
         let curr = self
             .geometry
             .0
@@ -42,6 +46,7 @@ impl<'subgeom, 'geom> IntoIterator for GeometryWrapper<'subgeom, 'geom> {
     type IntoIter = GeometryIterator<'subgeom, 'geom>;
 
     fn into_iter(self) -> Self::IntoIter {
+        trace!("GeometryWrapper::into_iter()");
         GeometryIterator::new(self.0)
     }
 }

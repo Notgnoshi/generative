@@ -1,4 +1,5 @@
 use geos::Geom;
+use log::trace;
 
 /// An iterator over the points of a geos::Geometry.
 pub struct PointIterator<'c> {
@@ -26,6 +27,7 @@ impl<'c> PointIterator<'c> {
     /// NOTE: geos::Geometry::get_coord_seq() clones the underlying CoordSeq because of memory
     /// management :/
     pub fn new(geom: geos::Geometry) -> PointIterator {
+        trace!("PointIterator::new()");
         let coordinate_sequence = match geom.geometry_type() {
             geos::GeometryTypes::Polygon => {
                 let exterior = geom
@@ -47,6 +49,7 @@ impl<'c> PointIterator<'c> {
     }
 
     pub fn new_from_const_geom(geometry: geos::ConstGeometry<'c, '_>) -> PointIterator<'c> {
+        trace!("PointIterator::new_from_const_geom()");
         let coordinate_sequence = match geometry.geometry_type() {
             geos::GeometryTypes::Polygon => {
                 let exterior = geometry
@@ -74,6 +77,7 @@ impl<'c> Iterator for PointIterator<'c> {
     /// Get the next point from the Geometry.
     fn next(&mut self) -> Option<Self::Item> {
         if self.index >= self.coords.size().unwrap_or(0) {
+            trace!("PointIterator::next(end)");
             return None; // Indicate the end of the sequence.
         }
 
@@ -94,6 +98,8 @@ impl<'c> Iterator for PointIterator<'c> {
         cs.set_x(0, x).expect("Failed to set X");
         cs.set_y(0, y).expect("Failed to set Y");
         cs.set_z(0, z).expect("Failed to set Z");
+
+        trace!("PointIterator::next({})", self.index);
 
         // Finally, we can create a new Point from the CoordSequence...
         return Some(geos::Geometry::create_point(cs).expect("Failed to create point"));

@@ -1,7 +1,7 @@
 use geos::Geom;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use log::trace;
+use log::debug;
 use std::io::Write;
 
 mod cmdline;
@@ -40,13 +40,20 @@ fn main() {
     let _result = tree.within(&query, 0.1, &squared_euclidean).unwrap();
 
     for geometry in geometries {
+        debug!("Processing geometry: {:?}", geometry.geometry_type());
         let geometries = geomflattener::GeometryIterator::new(&geometry);
         for geometry in geometries {
+            debug!(
+                "  Processing flattened geometry: {:?}",
+                geometry.geometry_type()
+            );
             // TODO: Ignore multi-geometries because we can't create a PointIterator from them.
             let points = csiter::PointIterator::new_from_const_geom(geometry);
             for point in points {
-                let wkt = point.to_wkt().unwrap();
-                trace!("point: {}", wkt);
+                debug!(
+                    "    Processing point: {}",
+                    point.to_wkt().unwrap_or(String::new())
+                );
                 // for prev, current in pairwise_points(geom) (implicitly convert to 3D, some edge cases
                 // for closed geometries) TODO: How to handle GeometryCollections?
                 //      lookup point in tree

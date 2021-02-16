@@ -1,4 +1,4 @@
-use log::warn;
+use log::{trace, warn};
 use std::io::{BufRead, BufReader, Read};
 use std::marker::PhantomData;
 
@@ -23,6 +23,7 @@ impl<'geom, R: Read> Iterator for WktDeserializer<'geom, R> {
     type Item = geos::Geometry<'geom>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        trace!("WktDeserializer::next()");
         let mut buffer = String::new();
         if let Ok(_) = self.reader.read_line(&mut buffer) {
             let buffer = buffer.trim();
