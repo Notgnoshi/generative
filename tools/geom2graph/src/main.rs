@@ -42,6 +42,7 @@ fn main() {
     for geometry in geometries {
         let geometries = geomflattener::GeometryIterator::new(&geometry);
         for geometry in geometries {
+            // TODO: Ignore multi-geometries because we can't create a PointIterator from them.
             let points = csiter::PointIterator::new_from_const_geom(geometry);
             for point in points {
                 let wkt = point.to_wkt().unwrap();

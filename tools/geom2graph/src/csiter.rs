@@ -23,10 +23,6 @@ impl<'c> PointIterator<'c> {
 
     /// Create a PointIterator from a geos::Geometry.
     /// TODO: Handle multi-geometries and geometry collections.
-    /// TODO: While it might be nice for the PointIterator to support multi types, it doesn't help
-    /// for the particular problem I'm trying to solve. I _do_ need to be able to _flatten_
-    /// geometries though.
-    /// TODO: Think about the return type.
     /// NOTE: geos::Geometry::get_coord_seq() clones the underlying CoordSeq because of memory
     /// management :/
     pub fn new(geom: geos::Geometry) -> PointIterator {
@@ -40,9 +36,14 @@ impl<'c> PointIterator<'c> {
             _ => geom.get_coord_seq(),
         };
 
-        // TODO: Make this (and below) not crash if you pass it something other than a
-        // POINT, LINESTRING, or LINEARRING.
-        return PointIterator::new_from_cs(coordinate_sequence.unwrap());
+        // Instead of crashing on an unsupported geometry type (something that's not a POINT,
+        // LINESTRING, or LINEARRING), create an empty PointIterator
+        match coordinate_sequence {
+            Ok(_) => PointIterator::new_from_cs(coordinate_sequence.unwrap()),
+            _ => PointIterator::new_from_cs(
+                geos::CoordSeq::new(0, geos::CoordDimensions::ThreeD).unwrap(),
+            ),
+        }
     }
 
     pub fn new_from_const_geom(geometry: geos::ConstGeometry<'c, '_>) -> PointIterator<'c> {
@@ -56,7 +57,14 @@ impl<'c> PointIterator<'c> {
             _ => geometry.get_coord_seq(),
         };
 
-        return PointIterator::new_from_cs(coordinate_sequence.unwrap());
+        // Instead of crashing on an unsupported geometry type (something that's not a POINT,
+        // LINESTRING, or LINEARRING), create an empty PointIterator
+        match coordinate_sequence {
+            Ok(_) => PointIterator::new_from_cs(coordinate_sequence.unwrap()),
+            _ => PointIterator::new_from_cs(
+                geos::CoordSeq::new(0, geos::CoordDimensions::ThreeD).unwrap(),
+            ),
+        }
     }
 }
 
