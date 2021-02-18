@@ -2,3 +2,7 @@
 	path = tools/geom2graph/depends/googletest
 	url = https://github.com/google/googletest.git
 	branch = master
+[submodule "tools/geom2graph/depends/geos"]
+	path = tools/geom2graph/depends/geos
+	url = https://github.com/libgeos/geos.git
+	branch = 3.9
