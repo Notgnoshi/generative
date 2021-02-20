@@ -6,3 +6,7 @@
 	path = tools/geom2graph/depends/geos
 	url = https://github.com/libgeos/geos.git
 	branch = 3.9
+[submodule "tools/geom2graph/depends/cxxopts"]
+	path = tools/geom2graph/depends/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+	branch = master
