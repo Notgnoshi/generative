@@ -1,0 +1,32 @@
+---
+Checks: >
+    bugprone-*,
+    clang-analyzer-*,
+    cppcoreguidelines-*,
+    modernize-*,
+    performance-*,
+    readability-*,
+    -modernize-use-trailing-return-type,
+CheckOptions:
+    - {key: readability-identifier-naming.NamespaceCase,           value: lower_case}
+    - {key: readability-identifier-naming.ClassCase,               value: CamelCase}
+    - {key: readability-identifier-naming.StructCase,              value: CamelCase}
+    - {key: readability-identifier-naming.EnumCase,                value: CamelCase}
+    - {key: readability-identifier-naming.EnumConstantCase,        value: UPPER_CASE}
+    - {key: readability-identifier-naming.ScopedEnumConstantCase,  value: UPPER_CASE}
+    - {key: readability-identifier-naming.StaticConstantCase,      value: UPPER_CASE}
+    - {key: readability-identifier-naming.GlobalConstantCase,      value: UPPER_CASE}
+    - {key: readability-identifier-naming.ConstexprConstantCase,   value: lower_case}
+    - {key: readability-identifier-naming.LocalConstantCase,       value: lower_case}
+    - {key: readability-identifier-naming.ConstantMemberCase,      value: lower_case}
+    - {key: readability-identifier-naming.MemberPrefix,            value: m_}
+    # Setting these prefixes doesn't appear to override MemberPrefix, even though they're more specific.
+    - {key: readability-identifier-naming.PublicMemberPrefix,      value: ''}
+    - {key: readability-identifier-naming.ConstantMemberPrefix,    value: ''}
+    - {key: readability-identifier-naming.MacroDefinitionCase,     value: UPPER_CASE}
+    - {key: readability-identifier-naming.MacroDefinitionPrefix,   value: GEOM2GRAPH_}
+    - {key: readability-identifier-naming.VariableCase,            value: lower_case}
+    - {key: readability-identifier-naming.FunctionCase,            value: lower_case}
+    - {key: readability-identifier-naming.TemplateParameterCase,   value: CamelCase}
+    - {key: readability-identifier-naming.TemplateParameterSuffix, value: _t}
+...
