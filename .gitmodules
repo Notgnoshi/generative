@@ -10,3 +10,7 @@
 	path = tools/geom2graph/depends/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
 	branch = master
+[submodule "tools/geom2graph/depends/log4cplus"]
+	path = tools/geom2graph/depends/log4cplus
+	url = https://github.com/log4cplus/log4cplus.git
+	branch = master
