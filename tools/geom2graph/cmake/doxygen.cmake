@@ -1,0 +1,12 @@
+function(enable_doxygen)
+    option(ENABLE_DOXYGEN "Enable doxygen doc builds of source" ON)
+  if(ENABLE_DOXYGEN)
+    set(DOXYGEN_CALLER_GRAPH YES)
+    set(DOXYGEN_CALL_GRAPH YES)
+    set(DOXYGEN_EXTRACT_ALL YES)
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/README.md")
+    find_package(Doxygen REQUIRED dot)
+    doxygen_add_docs(docs ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/README.md)
+
+  endif()
+endfunction()
