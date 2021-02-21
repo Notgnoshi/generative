@@ -1,8 +1,9 @@
-file(GLOB_RECURSE lib_sources CONFIGURE_DEPENDS "*.cpp")
-list(REMOVE_ITEM lib_sources ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+file(GLOB_RECURSE lib_sources CONFIGURE_DEPENDS "geom2graph/*.cpp")
+file(GLOB app_sources CONFIGURE_DEPENDS "*.cpp")
+# list(REMOVE_ITEM lib_sources ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 
 # TODO: Figure out why it takes so damn long to link the existing (and very simple) executable.
-add_executable(geom2graph main.cpp)
+add_executable(geom2graph ${app_sources})
 add_library(geom2graph_lib OBJECT ${lib_sources})
 
 # Enable LTO
