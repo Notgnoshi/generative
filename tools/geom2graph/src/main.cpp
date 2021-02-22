@@ -1,4 +1,6 @@
 #include "cmdline.h"
+#include "geom2graph/geometry-flattener.h"
+#include "geom2graph/wkt-reader.h"
 
 #include <log4cplus/consoleappender.h>
 #include <log4cplus/initializer.h>
@@ -17,13 +19,15 @@ int main(int argc, const char* argv[])
     s_logger.addAppender(appender);
 
     const CmdlineArgs args = CmdlineArgs::parse_args(argc, argv);
+    auto geometries = geom2graph::WKTReader(args.input);
 
-    // Read the geometries.
-    std::string line;
-    while (std::getline(args.input, line))
+    for (const auto& geometry : geometries)
     {
-        // A pretty dumb program so far, but it demonstrates that IO works.
-        args.output << line << "\n";
+        LOG4CPLUS_DEBUG(s_logger, "Flattening " << geometry->toString());
+        for (const auto& flat_geometry : geom2graph::GeometryFlattener(*geometry))
+        {
+            args.output << flat_geometry.toString() << "\n";
+        }
     }
 
     return 0;
