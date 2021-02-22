@@ -8,7 +8,7 @@
 
 #include <gtest/gtest.h>
 
-std::unique_ptr<geos::geom::Geometry> from_wkt(const std::string& wkt)
+static std::unique_ptr<geos::geom::Geometry> from_wkt(const std::string& wkt)
 {
     // This creates a new GeometryFactory for every geometry.
     geos::io::WKTReader reader;
