@@ -26,14 +26,15 @@ WKTReader::GeometryIterator& WKTReader::GeometryIterator::operator++()
 {
     if (m_is_past_end)
     {
-        LOG4CPLUS_TRACE(s_logger, "Advancing GeometryIterator past the end.");
+        // LOG4CPLUS_TRACE(s_logger, "Advancing GeometryIterator past the end.");
         return *this;
     }
 
     if (m_is_at_end && !m_is_past_end)
     {
-        LOG4CPLUS_TRACE(s_logger, "Advancing GeometryIterator to the end.");
+        // LOG4CPLUS_TRACE(s_logger, "Advancing GeometryIterator to the end.");
         m_is_past_end = true;
+        return *this;
     }
 
     std::string line;
@@ -41,22 +42,22 @@ WKTReader::GeometryIterator& WKTReader::GeometryIterator::operator++()
     do
     {
         std::getline(m_input_stream, line);
-        LOG4CPLUS_TRACE(s_logger, "Reading '" << line << "' from stream");
+        // LOG4CPLUS_TRACE(s_logger, "Reading '" << line << "' from stream");
         m_is_at_end = m_input_stream.eof();
-        if (!line.empty())
+        try
         {
-            try
+            m_current_value = m_wkt_reader.read(line);
+            got_valid_geometry = true;
+            LOG4CPLUS_DEBUG(s_logger, "Read geometry '" << m_current_value->toString() << "'");
+        } catch (const geos::io::ParseException& e)
+        {
+            LOG4CPLUS_WARN(s_logger, "Failed to parse '" << line << "' as valid WKT geometry");
+            // Need to handle the case that this was the last line in the stream. >:(
+            if (m_is_at_end)
             {
-                m_current_value = m_wkt_reader.read(line);
-                got_valid_geometry = true;
-                LOG4CPLUS_DEBUG(s_logger, "Read geometry '" << m_current_value->toString() << "'");
-            }
-            catch (const geos::io::ParseException& e)
-            {
-                LOG4CPLUS_WARN(s_logger, "Failed to parse '" << line << "' as valid WKT geometry");
+                m_is_past_end = true;
             }
         }
-
     } while (!got_valid_geometry && !m_is_at_end);
 
     return *this;
@@ -64,7 +65,9 @@ WKTReader::GeometryIterator& WKTReader::GeometryIterator::operator++()
 
 bool WKTReader::GeometryIterator::operator==(const GeometryIterator& rhs) const
 {
-    return this->m_is_past_end == rhs.m_is_past_end;
+    // Because the wrapped data is ephemeral, iterators are equal unless we happen to know for sure
+    // that they're not.
+    return this->m_is_past_end == rhs.m_is_past_end && this->m_is_at_end == rhs.m_is_at_end;
 }
 
 bool WKTReader::GeometryIterator::operator!=(const GeometryIterator& rhs) const
