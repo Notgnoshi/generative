@@ -1,6 +1,6 @@
 #include "cmdline.h"
 #include "geom2graph/geometry-flattener.h"
-#include "geom2graph/wkt-reader.h"
+#include "geom2graph/io/wkt-stream-reader.h"
 
 #include <log4cplus/consoleappender.h>
 #include <log4cplus/initializer.h>
@@ -19,7 +19,7 @@ int main(int argc, const char* argv[])
     s_logger.addAppender(appender);
 
     const CmdlineArgs args = CmdlineArgs::parse_args(argc, argv);
-    auto geometries = geom2graph::WKTReader(args.input);
+    auto geometries = geom2graph::io::WKTStreamReader(args.input);
 
     for (const auto& geometry : geometries)
     {
