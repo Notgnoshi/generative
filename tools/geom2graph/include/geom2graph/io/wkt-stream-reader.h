@@ -6,12 +6,12 @@
 #include <iterator>
 #include <memory>
 
-namespace geom2graph {
+namespace geom2graph::io {
 
 //! @brief Deserialize geometries from a WKT input stream.
 //! @details Wraps a std::istream providing WKT geometries, one per line, and provides an iterator
 //! interface to consume the istream, and yield one geometry after another.
-class WKTReader
+class WKTStreamReader
 {
     struct GeometryIterator :
         public std::iterator<std::input_iterator_tag, std::unique_ptr<geos::geom::Geometry>>
@@ -35,7 +35,7 @@ class WKTReader
 
 public:
     using iterator = GeometryIterator;
-    WKTReader(std::istream& input_stream) : m_input(input_stream) {}
+    WKTStreamReader(std::istream& input_stream) : m_input(input_stream) {}
 
     [[nodiscard]] iterator begin() const { return iterator(m_input); }
     [[nodiscard]] iterator end() const { return iterator(m_input, true); }
@@ -43,4 +43,4 @@ public:
 private:
     std::istream& m_input;
 };
-}  // namespace geom2graph
+}  // namespace geom2graph::io

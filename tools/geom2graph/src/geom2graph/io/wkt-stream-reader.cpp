@@ -1,13 +1,13 @@
-#include "geom2graph/wkt-reader.h"
+#include "geom2graph/io/wkt-stream-reader.h"
 
 #include <geos/io/ParseException.h>
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
 
-static log4cplus::Logger s_logger = log4cplus::Logger::getInstance("geom2graph.wktreader");
+static log4cplus::Logger s_logger = log4cplus::Logger::getInstance("geom2graph.io.wkt");
 
-namespace geom2graph {
-WKTReader::GeometryIterator::GeometryIterator(std::istream& input_stream, bool is_done) :
+namespace geom2graph::io {
+WKTStreamReader::GeometryIterator::GeometryIterator(std::istream& input_stream, bool is_done) :
     m_is_at_end(is_done), m_is_past_end(is_done), m_input_stream(input_stream)
 {
     // Need to prime the pump, so to speak.
@@ -22,7 +22,7 @@ WKTReader::GeometryIterator::GeometryIterator(std::istream& input_stream, bool i
     }
 }
 
-WKTReader::GeometryIterator& WKTReader::GeometryIterator::operator++()
+WKTStreamReader::GeometryIterator& WKTStreamReader::GeometryIterator::operator++()
 {
     if (m_is_past_end)
     {
@@ -63,15 +63,15 @@ WKTReader::GeometryIterator& WKTReader::GeometryIterator::operator++()
     return *this;
 }
 
-bool WKTReader::GeometryIterator::operator==(const GeometryIterator& rhs) const
+bool WKTStreamReader::GeometryIterator::operator==(const GeometryIterator& rhs) const
 {
     // Because the wrapped data is ephemeral, iterators are equal unless we happen to know for sure
     // that they're not.
     return this->m_is_past_end == rhs.m_is_past_end && this->m_is_at_end == rhs.m_is_at_end;
 }
 
-bool WKTReader::GeometryIterator::operator!=(const GeometryIterator& rhs) const
+bool WKTStreamReader::GeometryIterator::operator!=(const GeometryIterator& rhs) const
 {
     return !(*this == rhs);
 }
-}  // namespace geom2graph
+}  // namespace geom2graph::io

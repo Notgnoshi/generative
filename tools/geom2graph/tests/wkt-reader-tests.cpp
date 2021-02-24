@@ -1,31 +1,19 @@
-#include "geom2graph/wkt-reader.h"
+#include "geom2graph/io/wkt-stream-reader.h"
+#include "geom2graph/io/wkt.h"
 
 #include <geos/io/ParseException.h>
-#include <geos/io/WKTReader.h>
 
 #include <array>
 #include <sstream>
 
 #include <gtest/gtest.h>
 
-static std::unique_ptr<geos::geom::Geometry> from_wkt(const std::string& wkt)
-{
-    // This creates a new GeometryFactory for every geometry.
-    geos::io::WKTReader reader;
-    try
-    {
-        return reader.read(wkt);
-    } catch (geos::io::ParseException& e)
-    {
-        std::cerr << "Failed to parse '" << wkt << "'" << std::endl;
-        return nullptr;
-    }
-}
+using geom2graph::io::from_wkt;
 
 TEST(WktReaderTests, TestEmptyString)
 {
     std::istringstream input_stream{""};
-    geom2graph::WKTReader geometries(input_stream);
+    geom2graph::io::WKTStreamReader geometries(input_stream);
     auto iter = geometries.begin();
     // You should not be able to get a valid iterator to this stream.
     ASSERT_EQ(iter, geometries.end())
@@ -49,7 +37,7 @@ TEST(WktReaderTests, TestIteratorSanity)
 TEST(WktReaderTests, TestIteratorEnd)
 {
     std::istringstream input_stream{"POINT(1 1)\nPOINT(2 2)\nPOINT(3 3)"};
-    geom2graph::WKTReader geometries(input_stream);
+    geom2graph::io::WKTStreamReader geometries(input_stream);
     auto iter = geometries.begin();
 
     EXPECT_NE(iter, geometries.end());
@@ -64,7 +52,7 @@ TEST(WktReaderTests, TestIteratorEnd)
 TEST(WktReaderTests, TestSingleElement)
 {
     std::istringstream input_stream{"POINT(0 0)"};
-    geom2graph::WKTReader geometries(input_stream);
+    geom2graph::io::WKTStreamReader geometries(input_stream);
     auto iter = geometries.begin();
 
     ASSERT_NE(*iter, nullptr);
@@ -80,7 +68,7 @@ TEST(WktReaderTests, TestSingleElement)
 TEST(WktReaderTests, TestMultipleElements)
 {
     std::istringstream input_stream{"POINT(0 0)\nPOINT(1 1)"};
-    geom2graph::WKTReader geometries(input_stream);
+    geom2graph::io::WKTStreamReader geometries(input_stream);
     auto iter = geometries.begin();
     ASSERT_NE(iter, geometries.end());
     ASSERT_NE(*iter, nullptr);
@@ -98,7 +86,7 @@ TEST(WktReaderTests, TestMultipleElements)
 TEST(WKTReaderTests, TestExtraNewlines)
 {
     std::istringstream input{"POINT(0 0)\n\nPOINT(1 1)"};
-    auto geometries = geom2graph::WKTReader(input);
+    auto geometries = geom2graph::io::WKTStreamReader(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -110,7 +98,7 @@ TEST(WKTReaderTests, TestExtraNewlines)
 TEST(WKTReaderTests, TestSkipsGarbage)
 {
     std::istringstream input{"POINT(0 0)\nNOT A POINT\nPOINT(1 1)"};
-    auto geometries = geom2graph::WKTReader(input);
+    auto geometries = geom2graph::io::WKTStreamReader(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -122,7 +110,7 @@ TEST(WKTReaderTests, TestSkipsGarbage)
 TEST(WKTReaderTests, TestEndsWithGarbage)
 {
     std::istringstream input{"POINT(0 0)\nNOT A POINT\nPOINT(1 1)\nNOT A POINT"};
-    auto geometries = geom2graph::WKTReader(input);
+    auto geometries = geom2graph::io::WKTStreamReader(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -134,7 +122,7 @@ TEST(WKTReaderTests, TestEndsWithGarbage)
 TEST(WKTReaderTests, TestEndsWithNewline)
 {
     std::istringstream input{"POINT(0 0)\nNOT A POINT\nPOINT(1 1)\n"};
-    auto geometries = geom2graph::WKTReader(input);
+    auto geometries = geom2graph::io::WKTStreamReader(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -147,7 +135,7 @@ TEST(WktReaderTests, TestRangeLoop)
 {
     std::istringstream input_stream{"POINT(0 0)\nPOINT(1 2)"};
     std::array<std::string, 2> expected{"POINT(0 0)", "POINT(1 2)"};
-    geom2graph::WKTReader geometries(input_stream);
+    geom2graph::io::WKTStreamReader geometries(input_stream);
 
     size_t e = 0;
     for (auto& geometry : geometries)
@@ -197,7 +185,7 @@ TEST(WktReaderTests, TestDuplicateGeometry)
         ASSERT_NE(expected, nullptr);
     }
 
-    geom2graph::WKTReader geometries(input);
+    geom2graph::io::WKTStreamReader geometries(input);
     auto actual = geometries.begin();
     auto expected = expecteds.begin();
     for (; actual != geometries.end() && expected != expecteds.end(); ++actual, ++expected)

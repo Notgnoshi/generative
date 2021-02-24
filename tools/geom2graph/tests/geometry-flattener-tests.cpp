@@ -1,22 +1,12 @@
 #include "geom2graph/geometry-flattener.h"
+#include "geom2graph/io/wkt.h"
 
 #include <geos/io/ParseException.h>
 #include <geos/io/WKTReader.h>
 
 #include <gtest/gtest.h>
 
-static std::unique_ptr<geos::geom::Geometry> from_wkt(const std::string& wkt)
-{
-    // This creates a new GeometryFactory for every geometry.
-    geos::io::WKTReader reader;
-    try
-    {
-        return reader.read(wkt);
-    } catch (geos::io::ParseException& e)
-    {
-        return nullptr;
-    }
-}
+using geom2graph::io::from_wkt;
 
 TEST(GeometryFlattenerTests, TestPoint)
 {
@@ -217,7 +207,7 @@ TEST(GeometryFlattenerTests, TestDeeplyNestedCollection)
     auto flattener = geom2graph::GeometryFlattener(*geometry);
 
     size_t e = 0;
-    for(const auto& actual : flattener)
+    for (const auto& actual : flattener)
     {
         SCOPED_TRACE("Iteration: " + std::to_string(e));
         const auto expected = from_wkt(expected_wkt.at(e));
