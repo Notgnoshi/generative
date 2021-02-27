@@ -50,6 +50,7 @@ CmdlineArgs CmdlineArgs::parse_args(int argc, const char* argv[])
             ("l,log-level", "TRACE, DEBUG, INFO, WARN, ERROR, or FATAL.", cxxopts::value<std::string>()->default_value("WARN"))
             ("i,input",     "File to read WKT geometries from",           cxxopts::value<std::string>()->default_value("-"))
             ("o,output",    "File to write graph to",                     cxxopts::value<std::string>()->default_value("-"))
+            ("t,tolerance", "Vertex snapping tolerance",                  cxxopts::value<double>()->default_value("0.001"))
         ;
     // clang-format on
 
@@ -68,7 +69,8 @@ CmdlineArgs CmdlineArgs::parse_args(int argc, const char* argv[])
 
         const std::string input_filename = result["input"].as<std::string>();
         const std::string output_filename = result["output"].as<std::string>();
-        return CmdlineArgs(input_filename, output_filename);
+        const double tolerance = result["tolerance"].as<double>();
+        return CmdlineArgs(input_filename, output_filename, tolerance);
     }
     catch (cxxopts::OptionException& e)
     {

@@ -16,8 +16,9 @@ private:
 public:
     std::istream& input = std::cin;
     std::ostream& output = std::cout;
+    double tolerance = 0.0;
 
-    CmdlineArgs(const std::string& input_filename, const std::string& output_filename) :
+    CmdlineArgs(const std::string& input_filename, const std::string& output_filename, double tol) :
         m_input_file((input_filename.empty() || input_filename == "-")
                          ? nullptr
                          : new std::ifstream(input_filename)),
@@ -25,7 +26,8 @@ public:
                           ? nullptr
                           : new std::ofstream(output_filename)),
         input(m_input_file ? *m_input_file : std::cin),
-        output(m_output_file ? *m_output_file : std::cout)
+        output(m_output_file ? *m_output_file : std::cout),
+        tolerance(tol)
     {
     }
 

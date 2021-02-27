@@ -34,10 +34,8 @@ int main(int argc, const char* argv[])
     auto geometries = geom_stream.collapse();
     const auto collection = factory->createGeometryCollection(std::move(geometries));
 
-    LOG4CPLUS_INFO(s_logger, "Snapping geometries...");
-    //! @todo Read from commandline args.
-    const double tolerance = 0.01;
-    auto noder = std::make_unique<geos::noding::snap::SnappingNoder>(tolerance);
+    LOG4CPLUS_INFO(s_logger, "Snapping geometries with tolerance " << args.tolerance << "...");
+    auto noder = std::make_unique<geos::noding::snap::SnappingNoder>(args.tolerance);
     const std::unique_ptr<geos::geom::Geometry> noded =
         geom2graph::noding::GeometryNoder::node(*collection, std::move(noder));
 
