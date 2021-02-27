@@ -58,11 +58,16 @@ WKTStreamReader::GeometryIterator& WKTStreamReader::GeometryIterator::operator++
             LOG4CPLUS_DEBUG(s_logger, "Read geometry '" << m_current_value->toString() << "'");
         } catch (const geos::io::ParseException& e)
         {
-            LOG4CPLUS_WARN(s_logger, "Failed to parse '" << line << "' as valid WKT geometry");
             // Need to handle the case that this was the last line in the stream. >:(
             if (m_is_at_end)
             {
                 m_is_past_end = true;
+            } else
+            {
+                // Only print the warning when the line isn't the last line in the stream, because
+                // if the stream ends in a newline (which it does under normal circumstances) we
+                // "fail" to parse the last empty line.
+                LOG4CPLUS_WARN(s_logger, "Failed to parse '" << line << "' as valid WKT geometry");
             }
         }
     } while (!got_valid_geometry && !m_is_at_end);
