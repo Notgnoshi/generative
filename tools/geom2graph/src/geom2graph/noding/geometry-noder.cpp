@@ -35,7 +35,11 @@ private:
     geos::noding::SegmentString::NonConstVect& m_to;
 };
 
-GeometryNoder::GeometryNoder(const geos::geom::Geometry& geometry) : m_geometry(geometry)
+GeometryNoder::GeometryNoder(const geos::geom::Geometry& geometry,
+                             std::unique_ptr<geos::noding::Noder> noder) :
+    // If m_noder is null, get_noder will create a default IteratedNoder.
+    m_geometry(geometry),
+    m_noder(std::move(noder))
 {
 }
 
@@ -78,10 +82,12 @@ std::unique_ptr<geos::geom::Geometry> GeometryNoder::get_noded()
     return noded;
 }
 
-std::unique_ptr<geos::geom::Geometry> GeometryNoder::node(const geos::geom::Geometry& geometry)
+std::unique_ptr<geos::geom::Geometry>
+GeometryNoder::node(const geos::geom::Geometry& geometry,
+                    std::unique_ptr<geos::noding::Noder> noder)
 {
-    GeometryNoder noder(geometry);
-    return noder.get_noded();
+    GeometryNoder geom_noder(geometry, std::move(noder));
+    return geom_noder.get_noded();
 }
 void GeometryNoder::extract_segment_strings(const geos::geom::Geometry& geometry,
                                             geos::noding::SegmentString::NonConstVect& out)
@@ -90,7 +96,6 @@ void GeometryNoder::extract_segment_strings(const geos::geom::Geometry& geometry
     geometry.apply_ro(&extractor);
 }
 
-//! @todo allow the user to set the noder.
 geos::noding::Noder& GeometryNoder::get_noder()
 {
     if (!m_noder)
