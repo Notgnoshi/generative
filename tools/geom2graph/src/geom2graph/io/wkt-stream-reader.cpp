@@ -1,5 +1,7 @@
 #include "geom2graph/io/wkt-stream-reader.h"
 
+#include <geos/geom/Geometry.h>
+#include <geos/geom/GeometryFactory.h>
 #include <geos/io/ParseException.h>
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
@@ -7,8 +9,13 @@
 static log4cplus::Logger s_logger = log4cplus::Logger::getInstance("geom2graph.io.wkt");
 
 namespace geom2graph::io {
-WKTStreamReader::GeometryIterator::GeometryIterator(std::istream& input_stream, bool is_done) :
-    m_is_at_end(is_done), m_is_past_end(is_done), m_input_stream(input_stream)
+WKTStreamReader::GeometryIterator::GeometryIterator(std::istream& input_stream,
+                                                    const geos::geom::GeometryFactory& factory,
+                                                    bool is_done) :
+    m_is_at_end(is_done),
+    m_is_past_end(is_done),
+    m_input_stream(input_stream),
+    m_wkt_reader(factory)
 {
     // Need to prime the pump, so to speak.
     if (!m_is_past_end)

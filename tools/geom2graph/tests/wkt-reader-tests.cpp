@@ -86,7 +86,7 @@ TEST(WktReaderTests, TestMultipleElements)
 TEST(WKTReaderTests, TestExtraNewlines)
 {
     std::istringstream input{"POINT(0 0)\n\nPOINT(1 1)"};
-    auto geometries = geom2graph::io::WKTStreamReader(input);
+    geom2graph::io::WKTStreamReader geometries(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -98,7 +98,7 @@ TEST(WKTReaderTests, TestExtraNewlines)
 TEST(WKTReaderTests, TestSkipsGarbage)
 {
     std::istringstream input{"POINT(0 0)\nNOT A POINT\nPOINT(1 1)"};
-    auto geometries = geom2graph::io::WKTStreamReader(input);
+    geom2graph::io::WKTStreamReader geometries(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -110,7 +110,7 @@ TEST(WKTReaderTests, TestSkipsGarbage)
 TEST(WKTReaderTests, TestEndsWithGarbage)
 {
     std::istringstream input{"POINT(0 0)\nNOT A POINT\nPOINT(1 1)\nNOT A POINT"};
-    auto geometries = geom2graph::io::WKTStreamReader(input);
+    geom2graph::io::WKTStreamReader geometries(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -122,7 +122,7 @@ TEST(WKTReaderTests, TestEndsWithGarbage)
 TEST(WKTReaderTests, TestEndsWithNewline)
 {
     std::istringstream input{"POINT(0 0)\nNOT A POINT\nPOINT(1 1)\n"};
-    auto geometries = geom2graph::io::WKTStreamReader(input);
+    geom2graph::io::WKTStreamReader geometries(input);
     size_t i = 0;
     for (const auto& geometry : geometries)
     {
@@ -138,7 +138,7 @@ TEST(WktReaderTests, TestRangeLoop)
     geom2graph::io::WKTStreamReader geometries(input_stream);
 
     size_t e = 0;
-    for (auto& geometry : geometries)
+    for (const auto& geometry : geometries)
     {
         SCOPED_TRACE("Iteration: " + std::to_string(e));
         EXPECT_TRUE(geometry->equalsExact(from_wkt(expected.at(e)).get()));
