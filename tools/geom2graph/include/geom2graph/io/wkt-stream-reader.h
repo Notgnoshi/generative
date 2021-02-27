@@ -43,16 +43,16 @@ class WKTStreamReader
 public:
     using iterator = GeometryIterator;
     explicit WKTStreamReader(std::istream& input_stream) :
-        m_input(input_stream), m_factory(geos::geom::GeometryFactory::create())
+        m_input(input_stream), m_factory(geos::geom::GeometryFactory::create()), m_factory_ref(*m_factory)
     {
     }
-    WKTStreamReader(std::istream& input_stream, geos::geom::GeometryFactory::Ptr factory) :
-        m_input(input_stream), m_factory(std::move(factory))
+    WKTStreamReader(std::istream& input_stream, geos::geom::GeometryFactory& factory) :
+        m_input(input_stream), m_factory(nullptr), m_factory_ref(factory)
     {
     }
 
-    [[nodiscard]] iterator begin() const { return iterator(m_input, *m_factory); }
-    [[nodiscard]] iterator end() const { return iterator(m_input, *m_factory, true); }
+    [[nodiscard]] iterator begin() const { return iterator(m_input, m_factory_ref); }
+    [[nodiscard]] iterator end() const { return iterator(m_input, m_factory_ref, true); }
 
     //! @brief Consume the input stream, and collapse into a std::vector of geometries.
     [[nodiscard]] std::vector<std::unique_ptr<geos::geom::Geometry>> collapse() const
@@ -71,5 +71,6 @@ public:
 private:
     std::istream& m_input;
     geos::geom::GeometryFactory::Ptr m_factory;
+    geos::geom::GeometryFactory& m_factory_ref;
 };
 }  // namespace geom2graph::io
