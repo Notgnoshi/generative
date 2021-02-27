@@ -1,4 +1,4 @@
-*.swp
+*.sw*
 .vscode/
 
 # Byte-compiled / optimized / DLL files

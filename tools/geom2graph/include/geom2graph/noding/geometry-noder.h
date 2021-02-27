@@ -25,13 +25,20 @@ namespace geom2graph::noding {
 class GeometryNoder
 {
 public:
-    //! @todo Provide a geos::noding::Noder. Use template? Or pass a unique_ptr?
-    GeometryNoder(const geos::geom::Geometry& geometry);
+    //! @brief Create a GeometryNoder for the given geometry.
+    //! @param geometry The geometry to node. Likely a GEOMETRYCOLLECTION.
+    //! @param noder The Noder to use. If not specified, GeometryNoder will fall back on a
+    //! geos::noding::IteratedNoder.
+    GeometryNoder(const geos::geom::Geometry& geometry,
+                  std::unique_ptr<geos::noding::Noder> noder = nullptr);
     GeometryNoder(GeometryNoder const&) = delete;
     GeometryNoder& operator=(GeometryNoder const&) = delete;
 
     std::unique_ptr<geos::geom::Geometry> get_noded();
-    static std::unique_ptr<geos::geom::Geometry> node(const geos::geom::Geometry& geometry);
+    //! @brief A helper method to create a GeometryNoder and node the given geometry.
+    static std::unique_ptr<geos::geom::Geometry>
+    node(const geos::geom::Geometry& geometry,
+         std::unique_ptr<geos::noding::Noder> noder = nullptr);
 
 private:
     const geos::geom::Geometry& m_geometry;
