@@ -4,6 +4,7 @@
 #include <istream>
 #include <iterator>
 #include <memory>
+#include <vector>
 
 namespace geos::geom {
 class Geometry;
@@ -52,6 +53,20 @@ public:
 
     [[nodiscard]] iterator begin() const { return iterator(m_input, *m_factory); }
     [[nodiscard]] iterator end() const { return iterator(m_input, *m_factory, true); }
+
+    //! @brief Consume the input stream, and collapse into a std::vector of geometries.
+    [[nodiscard]] std::vector<std::unique_ptr<geos::geom::Geometry>> collapse() const
+    {
+        std::vector<std::unique_ptr<geos::geom::Geometry>> geometries;
+        // Can't reserve space ahead of time because we don't know how long the geometry stream is.
+
+        for (auto iter = this->begin(); iter != this->end(); ++iter)
+        {
+            geometries.push_back(std::move(*iter));
+        }
+
+        return geometries;
+    }
 
 private:
     std::istream& m_input;
