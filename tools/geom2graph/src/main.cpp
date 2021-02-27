@@ -4,6 +4,7 @@
 #include "geom2graph/noding/geometry-noder.h"
 
 #include <geos/geom/GeometryCollection.h>
+#include <geos/io/WKTWriter.h>
 #include <geos/noding/snap/SnappingNoder.h>
 #include <log4cplus/consoleappender.h>
 #include <log4cplus/initializer.h>
@@ -45,11 +46,14 @@ int main(int argc, const char* argv[])
         // The noding should also return a MULTILINESTRING, which doesn't need to be _recursively_
         // flattened, but that's what I implemented, so that's what I'm going to use.
         auto flattener = geom2graph::GeometryFlattener(*noded);
+        geos::io::WKTWriter writer;
+        writer.setTrim(true);
+        writer.setOutputDimension(3);
 
+        // I _think_ these are const refs to the geometries owned by 'noded'.
         for (const auto& geometry : flattener)
         {
-            LOG4CPLUS_TRACE(s_logger, "Snapped geometry: " << geometry.toString());
-            args.output << geometry.toString() << std::endl;
+            args.output << writer.write(&geometry) << std::endl;
         }
     } else
     {
