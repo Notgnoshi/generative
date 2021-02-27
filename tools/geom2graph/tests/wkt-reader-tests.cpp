@@ -2,6 +2,7 @@
 #include "geom2graph/io/wkt.h"
 
 #include <geos/io/ParseException.h>
+#include <geos/io/WKTWriter.h>
 
 #include <array>
 #include <sstream>
@@ -215,6 +216,40 @@ TEST(GeosWKTReaderTests, TestValidGeom)
 
     auto type = geometry->getGeometryTypeId();
     EXPECT_EQ(type, geos::geom::GeometryTypeId::GEOS_POINT);
+}
+
+TEST(GeosWKTReaderTests, TestDimensionality)
+{
+    const std::string wkt = "POINT Z(1 2 3)";
+    geos::io::WKTReader reader;
+
+    std::unique_ptr<geos::geom::Geometry> geometry = reader.read(wkt);
+    ASSERT_TRUE(geometry) << "Expected non-null geometry";
+
+    const auto type = geometry->getGeometryTypeId();
+    EXPECT_EQ(type, geos::geom::GeometryTypeId::GEOS_POINT);
+
+    const uint8_t dimension = geometry->getCoordinateDimension();
+    EXPECT_EQ(dimension, 3);
+
+    geos::io::WKTWriter writer;
+    writer.setTrim(true);
+
+    // The WKTWriter defaults to 2D unless you set it higher.
+    const std::string out2 = writer.write(geometry.get());
+    EXPECT_EQ(out2, "POINT (1 2)");
+
+    // You _have_ to set the output dimension to get 3D coordinates.
+    writer.setOutputDimension(3);
+    const std::string out3 = writer.write(geometry.get());
+    EXPECT_EQ(out3, "POINT Z (1 2 3)");
+
+    // But with the writer set to 3D, it'll still output 2D points if given.
+    auto geom2 = reader.read("POINT(1 1)");
+    ASSERT_TRUE(geom2);
+
+    const std::string out = writer.write(geom2.get());
+    EXPECT_EQ(out, "POINT (1 1)");
 }
 
 TEST(GeosWKTReaderTests, TestInvalidGeom)
