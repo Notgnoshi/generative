@@ -42,13 +42,9 @@ $ build/src/geom2graph --input examples/test-01.wkt
 5	POINT (2 2.01)
 #
 0	1
-1	0
 1	2
-2	1
 3	4
-4	3
 4	5
-5	4
 ```
 
 ```bash
@@ -69,28 +65,16 @@ $ build/src/geom2graph --input examples/test-04.wkt
 #
 0	1
 0	5
-1	0
 1	2
-2	1
 2	3
 2	6
 2	7
-3	2
 3	4
-4	3
 4	5
 4	6
 4	9
-5	0
-5	4
-6	2
-6	4
-7	2
 7	8
-8	7
 8	9
-9	4
-9	8
 ```
 
 ## Fuzzy vertex snapping
@@ -98,20 +82,16 @@ $ build/src/geom2graph --input examples/test-04.wkt
 Vertices are snapped together within the specified tolerance.
 
 ```bash
-$ build/src/geom2graph --input examples/test-01.wkt --tolerance 0.2
+$ build/src/geom2graph --input examples/test-04.wkt build/src/geom2graph --input examples/test-01.wkt --tolerance 0.2
 0	POINT (0 0)
 1	POINT (1 1)
 2	POINT (2 2)
 3	POINT (0 1)
 #
 0	1
-1	0
 1	2
 1	3
-2	1
 2	3
-3	1
-3	2
 ```
 
 ## 3D output
@@ -134,9 +114,6 @@ $ build/src/geom2graph --input examples/test-03.wkt --tolerance 0.2
 4	POINT (50 50)
 #
 0	1
-1	0
 1	2
-2	1
 3	4
-4	3
 ```
