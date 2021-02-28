@@ -5,6 +5,8 @@
 #include <geos/io/WKTWriter.h>
 
 #include <ostream>
+#include <set>
+#include <utility>
 
 namespace geom2graph::io {
 class GraphWriter
@@ -24,7 +26,6 @@ public:
     virtual ~GraphWriter() = default;
 
     //! @brief Write the given graph to the provided ostream.
-    //! @todo Some output formats (e.g., DOT) may benefit from a different traversal method.
     virtual void write(const geom2graph::noding::GeometryGraph& graph)
     {
         const auto& nodes = graph.get_graph();
@@ -36,13 +37,20 @@ public:
         this->end_nodes();
 
         this->start_edges();
-        //! @bug This results in every edge being duplicated.
-        //! Perhaps a solution is to do a BFS or DFS traversal instead of an N^2 loop?
+        // Treat the directed edges as undirected, so we only output half of them.
+        using Edge_t = std::pair<std::size_t, std::size_t>;
+        std::set<Edge_t> edges;
+
         for (const auto& node : nodes)
         {
             for (const auto adj : node.adjacencies)
             {
-                handle_edge(node, nodes[adj]);
+                const auto result = edges.emplace(std::min(node.id, adj), std::max(node.id, adj));
+                // The insertion took place.
+                if (result.second)
+                {
+                    handle_edge(node, nodes[adj]);
+                }
             }
         }
         this->end_edges();

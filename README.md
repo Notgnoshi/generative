@@ -322,16 +322,16 @@ $ head examples/fractal-plant-1.tgf
 8	POINT (-149.894065996011 48.51973288924074)
 9	POINT (-152.4741132487238 44.98471725450483)
 $ tail examples/fractal-plant-1.tgf
+6254	6259
+6254	6265
+6255	6259
+6255	6266
+6255	6267
+6258	6260
+6260	6261
 6260	6262
-6261	6260
-6262	6260
 6262	6263
 6262	6264
-6263	6262
-6264	6262
-6265	6254
-6266	6255
-6267	6255
 ```
 
 The `geom2graph` tool also works on 3D geometries, and even mixed 2D and 3D input, where it assumes the Z coordinate of the 2D geometries is 0.
@@ -378,16 +378,16 @@ $ head examples/maya-tree-2.tgf
 8	POINT Z (-0.4330127018922194 -1.991025403784439 3.015544456622768)
 9	POINT Z (-1.06002309434949 -2.172027713219388 3.538053117003827)
 $ tail examples/maya-tree-2.tgf
-138	113
-139	137
-140	73
-141	101
-141	131
-141	132
+127	130
+131	132
+131	141
+131	143
+132	137
+132	141
+133	135
+133	136
+137	139
 141	144
-142	101
-143	131
-144	141
 ```
 
 which, when visualized in a graph viewer, looks like this:
