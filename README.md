@@ -35,6 +35,7 @@ This is an attempt on doing the same, but with the following improvements:
   - [Example 1](#example-1)
   - [Example 2](#example-2)
   - [Example 3](#example-3)
+- [Converting the WKT to a graph](#converting-the-wkt-to-a-graph)
 
 # L-System Rule Parsing
 
@@ -284,3 +285,149 @@ done
 
 * PCA ![PCA](examples/plant-pca.svg)
 * SVD ![SVD](examples/plant-svd.svg)
+
+# Converting the WKT to a graph
+
+The [`geom2graph` tool](tools/geom2graph) can convert WKT input to [TGF](https://en.wikipedia.org/wiki/Trivial_Graph_Format), where each node in the graph is tagged with its WKT coordinates.
+Optionally, the tool can also perform "fuzzy" snapping, where vertices within a specified tolerance are snapped together, and treated as the same vertex.
+
+```shell
+$ tools/parse.py --config examples/fractal-plant-1.json |
+    tools/interpret.py --stepsize=3 --angle=22.5 |
+    tools/project.py --kind=pca --output examples/fractal-plant-1.wkt
+$ head examples/fractal-plant-1.wkt
+LINESTRING (-244.6453794276828 189.4413011320319, -167.1020575851201 132.8459547012428, -142.1107643324939 91.86504131999683, -138.4076504660449 68.15245083114208, -141.2342426714309 56.49010216097916, -144.7714518233552 51.64364454581902, -147.3327589096831 50.08168871752988, -150.2968327207899 49.61879948422376)
+LINESTRING (-147.3327589096831 50.08168871752988, -149.894065996011 48.51973288924074)
+LINESTRING (-147.3327589096831 50.08168871752988, -149.894065996011 48.51973288924074, -153.4312751479352 43.6732752740806)
+LINESTRING (-149.894065996011 48.51973288924074, -152.8581398071178 48.05684365593462)
+LINESTRING (-144.7714518233552 51.64364454581902, -146.5400563993173 49.22041573823896, -149.1013634856452 47.65845990994982)
+LINESTRING (-146.5400563993173 49.22041573823896, -148.3086609752794 46.7971869306589)
+LINESTRING (-146.5400563993173 49.22041573823896, -148.3086609752794 46.7971869306589, -149.7219570779724 40.96601259557747)
+LINESTRING (-148.3086609752794 46.7971869306589, -150.8699680616073 45.23523110236977)
+LINESTRING (-144.7714518233552 51.64364454581902, -148.3086609752794 46.7971869306589, -150.4286051293189 38.0504254280367, -152.197209705281 35.62719662045667)
+LINESTRING (-150.4286051293189 38.0504254280367, -151.1352531806654 35.134838260496)
+$ tools/geom2graph/build/src/geom2graph \
+    --tolerance=0.001 \
+    --input examples/fractal-plant-1.wkt \
+    --output examples/fractal-plant-1.tgf
+$ head examples/fractal-plant-1.tgf
+0	POINT (-244.6453794276828 189.4413011320319)
+1	POINT (-167.1020575851201 132.8459547012428)
+2	POINT (-142.1107643324939 91.86504131999683)
+3	POINT (-138.4076504660449 68.15245083114208)
+4	POINT (-141.2342426714309 56.49010216097916)
+5	POINT (-144.7714518233552 51.64364454581902)
+6	POINT (-147.3327589096831 50.08168871752988)
+7	POINT (-150.2968327207899 49.61879948422376)
+8	POINT (-149.894065996011 48.51973288924074)
+9	POINT (-152.4741132487238 44.98471725450483)
+$ tail examples/fractal-plant-1.tgf
+6260	6262
+6261	6260
+6262	6260
+6262	6263
+6262	6264
+6263	6262
+6264	6262
+6265	6254
+6266	6255
+6267	6255
+```
+
+The `geom2graph` tool also works on 3D geometries, and even mixed 2D and 3D input, where it assumes the Z coordinate of the 2D geometries is 0.
+
+```shell
+$ tools/parse.py --config examples/maya-tree-2.json |
+    tools/interpret.py \
+        --stepsize=1 \
+        --angle=30 \
+        --output=examples/maya-tree-2.wkt
+$ head examples/maya-tree-2.wkt
+LINESTRING Z (0 0 0, 0 0 1, 0 -0.4999999999999999 1.866025403784439, 0 -1.366025403784439 2.366025403784439, 0 -2.366025403784438 2.366025403784439, 0 -3.232050807568877 1.866025403784439)
+LINESTRING Z (0 -2.366025403784438 2.366025403784439, -0.4330127018922194 -3.232050807568877 2.616025403784439)
+LINESTRING Z (0 -2.366025403784438 2.366025403784439, 0.4330127018922194 -3.232050807568877 2.616025403784439)
+LINESTRING Z (0 -1.366025403784439 2.366025403784439, -0.4330127018922194 -1.991025403784439 3.015544456622768, -1.183012701892219 -2.207531754730549 3.640544456622768)
+LINESTRING Z (-0.4330127018922194 -1.991025403784439 3.015544456622768, -0.4040063509461099 -2.507171044359295 3.871553983041933)
+LINESTRING Z (-0.4330127018922194 -1.991025403784439 3.015544456622768, -0.837019052838329 -2.882171044359295 3.222034930203604)
+LINESTRING Z (0 -1.366025403784439 2.366025403784439, 0.4330127018922194 -1.991025403784439 3.015544456622768, 1.183012701892219 -2.207531754730549 3.640544456622768)
+LINESTRING Z (0.4330127018922194 -1.991025403784439 3.015544456622768, 0.837019052838329 -2.882171044359295 3.222034930203604)
+LINESTRING Z (0.4330127018922194 -1.991025403784439 3.015544456622768, 0.4040063509461099 -2.507171044359295 3.871553983041933)
+LINESTRING Z (0 -0.4999999999999999 1.866025403784439, -0.4330127018922194 -0.7165063509461098 2.741025403784439, -1.18301270189222 -0.59150635094611 3.390544456622768, -2.049038105676659 -0.1584936490538911 3.640544456622768)
+```
+
+This is what the geometries look like when rendered:
+
+![Rendering a 3D fractal plant](examples/maya-tree-2.png)
+
+So let's run the `geom2graph` tool, and visualize the resulting directed graph.
+
+```shell
+$ tools/geom2graph/build/src/geom2graph \
+    --tolerance=0.001 \
+    --input examples/maya-tree-2.wkt \
+    --output examples/maya-tree-2.tgf
+$ head examples/maya-tree-2.tgf
+0	POINT Z (0 0 0)
+1	POINT Z (0 -0.4999999999999999 1.866025403784439)
+2	POINT Z (0 -0.5819930716951528 3.184712085553997)
+3	POINT Z (0 -1.366025403784439 2.366025403784439)
+4	POINT Z (0 -2.366025403784438 2.366025403784439)
+5	POINT Z (0 -3.232050807568877 1.866025403784439)
+6	POINT Z (-0.4330127018922194 -3.232050807568877 2.616025403784439)
+7	POINT Z (0.4330127018922194 -3.232050807568877 2.616025403784439)
+8	POINT Z (-0.4330127018922194 -1.991025403784439 3.015544456622768)
+9	POINT Z (-1.06002309434949 -2.172027713219388 3.538053117003827)
+$ tail examples/maya-tree-2.tgf
+138	113
+139	137
+140	73
+141	101
+141	131
+141	132
+141	144
+142	101
+143	131
+144	141
+```
+
+which, when visualized in a graph viewer, looks like this:
+
+![yEd TGF visualization](examples/maya-tree-2-viz.png)
+
+The origin has been colored orange, and you can see the remarkable symmetry that's displayed, even with an organic layout.
+Notice that the edges are directed, and thus there's two directed edges for every logical edge.
+
+Interestingly, there seems to be three nodes adjacent to the origin, when the OpenGL visualizer shows a single vertical trunk.
+Given my understanding of the problem, I think this is because the turtle spends a lot of time retracing its steps.
+
+Note that we were able to **significantly** reduce the amount of retracing from the original `maya-tree`, by rewriting its L-System rules, while maintaining the same visual appearance.
+Let's visualize the points close to the origin to double check.
+
+A pruned version of the TGF output is shown below, showing the origin's neighbors.
+
+```tgf
+0	POINT Z (0 0 0)
+1	POINT Z (0 -0.4999999999999999 1.866025403784439)
+52	POINT Z (-0.4330127018922194 0.2499999999999999 1.866025403784439)
+100	POINT Z (0.4330127018922194 0.2499999999999999 1.866025403784439)
+#
+0	1
+0	52
+0	100
+```
+
+We can visualize these four nodes by piping them directly into the OpenGL renderer:
+
+```shell
+tools/renderer.py --axis << EOF
+POINT Z (0 0 0)
+POINT Z (0 -0.4999999999999999 1.866025403784439)
+POINT Z (-0.4330127018922194 0.2499999999999999 1.866025403784439)
+POINT Z (0.4330127018922194 0.2499999999999999 1.866025403784439)
+EOF
+```
+
+![Maya tree 2 near the origin](examples/maya-tree-2-origin.png)
+
+Apparently the "trunk" is actually three distinct (non overlapping collinear) segments.
+It will be interesting to look at this again, once I'm able to parse the graph output as a geometry collection, so that we can snap close vertices together, and then look at the resulting geometry.
