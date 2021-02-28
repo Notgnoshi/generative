@@ -169,6 +169,14 @@ tools/parse.py --config examples/fractal-plant-3d.json |
 
 ![Rendering a 3D fractal plant](examples/wkt-renderer-2.png)
 
+```shell
+tools/parse.py --config examples/maya-tree-2.json |
+    tools/interpret.py --angle 30 |
+    tools/render.py --axis
+```
+
+![Rendering a 3D fractal plant](examples/maya-tree-2.png)
+
 And as a teaser for [2D Projections](#2d-projections), here's the same fractal plant after running PCA.
 
 ```shell
