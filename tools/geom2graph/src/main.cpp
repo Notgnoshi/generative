@@ -2,6 +2,7 @@
 #include "geom2graph/geometry-flattener.h"
 #include "geom2graph/io/wkt-stream-reader.h"
 #include "geom2graph/noding/geometry-noder.h"
+#include "geom2graph/noding/geometry-graph.h"
 
 #include <geos/geom/GeometryCollection.h>
 #include <geos/io/WKTWriter.h>
@@ -42,18 +43,27 @@ int main(int argc, const char* argv[])
 
     if (noded)
     {
-        LOG4CPLUS_INFO(s_logger, "Processing snapped geometries...");
-        // The noding should also return a MULTILINESTRING, which doesn't need to be _recursively_
-        // flattened, but that's what I implemented, so that's what I'm going to use.
-        auto flattener = geom2graph::GeometryFlattener(*noded);
+        const auto graph = geom2graph::noding::GeometryGraph(*noded);
+        const auto& nodes = graph.get_graph();
+
+        //! @todo Move TGF output to geom2graph::io::TGFWriter
         geos::io::WKTWriter writer;
         writer.setTrim(true);
         writer.setOutputDimension(3);
 
-        // I _think_ these are const refs to the geometries owned by 'noded'.
-        for (const auto& geometry : flattener)
+        for (const auto& node : nodes)
         {
-            args.output << writer.write(&geometry) << std::endl;
+            const auto point = std::unique_ptr<geos::geom::Point>(factory->createPoint(node.coord));
+            args.output << node.id << "\t" << writer.write(point.get()) << std::endl;
+        }
+        args.output << "#\n";
+        for (const auto& node : nodes)
+        {
+            for(const auto& idx : node.adjacencies)
+            {
+                //! @todo Is it worth labeling each edge with a LINESTRING?
+                args.output << node.id << "\t" << idx << "\n";
+            }
         }
     } else
     {
