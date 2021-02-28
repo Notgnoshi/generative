@@ -1,8 +1,9 @@
 #include "cmdline.h"
 #include "geom2graph/geometry-flattener.h"
+#include "geom2graph/io/tgf-graph-writer.h"
 #include "geom2graph/io/wkt-stream-reader.h"
-#include "geom2graph/noding/geometry-noder.h"
 #include "geom2graph/noding/geometry-graph.h"
+#include "geom2graph/noding/geometry-noder.h"
 
 #include <geos/geom/GeometryCollection.h>
 #include <geos/io/WKTWriter.h>
@@ -26,6 +27,7 @@ int main(int argc, const char* argv[])
 
     const CmdlineArgs args = CmdlineArgs::parse_args(argc, argv);
 
+    LOG4CPLUS_INFO(s_logger, "Reading geometries...");
     auto factory = geos::geom::GeometryFactory::create();
     auto geom_stream = geom2graph::io::WKTStreamReader(args.input, *factory);
 
@@ -36,39 +38,25 @@ int main(int argc, const char* argv[])
     auto geometries = geom_stream.collapse();
     const auto collection = factory->createGeometryCollection(std::move(geometries));
 
+    // Find all intersections, and break geometries into non-intersecting (except at the vertices)
+    // linestrings, where vertices sufficiently close together are fuzzily snapped.
     LOG4CPLUS_INFO(s_logger, "Snapping geometries with tolerance " << args.tolerance << "...");
     auto noder = std::make_unique<geos::noding::snap::SnappingNoder>(args.tolerance);
-    const std::unique_ptr<geos::geom::Geometry> noded =
-        geom2graph::noding::GeometryNoder::node(*collection, std::move(noder));
-
-    if (noded)
+    const auto noded = geom2graph::noding::GeometryNoder::node(*collection, std::move(noder));
+    if (!noded)
     {
-        const auto graph = geom2graph::noding::GeometryGraph(*noded);
-        const auto& nodes = graph.get_graph();
-
-        //! @todo Move TGF output to geom2graph::io::TGFWriter
-        geos::io::WKTWriter writer;
-        writer.setTrim(true);
-        writer.setOutputDimension(3);
-
-        for (const auto& node : nodes)
-        {
-            const auto point = std::unique_ptr<geos::geom::Point>(factory->createPoint(node.coord));
-            args.output << node.id << "\t" << writer.write(point.get()) << std::endl;
-        }
-        args.output << "#\n";
-        for (const auto& node : nodes)
-        {
-            for(const auto& idx : node.adjacencies)
-            {
-                //! @todo Is it worth labeling each edge with a LINESTRING?
-                args.output << node.id << "\t" << idx << "\n";
-            }
-        }
-    } else
-    {
-        LOG4CPLUS_WARN(s_logger, "Failed to snap geometries.");
+        LOG4CPLUS_ERROR(s_logger, "Failed to snap geometries.");
+        return 1;
     }
+
+    LOG4CPLUS_INFO(s_logger, "Building geometry graph...");
+    const auto graph = geom2graph::noding::GeometryGraph(*noded);
+
+    LOG4CPLUS_INFO(s_logger, "Writing geometry graph...");
+    //! @todo Read graph output format from commandline arguments.
+    std::unique_ptr<geom2graph::io::GraphWriter> writer =
+        std::make_unique<geom2graph::io::TGFGraphWriter>(args.output, *factory);
+    writer->write(graph);
 
     return 0;
 }
