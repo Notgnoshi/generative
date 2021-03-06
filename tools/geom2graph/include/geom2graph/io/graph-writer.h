@@ -5,8 +5,6 @@
 #include <geos/io/WKTWriter.h>
 
 #include <ostream>
-#include <set>
-#include <utility>
 
 namespace geom2graph::io {
 class GraphWriter
@@ -37,17 +35,13 @@ public:
         this->end_nodes();
 
         this->start_edges();
-        // Treat the directed edges as undirected, so we only output half of them.
-        using Edge_t = std::pair<std::size_t, std::size_t>;
-        std::set<Edge_t> edges;
 
         for (const auto& node : nodes)
         {
             for (const auto adj : node.adjacencies)
             {
-                const auto result = edges.emplace(std::min(node.id, adj), std::max(node.id, adj));
-                // The insertion took place.
-                if (result.second)
+                // Only print each edge once.
+                if (node.id < adj)
                 {
                     handle_edge(node, nodes[adj]);
                 }
