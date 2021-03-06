@@ -1,7 +1,7 @@
 #pragma once
 #include <geos/geom/Coordinate.h>
 
-#include <set>
+#include <unordered_set>
 #include <vector>
 
 namespace geos::geom {
@@ -16,7 +16,7 @@ public:
     {
         const std::size_t id;  //!< An index into the GeometryGraph::get_graph() array.
         const geos::geom::Coordinate coord;  //!< The coordinate for this node in the graph.
-        std::set<std::size_t> adjacencies;   //!< All of the Node id's adjacent to this node.
+        std::unordered_set<std::size_t> adjacencies;   //!< All of the Node id's adjacent to this node.
 
         Node(std::size_t _id, const geos::geom::Coordinate& _coord) : id(_id), coord(_coord) {}
     };

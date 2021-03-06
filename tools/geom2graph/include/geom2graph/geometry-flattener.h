@@ -38,7 +38,7 @@ public:
 
     [[nodiscard]] const_iterator cbegin() const { return const_iterator(m_geometry, 0); };
     [[nodiscard]] const_iterator cend() const { return const_iterator(m_geometry, -1); };
-    
+
     [[nodiscard]] iterator begin() const { return iterator(m_geometry, 0); };
     [[nodiscard]] iterator end() const { return iterator(m_geometry, -1); };
 
