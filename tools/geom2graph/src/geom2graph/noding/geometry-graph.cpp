@@ -3,87 +3,121 @@
 #include "geom2graph/geometry-flattener.h"
 
 #include <geos/geom/CoordinateSequence.h>
+#include <geos/geom/CoordinateSequenceFactory.h>
 #include <geos/geom/Geometry.h>
+#include <geos/geom/LineString.h>
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
 
+#include <array>
 #include <map>
 
 static auto s_logger = log4cplus::Logger::getInstance("geom2graph.noding.geometrygraph");
 
 namespace geom2graph::noding {
 
-// TIL: anonymous namespaces are equivalent to marking these methods as static.
-namespace {
-    using Nodes_t = std::map<geos::geom::Coordinate, std::size_t, geos::geom::CoordinateLessThen>;
-    using Graph_t = std::vector<GeometryGraph::Node>;
-
-    GeometryGraph::Node&
-    find_or_insert(Graph_t& graph, Nodes_t& coords, const Nodes_t::key_type& coord)
-    {
-        auto iter = coords.find(coord);
-
-        // This isn't a coordinate we know about.
-        if (iter == coords.end())
-        {
-            GeometryGraph::Node new_node(graph.size(), coord);
-            LOG4CPLUS_TRACE(s_logger,
-                            "Adding new coordinate to graph: " << coord.toString() << " with id "
-                                                               << new_node.id);
-            graph.push_back(new_node);
-
-            auto result = coords.emplace(new_node.coord, new_node.id);
-            if (result.second)
-            {
-                // This is a node we haven't seen before.
-            }
-            iter = result.first;
-        }
-
-        return graph.at(iter->second);
-    }
-
-    std::vector<GeometryGraph::Node> build_graph(const geos::geom::Geometry& geometry)
-    {
-        // Each node owns its own adjacency list.
-        std::vector<GeometryGraph::Node> graph;
-        graph.reserve(geometry.getNumPoints());
-
-        // Need to look up a node's ID by it's coordinates, if it exists.
-        std::map<geos::geom::Coordinate, std::size_t, geos::geom::CoordinateLessThen> nodes;
-
-        for (const auto& geom : geom2graph::GeometryFlattener(geometry))
-        {
-            // LOG4CPLUS_TRACE(s_logger, "Adding " << geom.toString() << " to graph");
-
-            // This pointer is the owner of the coordinates, so we have to copy from it into the
-            // created Node
-            const auto coords = geom.getCoordinates();
-            for (std::size_t i = 0, j = 1; j < coords->getSize(); i = j++)
-            {
-                const auto& curr = coords->getAt(i);
-                const auto& next = coords->getAt(j);
-
-                LOG4CPLUS_TRACE(s_logger,
-                                "Adding edge " << curr.toString() << " -> " << next.toString());
-
-                // Add, or lookup the nodes in the graph.
-                auto& curr_node = find_or_insert(graph, nodes, curr);
-                auto& next_node = find_or_insert(graph, nodes, next);
-
-                // Add each node to eachother's adjacency list.
-                curr_node.adjacencies.emplace(next_node.id);
-                next_node.adjacencies.emplace(curr_node.id);
-            }
-        }
-
-        return graph;
-    }
-}  // namespace
-
 GeometryGraph::GeometryGraph(const geos::geom::Geometry& multilinestring) :
-    m_geometry(multilinestring)
+    m_factory(*multilinestring.getFactory())
 {
-    m_graph = build_graph(m_geometry);
+    build(multilinestring);
+}
+
+GeometryGraph::GeometryGraph(std::vector<GeometryGraph::Node>&& nodes,
+        const geos::geom::GeometryFactory& factory) :
+    m_factory(factory), m_nodes(std::move(nodes))
+{
+}
+
+void GeometryGraph::add_edge(std::size_t src, std::size_t dst)
+{
+    m_nodes[src].adjacencies.emplace(dst);
+    m_nodes[dst].adjacencies.emplace(src);
+}
+
+std::vector<std::pair<const GeometryGraph::Node&, const GeometryGraph::Node&>>
+GeometryGraph::get_edge_pairs() const
+{
+    std::vector<std::pair<const GeometryGraph::Node&, const GeometryGraph::Node&>> pairs;
+    // A heuristic.
+    pairs.reserve(m_nodes.size() * 2);
+    for (const auto& node : m_nodes)
+    {
+        for (const auto adj : node.adjacencies)
+        {
+            // Only print each edge once.
+            if (node.index < adj)
+            {
+                pairs.emplace_back(node, m_nodes[adj]);
+            }
+        }
+    }
+    return pairs;
+}
+
+std::vector<std::unique_ptr<geos::geom::LineString>> GeometryGraph::get_edges() const
+{
+    const auto pairs = this->get_edge_pairs();
+    std::vector<std::unique_ptr<geos::geom::LineString>> edges;
+    edges.reserve(pairs.size());
+    const auto* cs_factory = m_factory.getCoordinateSequenceFactory();
+
+    for (const auto& pair : pairs)
+    {
+        std::unique_ptr<geos::geom::CoordinateSequence> coords = cs_factory->create({
+            *pair.first.point->getCoordinate(),
+            *pair.second.point->getCoordinate(),
+        });
+        auto edge = m_factory.createLineString(std::move(coords));
+        edges.push_back(std::move(edge));
+    }
+
+    return edges;
+}
+
+GeometryGraph::Node&
+GeometryGraph::find_or_insert(Nodes_t& inserted_coords, const geos::geom::Coordinate& coord)
+{
+    auto iter = inserted_coords.find(coord);
+
+    // This isn't a coordinate we know about.
+    if (iter == inserted_coords.end())
+    {
+        auto point = std::unique_ptr<geos::geom::Point>(m_factory.createPoint(coord));
+        GeometryGraph::Node new_node(m_nodes.size(), std::move(point));
+        LOG4CPLUS_TRACE(s_logger,
+                        "Adding new node " << new_node.index << "\t" << new_node.point->toString());
+        auto result = inserted_coords.emplace(coord, new_node.index);
+        iter = result.first;
+        m_nodes.push_back(std::move(new_node));
+    }
+
+    return m_nodes.at(iter->second);
+}
+
+void GeometryGraph::build(const geos::geom::Geometry& geometry)
+{
+    m_nodes.reserve(geometry.getNumPoints());
+
+    // Need to look up a node's ID by it's coordinates, if it exists.
+    std::map<geos::geom::Coordinate, std::size_t, geos::geom::CoordinateLessThen> inserted_coords;
+
+    for (const auto& geom : geom2graph::GeometryFlattener(geometry))
+    {
+        const auto coords = geom.getCoordinates();
+        for (std::size_t i = 0, j = 1; j < coords->getSize(); i = j++)
+        {
+            const auto& curr = coords->getAt(i);
+            const auto& next = coords->getAt(j);
+
+            LOG4CPLUS_TRACE(s_logger,
+                            "Adding edge " << curr.toString() << " -> " << next.toString());
+
+            // Add, or lookup the nodes in the graph.
+            auto& curr_node = find_or_insert(inserted_coords, curr);
+            auto& next_node = find_or_insert(inserted_coords, next);
+
+            add_edge(curr_node.index, next_node.index);
+        }
+    }
 }
 }  // namespace geom2graph::noding

@@ -55,7 +55,7 @@ int main(int argc, const char* argv[])
     LOG4CPLUS_INFO(s_logger, "Writing geometry graph...");
     //! @todo Read graph output format from commandline arguments.
     std::unique_ptr<geom2graph::io::GraphWriter> writer =
-        std::make_unique<geom2graph::io::TGFGraphWriter>(args.output, *factory);
+        std::make_unique<geom2graph::io::TGFGraphWriter>(args.output);
     writer->write(graph);
 
     return 0;
