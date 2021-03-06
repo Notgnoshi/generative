@@ -218,3 +218,92 @@ TEST(GeometryFlattenerTests, TestDeeplyNestedCollection)
         e++;
     }
 }
+
+TEST(GeometryFlattenerTests, RecursiveIteratorEquality)
+{
+    // The multipoint will have a child iterator.
+    const auto geometry = from_wkt("GEOMETRYCOLLECTION(MULTIPOINT(1 1, 2 2), POINT(3 3))");
+    ASSERT_TRUE(geometry);
+    auto flattener = geom2graph::GeometryFlattener(*geometry);
+    const auto end = flattener.end();
+    auto iter1 = flattener.begin();
+    auto iter2 = flattener.begin();
+
+    ASSERT_NE(iter1, end);
+    ASSERT_EQ(iter1, iter2);
+
+    ++iter1;
+    EXPECT_NE(iter1, iter2);
+
+    ++iter2;
+    EXPECT_EQ(iter1, iter2);
+
+    ++iter1;
+    ++iter2;
+    EXPECT_EQ(iter1, iter2);
+
+    ++iter1;
+    ++iter2;
+    EXPECT_EQ(iter1, iter2);
+    EXPECT_EQ(iter1, end);
+}
+
+TEST(GeometryFlattenerTests, DeeplyRecursiveIteratorEquality)
+{
+    const auto geometry = from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION("
+            "GEOMETRYCOLLECTION("
+                "POINT(1 1),"                    // 0
+                "GEOMETRYCOLLECTION("
+                    "MULTIPOINT((2 2), (3 3)),"  // 1, 2
+                    "POINT(4 4)"                 // 3
+                "),"
+                "MULTIPOINT((5 5))"              // 4
+            "),"
+            "POINT(6 6),"                        // 5
+            "MULTILINESTRING((7 7, 8 8, 9 9))"   // 6, 7, 8
+        ")"
+        // clang-format on
+    );
+    ASSERT_TRUE(geometry);
+
+    auto flattener = geom2graph::GeometryFlattener(*geometry);
+    const auto end = flattener.end();
+
+    auto iter1 = flattener.begin();
+    auto iter2 = flattener.begin();
+
+    ASSERT_NE(iter1, end);
+    ASSERT_EQ(iter1, iter2);
+
+    ++iter1;
+    ASSERT_NE(iter1, end);
+    EXPECT_NE(iter1, iter2);
+
+    ++iter1;
+    ASSERT_NE(iter1, end);
+    EXPECT_NE(iter1, iter2);
+
+    ++iter1;
+    ASSERT_NE(iter1, end);
+    EXPECT_NE(iter1, iter2);
+
+    std::advance(iter2, 3);
+    ASSERT_NE(iter2, end);
+    EXPECT_EQ(iter1, iter2);
+
+    std::advance(iter2, 3);
+    ASSERT_NE(iter2, end);
+    EXPECT_NE(iter1, iter2);
+
+    std::advance(iter1, 3);
+    ASSERT_NE(iter1, end);
+    EXPECT_EQ(iter1, iter2);
+
+    std::advance(iter1, 1);
+    std::advance(iter2, 1);
+
+    EXPECT_EQ(iter1, end);
+    EXPECT_EQ(iter1, iter2);
+}
