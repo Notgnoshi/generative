@@ -126,7 +126,14 @@ GeometryFlattener::RecursiveGeometryIterator::operator++()
 bool GeometryFlattener::RecursiveGeometryIterator::operator==(
     const RecursiveGeometryIterator& rhs) const
 {
-    return (&this->m_geometry == &rhs.m_geometry) && this->m_index == rhs.m_index;
+    // They need to both have iterators, or both not have iterators.
+    const bool children_iter_xor = !m_iterator != !rhs.m_iterator;
+    bool children_equal = true;
+    if (m_iterator && !children_iter_xor)
+    {
+        children_equal = m_iterator->operator==(*rhs.m_iterator);
+    }
+    return (&this->m_geometry == &rhs.m_geometry) && this->m_index == rhs.m_index && children_equal;
 }
 
 bool GeometryFlattener::RecursiveGeometryIterator::operator!=(
