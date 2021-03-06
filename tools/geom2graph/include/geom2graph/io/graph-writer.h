@@ -1,7 +1,6 @@
 #pragma once
 #include "geom2graph/noding/geometry-graph.h"
 
-#include <geos/geom/GeometryFactory.h>
 #include <geos/io/WKTWriter.h>
 
 #include <ostream>
@@ -10,13 +9,7 @@ namespace geom2graph::io {
 class GraphWriter
 {
 public:
-    //! @todo It feels weird that a graph writer needs a geometry factory.
-    //! It's needed because you can't directly convert Coordinates to WKT.
-    //! I think the solution is to store POINTs in the GeometryGraph::Node, which will be nice,
-    //! because we already have to copy the Coordinate.
-    //! @todo Investigate the size difference between a Coordinate and a Point.
-    explicit GraphWriter(std::ostream& output, const geos::geom::GeometryFactory& factory) :
-        m_out(output), m_factory(factory)
+    explicit GraphWriter(std::ostream& output) : m_out(output)
     {
         m_writer.setTrim(true);
         m_writer.setOutputDimension(3);
@@ -26,7 +19,7 @@ public:
     //! @brief Write the given graph to the provided ostream.
     virtual void write(const geom2graph::noding::GeometryGraph& graph)
     {
-        const auto& nodes = graph.get_graph();
+        const auto& nodes = graph.get_nodes();
         this->start_nodes();
         for (const auto& node : nodes)
         {
@@ -35,17 +28,10 @@ public:
         this->end_nodes();
 
         this->start_edges();
-
-        for (const auto& node : nodes)
+        const auto edges = graph.get_edge_pairs();
+        for (const auto& edge : edges)
         {
-            for (const auto adj : node.adjacencies)
-            {
-                // Only print each edge once.
-                if (node.id < adj)
-                {
-                    handle_edge(node, nodes[adj]);
-                }
-            }
+            this->handle_edge(edge.first, edge.second);
         }
         this->end_edges();
     }
@@ -63,13 +49,11 @@ protected:
     [[nodiscard]] std::ostream& out() const { return m_out; }
     [[nodiscard]] std::string wkt(const geom2graph::noding::GeometryGraph::Node& node)
     {
-        const auto point = std::unique_ptr<geos::geom::Point>(m_factory.createPoint(node.coord));
-        return m_writer.write(point.get());
+        return m_writer.write(node.point.get());
     }
 
 private:
     std::ostream& m_out;
-    const geos::geom::GeometryFactory& m_factory;
     geos::io::WKTWriter m_writer;
 };
 }  // namespace geom2graph::io

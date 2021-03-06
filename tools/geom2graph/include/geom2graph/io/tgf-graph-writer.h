@@ -5,10 +5,7 @@ namespace geom2graph::io {
 class TGFGraphWriter : public GraphWriter
 {
 public:
-    TGFGraphWriter(std::ostream& out, const geos::geom::GeometryFactory& factory) :
-        GraphWriter(out, factory)
-    {
-    }
+    TGFGraphWriter(std::ostream& out) : GraphWriter(out) {}
 
 private:
     void handle_node(const geom2graph::noding::GeometryGraph::Node& node) override;

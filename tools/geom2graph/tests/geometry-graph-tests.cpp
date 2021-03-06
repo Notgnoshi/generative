@@ -17,7 +17,7 @@ TEST(GeometryGraphTests, SingleLinestring)
     ASSERT_TRUE(coords);
 
     const auto graph = geom2graph::noding::GeometryGraph(*geometry);
-    const auto& nodes = graph.get_graph();
+    const auto& nodes = graph.get_nodes();
 
     ASSERT_THAT(nodes, SizeIs(3));
     const auto& first = nodes.at(0);
@@ -25,9 +25,9 @@ TEST(GeometryGraphTests, SingleLinestring)
     const auto& third = nodes.at(2);
 
     // As an implementation detail, expect the IDs to be generated in order of discovery.
-    EXPECT_EQ(first.coord, coords->getAt(0));
-    EXPECT_EQ(second.coord, coords->getAt(1));
-    EXPECT_EQ(third.coord, coords->getAt(2));
+    EXPECT_EQ(*first.point->getCoordinate(), coords->getAt(0));
+    EXPECT_EQ(*second.point->getCoordinate(), coords->getAt(1));
+    EXPECT_EQ(*third.point->getCoordinate(), coords->getAt(2));
 
     EXPECT_THAT(first.adjacencies, UnorderedElementsAre(1));
     EXPECT_THAT(second.adjacencies, UnorderedElementsAre(0, 2));
@@ -42,16 +42,16 @@ TEST(GeometryGraphTests, Single3DLinstring)
     ASSERT_TRUE(coords);
 
     const auto graph = geom2graph::noding::GeometryGraph(*geometry);
-    const auto& nodes = graph.get_graph();
+    const auto& nodes = graph.get_nodes();
 
     ASSERT_THAT(nodes, SizeIs(3));
     const auto& first = nodes.at(0);
     const auto& second = nodes.at(1);
     const auto& third = nodes.at(2);
 
-    EXPECT_EQ(first.coord, coords->getAt(0));
-    EXPECT_EQ(second.coord, coords->getAt(1));
-    EXPECT_EQ(third.coord, coords->getAt(2));
+    EXPECT_EQ(*first.point->getCoordinate(), coords->getAt(0));
+    EXPECT_EQ(*second.point->getCoordinate(), coords->getAt(1));
+    EXPECT_EQ(*third.point->getCoordinate(), coords->getAt(2));
 
     EXPECT_THAT(first.adjacencies, UnorderedElementsAre(1));
     EXPECT_THAT(second.adjacencies, UnorderedElementsAre(0, 2));
@@ -66,7 +66,7 @@ TEST(GeometryGraphTests, ClosedPolygon)
     ASSERT_TRUE(coords);
 
     const auto graph = geom2graph::noding::GeometryGraph(*geometry);
-    const auto& nodes = graph.get_graph();
+    const auto& nodes = graph.get_nodes();
 
     ASSERT_THAT(nodes, SizeIs(3));
 
@@ -75,9 +75,9 @@ TEST(GeometryGraphTests, ClosedPolygon)
     const auto& third = nodes.at(2);
 
     // As an implementation detail, expect the IDs to be generated in order of discovery.
-    EXPECT_EQ(first.coord, coords->getAt(0));
-    EXPECT_EQ(second.coord, coords->getAt(1));
-    EXPECT_EQ(third.coord, coords->getAt(2));
+    EXPECT_EQ(*first.point->getCoordinate(), coords->getAt(0));
+    EXPECT_EQ(*second.point->getCoordinate(), coords->getAt(1));
+    EXPECT_EQ(*third.point->getCoordinate(), coords->getAt(2));
 
     EXPECT_THAT(first.adjacencies, UnorderedElementsAre(1, 2));
     EXPECT_THAT(second.adjacencies, UnorderedElementsAre(0, 2));
@@ -100,16 +100,16 @@ TEST(GeometryGraphTests, DisjointMultiLinestring)
     ASSERT_THAT(coords, Pointee(SizeIs(6)));
 
     const auto graph = geom2graph::noding::GeometryGraph(*geometry);
-    const auto& nodes = graph.get_graph();
+    const auto& nodes = graph.get_nodes();
 
     ASSERT_THAT(nodes, SizeIs(6));
     // As an implementation detail, expect the IDs to be generated in order of discovery.
-    EXPECT_EQ(nodes.at(0).coord, coords->getAt(0));
-    EXPECT_EQ(nodes.at(1).coord, coords->getAt(1));
-    EXPECT_EQ(nodes.at(2).coord, coords->getAt(2));
-    EXPECT_EQ(nodes.at(3).coord, coords->getAt(3));
-    EXPECT_EQ(nodes.at(4).coord, coords->getAt(4));
-    EXPECT_EQ(nodes.at(5).coord, coords->getAt(5));
+    EXPECT_EQ(*nodes.at(0).point->getCoordinate(), coords->getAt(0));
+    EXPECT_EQ(*nodes.at(1).point->getCoordinate(), coords->getAt(1));
+    EXPECT_EQ(*nodes.at(2).point->getCoordinate(), coords->getAt(2));
+    EXPECT_EQ(*nodes.at(3).point->getCoordinate(), coords->getAt(3));
+    EXPECT_EQ(*nodes.at(4).point->getCoordinate(), coords->getAt(4));
+    EXPECT_EQ(*nodes.at(5).point->getCoordinate(), coords->getAt(5));
 
     EXPECT_THAT(nodes.at(0).adjacencies, UnorderedElementsAre(1));
     EXPECT_THAT(nodes.at(1).adjacencies, UnorderedElementsAre(0, 2));
@@ -135,16 +135,17 @@ TEST(GeometryGraphTests, MultiLinestring)
     ASSERT_THAT(coords, Pointee(SizeIs(6)));
 
     const auto graph = geom2graph::noding::GeometryGraph(*geometry);
-    const auto& nodes = graph.get_graph();
+    const auto& nodes = graph.get_nodes();
 
     // The two geometries share a point, so the numbers of points don't match.
     ASSERT_THAT(nodes, SizeIs(5));
     // As an implementation detail, expect the IDs to be generated in order of discovery.
-    EXPECT_EQ(nodes.at(0).coord, coords->getAt(0));
-    EXPECT_EQ(nodes.at(1).coord, coords->getAt(1));
-    EXPECT_EQ(nodes.at(2).coord, coords->getAt(2));
-    EXPECT_EQ(nodes.at(3).coord, coords->getAt(4));  // Skipping 3, because it's a duplicate!
-    EXPECT_EQ(nodes.at(4).coord, coords->getAt(5));
+    EXPECT_EQ(*nodes.at(0).point->getCoordinate(), coords->getAt(0));
+    EXPECT_EQ(*nodes.at(1).point->getCoordinate(), coords->getAt(1));
+    EXPECT_EQ(*nodes.at(2).point->getCoordinate(), coords->getAt(2));
+    EXPECT_EQ(*nodes.at(3).point->getCoordinate(),
+              coords->getAt(4));  // Skipping 3, because it's a duplicate!
+    EXPECT_EQ(*nodes.at(4).point->getCoordinate(), coords->getAt(5));
 
     EXPECT_THAT(nodes.at(0).adjacencies, UnorderedElementsAre(1));
     EXPECT_THAT(nodes.at(1).adjacencies, UnorderedElementsAre(0, 2, 3));
@@ -159,7 +160,7 @@ TEST(GeometryGraphTests, LonePoint)
     ASSERT_TRUE(geometry);
 
     const auto graph = geom2graph::noding::GeometryGraph(*geometry);
-    const auto& nodes = graph.get_graph();
+    const auto& nodes = graph.get_nodes();
 
     // Point isn't added to the graph, because we iterate over the coordinates of a geometry
     // pairwise.
