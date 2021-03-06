@@ -26,7 +26,7 @@ set_project_warnings(project_warnings)
 include(cmake/doxygen.cmake)
 enable_doxygen()
 
-option(ENABLE_PCH "Enable Precompiled Headers" OFF)
+option(ENABLE_PCH "Enable Precompiled Headers" ON)
 if(ENABLE_PCH)
     target_precompile_headers(
         project_options
@@ -35,6 +35,9 @@ if(ENABLE_PCH)
         <string>
         <map>
         <utility>
+        <unordered_set>
+        <set>
+        <memory>
     )
 endif()
 
