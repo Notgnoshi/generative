@@ -9,6 +9,7 @@
 #include <geos/geom/GeometryCollection.h>
 #include <geos/io/WKTWriter.h>
 #include <geos/noding/snap/SnappingNoder.h>
+#include <geos/operation/polygonize/Polygonizer.h>
 #include <log4cplus/consoleappender.h>
 #include <log4cplus/initializer.h>
 #include <log4cplus/logger.h>
@@ -64,18 +65,55 @@ static int _graph2geom(const CmdlineArgs& args)
     LOG4CPLUS_INFO(s_logger, "Reading graph...");
     auto factory = geos::geom::GeometryFactory::create();
     std::unique_ptr<geom2graph::io::GraphReader> reader;
-    std::unique_ptr<geom2graph::io::GraphWriter> writer;
     switch (args.graph_format)
     {
     case CmdlineArgs::GraphFormat::TGF:
         reader = std::make_unique<geom2graph::io::TGFGraphReader>(args.input, *factory);
-        writer = std::make_unique<geom2graph::io::TGFGraphWriter>(args.output);
     }
     const auto graph = reader->read();
 
-    //! @todo Remove me. I'm just for debugging.
-    LOG4CPLUS_INFO(s_logger, "Writing graph...");
-    writer->write(graph);
+    LOG4CPLUS_INFO(s_logger, "Read graph with " << graph.get_nodes().size() << " nodes");
+    // Expensive, as it has to create a new LINESTRING geometry for every edge.
+    const auto owned_edges = graph.get_edges();
+    LOG4CPLUS_INFO(s_logger, "Read " << owned_edges.size() << " edges from graph");
+
+    // The polygonizer takes raw pointers, so we have to get a non-owning view.
+    std::vector<const geos::geom::Geometry*> edges;
+    edges.reserve(owned_edges.size());
+    std::transform(
+        owned_edges.begin(),
+        owned_edges.end(),
+        std::back_inserter(edges),
+        [](const std::unique_ptr<geos::geom::LineString>& edge) -> const geos::geom::Geometry* {
+            return edge.get();
+        });
+
+    auto polygonizer = geos::operation::polygonize::Polygonizer();
+    // Adding the edges doesn't actually polygonize. That's deferred to the first time the polygons
+    // or dangles are accessed.
+    polygonizer.add(&edges);
+
+    LOG4CPLUS_INFO(s_logger, "Polygonizing graph...");
+    const auto polys = polygonizer.getPolygons();
+    const auto dangles = polygonizer.getDangles();
+    LOG4CPLUS_INFO(s_logger,
+                   "Got " << polys.size() << " polygons and " << dangles.size() << " dangles.");
+
+    geos::io::WKTWriter writer;
+    writer.setTrim(true);
+    writer.setOutputDimension(3);
+
+    for (const auto& poly : polys)
+    {
+        const std::string wkt = writer.write(poly.get());
+        args.output << wkt << std::endl;
+    }
+    for (const auto& dangle : dangles)
+    {
+        const std::string wkt = writer.write(dangle);
+        args.output << wkt << std::endl;
+    }
+
     return 0;
 }
 
