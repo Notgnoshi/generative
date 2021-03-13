@@ -129,7 +129,7 @@ void TGFGraphReader::read_node(const std::string& _line) noexcept
         return;
     }
 
-
+    //! @todo This doesn't print 3D points...
     LOG4CPLUS_DEBUG(s_logger, "Adding node " << point->toString() << " at index " << index);
     m_nodes_list.emplace_back(index, std::move(point));
 }
