@@ -3,6 +3,7 @@
 #include "geom2graph/io/tgf-graph-reader.h"
 #include "geom2graph/io/tgf-graph-writer.h"
 #include "geom2graph/io/wkt-stream-reader.h"
+#include "geom2graph/io/wkt.h"
 #include "geom2graph/noding/geometry-graph.h"
 #include "geom2graph/noding/geometry-noder.h"
 
@@ -19,6 +20,8 @@
 #include <string>
 
 static auto s_logger = log4cplus::Logger::getRoot();
+
+using geom2graph::io::operator<<;
 
 static int _geom2graph(const CmdlineArgs& args)
 {
@@ -44,6 +47,7 @@ static int _geom2graph(const CmdlineArgs& args)
         return 1;
     }
 
+    LOG4CPLUS_TRACE(s_logger, "Snapped geometries: " << noded);
     LOG4CPLUS_INFO(s_logger, "Building geometry graph...");
     const auto graph = geom2graph::noding::GeometryGraph(*noded);
 

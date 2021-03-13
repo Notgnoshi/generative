@@ -1,5 +1,7 @@
 #include "geom2graph/io/tgf-graph-reader.h"
 
+#include "geom2graph/io/wkt.h"
+
 #include <geos/geom/Point.h>
 #include <geos/io/ParseException.h>
 #include <log4cplus/logger.h>
@@ -117,8 +119,7 @@ void TGFGraphReader::read_node(const std::string& _line) noexcept
 
     if (geometry->getGeometryTypeId() != geos::geom::GeometryTypeId::GEOS_POINT)
     {
-        LOG4CPLUS_WARN(
-            s_logger, "Only POINT node labels are supported. Got '" << geometry->toString() << "'");
+        LOG4CPLUS_WARN(s_logger, "Only POINT node labels are supported. Got '" << geometry << "'");
         return;
     }
 
@@ -129,8 +130,7 @@ void TGFGraphReader::read_node(const std::string& _line) noexcept
         return;
     }
 
-    //! @todo This doesn't print 3D points...
-    LOG4CPLUS_DEBUG(s_logger, "Adding node " << point->toString() << " at index " << index);
+    LOG4CPLUS_DEBUG(s_logger, "Adding node " << point << " at index " << index);
     m_nodes_list.emplace_back(index, std::move(point));
 }
 

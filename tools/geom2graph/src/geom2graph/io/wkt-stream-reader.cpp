@@ -1,4 +1,5 @@
 #include "geom2graph/io/wkt-stream-reader.h"
+#include "geom2graph/io/wkt.h"
 
 #include <geos/geom/Geometry.h>
 #include <geos/geom/GeometryFactory.h>
@@ -55,7 +56,7 @@ WKTStreamReader::GeometryIterator& WKTStreamReader::GeometryIterator::operator++
         {
             m_current_value = m_wkt_reader.read(line);
             got_valid_geometry = true;
-            LOG4CPLUS_DEBUG(s_logger, "Read geometry '" << m_current_value->toString() << "'");
+            LOG4CPLUS_DEBUG(s_logger, "Read geometry '" << m_current_value << "'");
         } catch (const geos::io::ParseException& e)
         {
             // Need to handle the case that this was the last line in the stream. >:(
