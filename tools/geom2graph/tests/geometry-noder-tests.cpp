@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 using geom2graph::io::from_wkt;
+using geom2graph::io::operator<<;
 
 TEST(GeometryNoderTests, DisjointPoint)
 {
@@ -152,7 +153,7 @@ TEST(GeometryNoderTests, SnappingNoder)
     // std::cerr << noded->toString() << std::endl;
 
     EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
-    EXPECT_TRUE(noded->equals(expected.get()));
+    EXPECT_TRUE(noded->equals(expected.get())) << "actual: " << noded << " expected: " << expected;
 }
 
 //! @todo Use google benchmark.

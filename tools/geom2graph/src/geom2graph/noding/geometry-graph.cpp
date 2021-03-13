@@ -1,6 +1,7 @@
 #include "geom2graph/noding/geometry-graph.h"
 
 #include "geom2graph/geometry-flattener.h"
+#include "geom2graph/io/wkt.h"
 
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/CoordinateSequenceFactory.h>
@@ -14,6 +15,7 @@
 
 static auto s_logger = log4cplus::Logger::getInstance("geom2graph.noding.geometrygraph");
 
+using geom2graph::io::operator<<;
 namespace geom2graph::noding {
 
 GeometryGraph::GeometryGraph(const geos::geom::Geometry& multilinestring) :
@@ -23,7 +25,7 @@ GeometryGraph::GeometryGraph(const geos::geom::Geometry& multilinestring) :
 }
 
 GeometryGraph::GeometryGraph(std::vector<GeometryGraph::Node>&& nodes,
-        const geos::geom::GeometryFactory& factory) :
+                             const geos::geom::GeometryFactory& factory) :
     m_factory(factory), m_nodes(std::move(nodes))
 {
 }
@@ -84,8 +86,7 @@ GeometryGraph::find_or_insert(Nodes_t& inserted_coords, const geos::geom::Coordi
     {
         auto point = std::unique_ptr<geos::geom::Point>(m_factory.createPoint(coord));
         GeometryGraph::Node new_node(m_nodes.size(), std::move(point));
-        LOG4CPLUS_TRACE(s_logger,
-                        "Adding new node " << new_node.index << "\t" << new_node.point->toString());
+        LOG4CPLUS_TRACE(s_logger, "Adding new node " << new_node.index << "\t" << new_node.point);
         auto result = inserted_coords.emplace(coord, new_node.index);
         iter = result.first;
         m_nodes.push_back(std::move(new_node));
@@ -109,8 +110,7 @@ void GeometryGraph::build(const geos::geom::Geometry& geometry)
             const auto& curr = coords->getAt(i);
             const auto& next = coords->getAt(j);
 
-            LOG4CPLUS_TRACE(s_logger,
-                            "Adding edge " << curr.toString() << " -> " << next.toString());
+            LOG4CPLUS_TRACE(s_logger, "new edge " << curr.toString() << " -> " << next.toString());
 
             // Add, or lookup the nodes in the graph.
             auto& curr_node = find_or_insert(inserted_coords, curr);
