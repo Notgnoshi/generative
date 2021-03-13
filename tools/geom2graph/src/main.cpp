@@ -1,5 +1,6 @@
 #include "cmdline.h"
 #include "geom2graph/geometry-flattener.h"
+#include "geom2graph/io/tgf-graph-reader.h"
 #include "geom2graph/io/tgf-graph-writer.h"
 #include "geom2graph/io/wkt-stream-reader.h"
 #include "geom2graph/noding/geometry-graph.h"
@@ -18,15 +19,8 @@
 
 static auto s_logger = log4cplus::Logger::getRoot();
 
-int main(int argc, const char* argv[])
+static int _geom2graph(const CmdlineArgs& args)
 {
-    log4cplus::Initializer initializer;
-    // A basic ConsoleAppender that logs to stderr.
-    auto appender = log4cplus::SharedAppenderPtr(new log4cplus::ConsoleAppender(true, true));
-    s_logger.addAppender(appender);
-
-    const CmdlineArgs args = CmdlineArgs::parse_args(argc, argv);
-
     LOG4CPLUS_INFO(s_logger, "Reading geometries...");
     auto factory = geos::geom::GeometryFactory::create();
     auto geom_stream = geom2graph::io::WKTStreamReader(args.input, *factory);
@@ -53,10 +47,52 @@ int main(int argc, const char* argv[])
     const auto graph = geom2graph::noding::GeometryGraph(*noded);
 
     LOG4CPLUS_INFO(s_logger, "Writing geometry graph...");
-    //! @todo Read graph output format from commandline arguments.
-    std::unique_ptr<geom2graph::io::GraphWriter> writer =
-        std::make_unique<geom2graph::io::TGFGraphWriter>(args.output);
-    writer->write(graph);
 
+    std::unique_ptr<geom2graph::io::GraphWriter> writer;
+    switch (args.graph_format)
+    {
+    case CmdlineArgs::GraphFormat::TGF:
+        writer = std::make_unique<geom2graph::io::TGFGraphWriter>(args.output);
+        break;
+    }
+    writer->write(graph);
     return 0;
+}
+
+static int _graph2geom(const CmdlineArgs& args)
+{
+    LOG4CPLUS_INFO(s_logger, "Reading graph...");
+    auto factory = geos::geom::GeometryFactory::create();
+    std::unique_ptr<geom2graph::io::GraphReader> reader;
+    std::unique_ptr<geom2graph::io::GraphWriter> writer;
+    switch (args.graph_format)
+    {
+    case CmdlineArgs::GraphFormat::TGF:
+        reader = std::make_unique<geom2graph::io::TGFGraphReader>(args.input, *factory);
+        writer = std::make_unique<geom2graph::io::TGFGraphWriter>(args.output);
+    }
+    const auto graph = reader->read();
+
+    //! @todo Remove me. I'm just for debugging.
+    LOG4CPLUS_INFO(s_logger, "Writing graph...");
+    writer->write(graph);
+    return 0;
+}
+
+int main(int argc, const char* argv[])
+{
+    log4cplus::Initializer initializer;
+    // A basic ConsoleAppender that logs to stderr.
+    auto appender = log4cplus::SharedAppenderPtr(new log4cplus::ConsoleAppender(true, true));
+    s_logger.addAppender(appender);
+
+    const CmdlineArgs args = CmdlineArgs::parse_args(argc, argv);
+
+    if (args.graph2geom)
+    {
+        LOG4CPLUS_INFO(s_logger, "Converting graph to geometries...");
+        return _graph2geom(args);
+    }
+    LOG4CPLUS_INFO(s_logger, "Converting geometries to a graph...");
+    return _geom2graph(args);
 }
