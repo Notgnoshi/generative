@@ -100,7 +100,7 @@ void GeometryGraph::build(const geos::geom::Geometry& geometry)
     m_nodes.reserve(geometry.getNumPoints());
 
     // Need to look up a node's ID by it's coordinates, if it exists.
-    std::map<geos::geom::Coordinate, std::size_t, geos::geom::CoordinateLessThen> inserted_coords;
+    GeometryGraph::Nodes_t inserted_coords;
 
     for (const auto& geom : geom2graph::GeometryFlattener(geometry))
     {

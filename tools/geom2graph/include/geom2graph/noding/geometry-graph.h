@@ -74,7 +74,34 @@ public:
     [[nodiscard]] std::vector<std::unique_ptr<geos::geom::LineString>> get_edges() const;
 
 private:
-    using Nodes_t = std::map<geos::geom::Coordinate, std::size_t, geos::geom::CoordinateLessThen>;
+    struct Coordinate3DSafeLessThan
+    {
+        bool operator()(const geos::geom::Coordinate& lhs, const geos::geom::Coordinate& rhs) const
+        {
+            if (lhs.x < rhs.x)
+            {
+                return true;
+            }
+            if (lhs.x > rhs.x)
+            {
+                return false;
+            }
+            if (lhs.y < rhs.y)
+            {
+                return true;
+            }
+            if (lhs.y > rhs.y)
+            {
+                return false;
+            }
+
+            // For 2D coordinates, the z value is std::numeric_limits<double>::quiet_NaN()
+            const auto l_z = std::isnan(lhs.z) ? 0 : lhs.z;
+            const auto r_z = std::isnan(rhs.z) ? 0 : rhs.z;
+            return l_z < r_z;
+        }
+    };
+    using Nodes_t = std::map<geos::geom::Coordinate, std::size_t, Coordinate3DSafeLessThan>;
 
     // Used in get_edges and find_or_insert
     const geos::geom::GeometryFactory& m_factory;
