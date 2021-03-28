@@ -34,7 +34,7 @@ TEST(GeometryGraphTests, SingleLinestring)
     EXPECT_THAT(third.adjacencies, UnorderedElementsAre(1));
 }
 
-TEST(GeometryGraphTests, Single3DLinstring)
+TEST(GeometryGraphTests, Single3DLinestring)
 {
     const auto geometry = geom2graph::io::from_wkt("LINESTRING Z(0 0 0, 1 1 1, 2 2 2)");
     ASSERT_TRUE(geometry);
@@ -56,6 +56,34 @@ TEST(GeometryGraphTests, Single3DLinstring)
     EXPECT_THAT(first.adjacencies, UnorderedElementsAre(1));
     EXPECT_THAT(second.adjacencies, UnorderedElementsAre(0, 2));
     EXPECT_THAT(third.adjacencies, UnorderedElementsAre(1));
+}
+
+TEST(GeometryGraphTests, MayaLineString)
+{
+    // The first linestring from the maya-tree-2 example.
+    const auto geometry = geom2graph::io::from_wkt(
+        "LINESTRING Z (0 0 0, 0 0 1, 0 -0.7071067811865476 1.707106781186547)");
+    ASSERT_TRUE(geometry);
+    ASSERT_EQ(geometry->getNumPoints(), 3);
+    ASSERT_EQ(geometry->getCoordinateDimension(), 3);
+
+    const auto graph = geom2graph::noding::GeometryGraph(*geometry);
+    const auto& nodes = graph.get_nodes();
+
+    ASSERT_THAT(nodes, SizeIs(3));
+}
+
+TEST(GeometryGraphTests, DifferInZCoord)
+{
+    const auto geometry = geom2graph::io::from_wkt("LINESTRING Z (0 0 1, 0 0 2, 0 0 3)");
+    ASSERT_TRUE(geometry);
+    ASSERT_EQ(geometry->getNumPoints(), 3);
+    ASSERT_EQ(geometry->getCoordinateDimension(), 3);
+
+    const auto graph = geom2graph::noding::GeometryGraph(*geometry);
+    const auto& nodes = graph.get_nodes();
+
+    ASSERT_THAT(nodes, SizeIs(3));
 }
 
 TEST(GeometryGraphTests, ClosedPolygon)
