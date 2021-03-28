@@ -11,6 +11,7 @@ set_property(TARGET geom2graph PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 set_property(TARGET geom2graph_lib PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 target_link_libraries(geom2graph_lib PRIVATE project_options project_warnings)
+target_link_libraries(geom2graph_lib PUBLIC SFCGAL gmp gmpxx)
 third_party_target_link_libraries(geom2graph_lib PUBLIC geos)
 third_party_target_link_libraries(geom2graph_lib PRIVATE log4cplus)
 

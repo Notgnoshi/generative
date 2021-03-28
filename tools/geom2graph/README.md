@@ -4,6 +4,14 @@ A C++ CLI application to convert a set of WKT geometries to a graph representati
 
 ## How to build
 
+Install the dependencies
+
+```bash
+sudo apt install libsfcgal-dev libboost-serialization-dev
+```
+
+**TODO:** I would like someone to be able to clone this repository and "just use it" without having to jump through hoops.
+
 Ensure the submodule dependencies have been checked out, and use CMake.
 
 ```bash

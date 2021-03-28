@@ -49,6 +49,11 @@ set(BUILD_BENCHMARKS OFF CACHE BOOL "enable geos benchmarks" FORCE)
 add_subdirectory(depends/geos)
 set(ROOT ../../)
 
+# SFCGAL doesn't provide a SFCGALConfig.cmake file when installed.
+# See: https://packages.ubuntu.com/focal/libsfcgal-dev
+#find_package(SFCGAL)
+find_package(Boost REQUIRED COMPONENTS serialization)
+
 # cxxopts has some very reasonable configuration that detects if it's being built by a third party,
 # and does the right thing so as to not break said party.
 add_subdirectory(depends/cxxopts)
