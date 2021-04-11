@@ -112,3 +112,10 @@ class InterpreterTests(unittest.TestCase):
         tokens = self.i.tokenize(commands)
         lines = list(self.i.interpret(tokens))
         self.assertListEqual(lines, expected)
+
+    def test_orientation_change_doesnt_drop_points(self):
+        # little 'f' means step forward without drawing, so this shouldn't generate a line.
+        commands = io.StringIO(">>>f>>f")
+        tokens = self.i.tokenize(commands)
+        lines = list(self.i.interpret(tokens))
+        self.assertEqual(len(lines), 0)

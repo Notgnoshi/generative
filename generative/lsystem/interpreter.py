@@ -40,6 +40,7 @@ class LSystemInterpeter:
         self.stepsize = stepsize
         self.angle = angle
         self.drawing = True
+        self.orientation_changed = False
         self.active_line = []
         self.stack = []
 
@@ -96,41 +97,47 @@ class LSystemInterpeter:
 
     def _interpret_default(self, tokens: Tokens):
         for token in tokens:
+            # Step forward and draw
             if token in {"F", "G"}:
-                if self.drawing and len(self.active_line) == 0:
+                if self.drawing and (len(self.active_line) == 0 or self.orientation_changed):
                     logger.debug(
-                        f"Making first step forwards since last flush. pos: {self.turtle.position}"
+                        "Making first step forwards since last flush or orientation change. pos: %s",
+                        self.turtle.position,
                     )
+                    self.orientation_changed = False
                     self.active_line.append(self.turtle.position)
                 self.turtle.forward(self.stepsize)
+            # Step forward without drawing
             elif token in {"f", "g"}:
                 yield self._flush_active_line()
                 self.turtle.forward(self.stepsize)
             elif token == "-":
-                self._append_position()
+                self.orientation_changed = True
                 self.turtle.yaw(-self.angle)
             elif token == "+":
-                self._append_position()
+                self.orientation_changed = True
                 self.turtle.yaw(+self.angle)
             elif token == "v":
-                self._append_position()
+                self.orientation_changed = True
                 self.turtle.pitch(-self.angle)
             elif token == "^":
-                self._append_position()
+                self.orientation_changed = True
                 self.turtle.pitch(+self.angle)
             elif token == "<":
-                self._append_position()
+                self.orientation_changed = True
                 self.turtle.roll(-self.angle)
             elif token == ">":
-                self._append_position()
+                self.orientation_changed = True
                 self.turtle.roll(+self.angle)
             elif token == "|":
-                self._append_position()
+                self.orientation_changed = True
                 # TODO: Determine if we should also roll 180deg.
                 self.turtle.yaw(180)
+            # Turn drawing off
             elif token == "d":
                 yield self._flush_active_line()
                 self.drawing = False
+            # Turn drawing back on
             elif token == "D":
                 self.drawing = True
             elif token == "[":
