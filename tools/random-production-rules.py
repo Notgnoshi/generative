@@ -125,8 +125,8 @@ def generate_lhs_distribution(allow_placeholders=False):
     distribution = {
         "F": 0.2,
         "G": 0.1,
-        "f": 0.1,
-        "g": 0.1,
+        "f": 0.05,
+        "g": 0.05,
     }
     remaining_pm = 1.0 - sum(distribution.values())
 
@@ -184,17 +184,23 @@ def generate_rhs_distribution(available_tokens: list, biases: dict, temperature)
 
 def bias(distribution, biases, temperature):
     for token in distribution:
-        distribution[token] *= biases[token]
+        distribution[token] *= biases[token] * temperature
+    # distribution = softmax(distribution, temperature)
+    distribution = normalize(distribution)
+    return distribution
 
-    return normalize(distribution, temperature)
 
-
-def normalize(distribution, temperature):
+def softmax(distribution, temperature):
     denom = sum(np.exp(np.array(list(distribution.values())) / temperature))
-    # denom = sum(distribution.values())
     for token in distribution:
         distribution[token] = np.exp(distribution[token] / temperature) / denom
-        # distribution[token] = distribution[token] / denom
+    return distribution
+
+
+def normalize(distribution):
+    denom = sum(distribution.values())
+    for token in distribution:
+        distribution[token] = distribution[token] / denom
     return distribution
 
 
