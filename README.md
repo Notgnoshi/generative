@@ -335,7 +335,9 @@ $ tail examples/fractal-plant-1.tgf
 6262	6264
 ```
 
-The `geom2graph` tool also works on 3D geometries, and even mixed 2D and 3D input, where it assumes the Z coordinate of the 2D geometries is 0.
+~~The `geom2graph` tool also works on 3D geometries, and even mixed 2D and 3D input, where it assumes the Z coordinate of the 2D geometries is 0.~~
+The `geom2graph` tool is _supposed_ to work on 3D geometries, but due to the limitations of the GEOS library, the z coordinate is ignored when line-line intersections are calculated and snapped together (the graph noding process).
+For now, it will only work on 2D geometries, because fixing GEOS, open source as it is, is no small task, and, well, this project is for fun.
 
 ```shell
 $ tools/parse.py --config examples/maya-tree-2.json |
@@ -430,8 +432,7 @@ EOF
 
 ![Maya tree 2 near the origin](examples/maya-tree-2-origin.png)
 
-Apparently the "trunk" is actually three distinct (non overlapping collinear) segments.
-It will be interesting to look at this again, once I'm able to parse the graph output as a geometry collection, so that we can snap close vertices together, and then look at the resulting geometry.
+This is because the `geom2graph` tool is broken in 3D. The `z` coordinate is ignored when the LINESTRING intersections are calculated, which results in three nodes adjacent to `(0, 0, 0)`.
 
 # Generating Random L-Systems
 
