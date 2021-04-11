@@ -93,6 +93,6 @@ if __name__ == "__main__":
         level=LOG_LEVELS.get(args.log_level),
         stream=sys.stderr,
     )
-    logger = logging.getLogger(name="project.py")
+    logger = logging.getLogger(name=__file__)
 
     main(args)
