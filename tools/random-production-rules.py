@@ -143,14 +143,14 @@ def generate_lhs_distribution(allow_placeholders=False):
 
 def generate_lhs_tokens(distribution, rng):
     """Generate a set of tokens to build production rules for."""
-    # Iteration order over a set is apparently non-deterministic, so use a list instead...
-    tokens = []
+    tokens = set()
     token_pool = list(distribution.keys())
     token_probabilities = list(distribution.values())
     while "f" not in tokens:
-        tokens.append(rng.choice(token_pool, p=token_probabilities))
+        tokens.add(rng.choice(token_pool, p=token_probabilities))
 
-    return tokens
+    # Iteration order over a set is apparently non-deterministic, so use a list instead...
+    return list(tokens)
 
 
 def generate_rhs_distribution(available_tokens: list, biases: dict, temperature):
