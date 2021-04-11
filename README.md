@@ -36,6 +36,7 @@ This is an attempt on doing the same, but with the following improvements:
   - [Example 2](#example-2)
   - [Example 3](#example-3)
 - [Converting the WKT to a graph](#converting-the-wkt-to-a-graph)
+- [Generating Random L-Systems](#generating-random-l-systems)
 
 # L-System Rule Parsing
 
@@ -431,3 +432,57 @@ EOF
 
 Apparently the "trunk" is actually three distinct (non overlapping collinear) segments.
 It will be interesting to look at this again, once I'm able to parse the graph output as a geometry collection, so that we can snap close vertices together, and then look at the resulting geometry.
+
+# Generating Random L-Systems
+
+Using the [random-production-rules.py](tools/random-production-rules.py) tool, you can generate random production rules.
+Notice that in many of the following examples, I've used `tr`/`sed` to edit the generated rules.
+Most of the generated L-Systems aren't interesting, and many of the ones that are, use `d`/`D` and `f`,`g` liberally, so they don't actually generate an image.
+
+```shell
+./tools/random-production-rules.py -d -t 0.8 -s 794256548 |
+    # Manually convert non-drawing to drawing turtle commands to get a sense for some of the random generation.
+    tr f-g F-G |
+    ./tools/parse.py -c - -n 6 | tee /dev/tty |
+    tools/interpret.py |
+    tools/project.py --kind pca --scale 10 |
+    tools/wkt2svg.py -o examples/random-794256548.svg
+firefox examples/random-794256548.svg
+```
+
+![Random L-System](examples/random-794256548.svg)
+
+```shell
+./tools/random-production-rules.py -s 3688899091 -d -t 0.8 |
+    tr f F | tr -d D | tee /dev/tty |
+    ./tools/parse.py -c - -n 8 |
+    ./tools/interpret.py --log-level ERROR |  # Silence warnings because there's an unmatched ']'
+    ./tools/project.py --kind pca --scale 10 |
+    ./tools/wkt2svg.py -o examples/random-3688899091.svg
+firefox examples/random-3688899091.svg
+```
+
+![Random L-System](examples/random-3688899091.svg)
+
+```shell
+./tools/random-production-rules.py -s 431572725 -d |
+    tr f F | sed 's/</<<+F>>+F/g' | tee /dev/tty |
+    ./tools/parse.py -c - -n 6 |
+    ./tools/interpret.py |
+    ./tools/project.py --kind pca --scale 20 |
+    ./tools/wkt2svg.py -o examples/random-431572725.svg
+firefox examples/random-431572725.svg
+```
+
+![Random L-System](examples/random-431572725.svg)
+
+```shell
+./tools/random-production-rules.py -s 1006065088 -d |
+    ./tools/parse.py -c - -n 6 |
+    ./tools/interpret.py |
+    ./tools/project.py --kind pca --scale 20 |
+    ./tools/wkt2svg.py -o examples/random-1006065088.svg
+firefox examples/random-1006065088.svg
+```
+
+![Random L-System](examples/random-1006065088.svg)
