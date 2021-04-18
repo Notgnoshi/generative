@@ -19,6 +19,28 @@ This is an attempt on doing the same, but with the following improvements:
 * Support for several dimensionality-reduction techniques to project inherently 3D L-System trees to 2D
 * 3D OpenGL WKT renderer
 * 2D WKT to SVG generation
+* Random production rule generation
+
+Usage:
+
+```shell
+# Include the submodules if you intend to build the geom2graph tool
+git clone --recurse-submodules https://github.com/Notgnoshi/generative.git
+cd generative
+python -m venv --prompt generative .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+# Optionally run the tests to make sure your environment is sufficient
+pytest
+# Optionally build the geom2graph tool. However, there's currently no real point to doing so :(
+pushd
+mkdir -p tools/geom2graph/build
+pushd tools/geom2graph/build
+cmake ..
+make
+popd
+tools/geom2graph/build/src/geom2graph --help
+```
 
 ## Table of Contents
 
