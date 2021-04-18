@@ -63,7 +63,7 @@ tools/geom2graph/build/src/geom2graph --help
 
 # L-System Rule Parsing
 
-In [*The Algorithmic Beauty of Plants*](http://algorithmicbotany.org/papers/#abop), Lindenmayer and Prusinkiewicz outlined several types of grammars that could be interpreted as algorithmic models of plans.
+In [*The Algorithmic Beauty of Plants*](http://algorithmicbotany.org/papers/#abop), Lindenmayer and Prusinkiewicz outlined several types of grammars that could be interpreted as algorithmic models of plants.
 These grammars are
 
 1. Context-free grammars
