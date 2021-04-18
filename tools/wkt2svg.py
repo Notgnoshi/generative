@@ -13,7 +13,7 @@ import svgwrite
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from generative.wkio import deserialize_geometries  # isort:skip
+from generative.wkio import deserialize_geometries
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
@@ -45,10 +45,10 @@ def parse_args():
         help="Where to output the SVG. Defaults to stdout.",
     )
     parser.add_argument(
-        "--format",
-        "-f",
+        "--input-format",
+        "-I",
         default="wkt",
-        choices=["wkt", "wkb"],
+        choices=["wkt", "wkb", "flat"],
         help="The input format. Defaults to WKT.",
     )
     parser.add_argument(
@@ -145,7 +145,8 @@ def main(args):
     dwg.stroke(color="black", width=1)
 
     # TODO: Flip the y-axis because screen coordinates.
-    for geom in deserialize_geometries(args.input, args.format):
+    # TODO: Add support for styling the SVG with interleaved '#style:' lines or similar?
+    for geom in deserialize_geometries(args.input, args.input_format):
         mx, my, Mx, My = geom.bounds
         min_x = min(mx, min_x)
         min_y = min(my, min_y)

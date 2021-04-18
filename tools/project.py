@@ -7,9 +7,14 @@ import sys
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from generative.wkio import deserialize_geometries, serialize_geometries  # isort:skip
-from generative.projection import project  # isort:skip
-from generative.flatten import flatten, unflatten  # isort:skip
+from generative.flatten import flatten, unflatten
+from generative.projection import project
+from generative.wkio import (
+    deserialize_flat,
+    deserialize_geometries,
+    serialize_flat,
+    serialize_geometries,
+)
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
@@ -40,13 +45,19 @@ def parse_args():
         default=sys.stdout,
         help="Where to output the WKT/WKB. Defaults to stdout.",
     )
-    # TODO: Should I specify both the input and output formats separately?
     parser.add_argument(
-        "--format",
-        "-f",
+        "--input-format",
+        "-I",
         default="wkt",
-        choices=["wkt", "wkb"],
-        help="The input and output format. Defaults to WKT.",
+        choices=["wkt", "wkb", "flat"],
+        help="The input geometry format. Defaults to WKT. Use 'flat' for better performance.",
+    )
+    parser.add_argument(
+        "--output-format",
+        "-O",
+        default="wkt",
+        choices=["wkt", "wkb", "flat"],
+        help="The output geometry format. Defaults to WKT. Use 'flat' for better performance.",
     )
     parser.add_argument(
         "-l",
@@ -79,12 +90,18 @@ def parse_args():
 
 
 def main(args):
-    logger.debug(args)
-    geometries = deserialize_geometries(args.input, args.format)
-    tagged_points = flatten(geometries)
+    if args.input_format != "flat":
+        geometries = deserialize_geometries(args.input, args.input_format)
+        tagged_points = flatten(geometries)
+    else:
+        tagged_points = deserialize_flat(args.input)
     transformed_points = project(tagged_points, args.kind, args.dimensions, args.scale)
-    transformed_geoms = unflatten(transformed_points)
-    serialize_geometries(transformed_geoms, args.output, args.format)
+
+    if args.output_format != "flat":
+        transformed_geoms = unflatten(transformed_points)
+        serialize_geometries(transformed_geoms, args.output, args.output_format)
+    else:
+        serialize_flat(transformed_points, args.output)
 
 
 if __name__ == "__main__":

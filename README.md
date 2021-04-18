@@ -51,6 +51,7 @@ tools/geom2graph/build/src/geom2graph --help
   - [All of the Above](#all-of-the-above)
   - [Why not Parametric?](#why-not-parametric)
 - [L-String Interpretation](#l-string-interpretation)
+- [Geometry Formats](#geometry-formats)
 - [Visualization](#visualization)
 - [Projections](#projections)
 - [SVG Generation](#svg-generation)
@@ -171,6 +172,79 @@ LINESTRING Z (0 -17.31370849898476 29.65685424949237, 0 -16.60660171779822 29.36
 
 There are fewer options than `tools/parse.py`, but you can at least configure the step size and angle used by the turtle.
 See `tools/interpret.py --help` for more information on how the L-Strings are interpreted.
+
+# Geometry Formats
+
+Each tool, where it makes sense, supports three different input and output formats.
+
+* WKT
+* WKB (hex)
+* Flattened and tagged points
+
+Choose the input geometry format by passing `--input-format` or `-I` with any of `wkt`, `wkb` or `flat` as an argument.
+Similarly, use `--output-format` or `-O` with the same formats.
+
+You can use the [`tools/format.py`](tools/format.py) tool to convert between any of the three formats.
+
+```shell
+$ ./tools/format.py --input examples/maya-tree-2.wkt --output-format flat --output examples/maya-tree-2.flat
+$ head examples/maya-tree-2.flat
+(0.0, 0.0, 0.0)	LINESTRING_BEGIN
+(0.0, 0.0, 1.0)
+(0.0, -0.4999999999999999, 1.866025403784439)
+(0.0, -1.366025403784439, 2.366025403784439)
+(0.0, -2.366025403784438, 2.366025403784439)
+(0.0, -3.232050807568877, 1.866025403784439)	LINESTRING_END
+(0.0, -2.366025403784438, 2.366025403784439)	LINESTRING_BEGIN
+(-0.4330127018922194, -3.232050807568877, 2.616025403784439)	LINESTRING_END
+(0.0, -2.366025403784438, 2.366025403784439)	LINESTRING_BEGIN
+(0.4330127018922194, -3.232050807568877, 2.616025403784439)	LINESTRING_END
+$ ./tools/format.py --input-format flat --input examples/maya-tree-2.flat --output-format wkb --output examples/maya-tree-2.wkb
+$ # WKB isn't very interesting to look at:
+$ #head examples/maya-tree-2.wkb
+$ # Ensure that a round trip leaves us where we started:
+$ diff <(./tools/format.py --input-format wkb --input examples/maya-tree-2.wkb --output-format wkt) examples/maya-tree-2.wkt
+$ echo $?
+0
+```
+
+The flattened format is primarily useful for the `tools/project.py` tool, as it flattens a sequence of geometries into an array of points, each of which is tagged with enough metadata to reconstruct the geometry after the point cloud is transformed.
+Using `tools/project.py --output-format=flat` allows you to chain multiple projections together, where subsequent invocations use `--input-format=flat`.
+Doing so is more efficient, because reconstructing the geometries from the tagged array of points requires an inefficient recursive algorithm, that is best avoided when possible.
+
+```shell
+$ tail -n 1 examples/maya-tree-2.wkt
+LINESTRING Z (0.4349557589700654 0.7176281754730549 3.74042421983235, 0.863952186562879 1.001046676532934 4.598116483041933)
+$ Use the identity projection and a scale to rescale a set of geometries
+$ ./tools/project.py --input-format flat --input examples/maya-tree-2.flat --kind I --scale 100 | tail -n 1
+LINESTRING Z (43.49557589700654 71.76281754730549 374.042421983235, 86.39521865628789 100.1046676532934 459.8116483041933)
+$ ./tools/random-production-rules.py --seed 2127293550 |
+    ./tools/parse.py -c - -n 9 |
+    ./tools/interpret.py -l ERROR -o /tmp/example.wkt
+$ ./tools/format.py -i /tmp/example.wkt -O flat -o /tmp/example.flat
+$ time ./tools/project.py -i /tmp/example.wkt --kind I -o /dev/null
+real    0m2.352s
+user    0m3.528s
+sys     0m4.563s
+$ time ./tools/project.py -I flat -i /tmp/example.flat --kind I -o /dev/null
+real    0m1.714s
+user    0m3.008s
+sys     0m4.266s
+$ time ./tools/project.py --kind I --scale 100 -I flat -i /tmp/example.flat -O flat |
+    ./tools/project.py -I flat --kind pca --dimensions 3 -o /dev/null
+real    0m2.569s
+user    0m4.912s
+sys     0m7.299s
+$ time ./tools/project.py --kind I --scale 100 -i /tmp/example.wkt |
+    ./tools/project.py --kind pca --dimensions 3 -o /dev/null
+real    0m4.002s
+user    0m7.231s
+sys     0m7.274s
+```
+
+We can see that the flat format _does_ save time, but not by a significant enough amount to make it worth while.
+
+¯\_(ツ)_/¯
 
 # Visualization
 
