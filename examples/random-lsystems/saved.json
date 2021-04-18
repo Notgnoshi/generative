@@ -1,0 +1,180 @@
+[
+  {
+    "scale": 100,
+    "seed": 3706609496,
+    "rules": [
+      "G -> ^^[|<|G]v|<G+G",
+      "f -> |[++|G^<+"
+    ],
+    "axiom": "f",
+    "iterations": 6,
+    "angle": 90
+  },
+  {
+    "scale": 100,
+    "seed": 4064620663,
+    "rules": [
+      "F -> [F^f][fF^",
+      "F -> ^F]f[<v>]>v>v><^",
+      "F -> >ffv-]v|>>vfFvf",
+      "f -> ^[-vv[|][<Fv-v|f]|"
+    ],
+    "axiom": "F",
+    "iterations": 6,
+    "angle": 90
+  },
+  {
+    "scale": 10,
+    "seed": 607095405,
+    "rules": [
+      "F -> >[^F[FF<",
+      "G -> [F[G<^f>[[^]v",
+      "F -> -|f++FGFf^F",
+      "G -> [][Fv^<[f<",
+      "f -> G[f^GF-["
+    ],
+    "axiom": "F",
+    "iterations": 6,
+    "angle": 3
+  },
+  {
+    "scale": 10,
+    "seed": 3092857892,
+    "rules": [
+      "G -> ><^[fffgvG<f^[^+",
+      "F -> ]F+Fv^[",
+      "g -> [|-f<",
+      "f -> ^FF+|[+F]GfF[]+[F|g"
+    ],
+    "axiom": "g",
+    "iterations": 6,
+    "angle": 15
+  },
+  {
+    "scale": 100,
+    "seed": 4016387261,
+    "rules": [
+      "F -> [||vF<^|F[[|[^v"
+    ],
+    "axiom": "F",
+    "iterations": 6,
+    "angle": 5
+  },
+  {
+    "scale": 100,
+    "seed": 2668370672,
+    "rules": [
+      "F -> v><F[[|vF+|-["
+    ],
+    "axiom": "F",
+    "iterations": 10,
+    "angle": 60
+  },
+  {
+    "scale": 100,
+    "seed": 2668370672,
+    "rules": [
+      "F -> vFvF"
+    ],
+    "axiom": "F",
+    "iterations": 5,
+    "angle": 60,
+    "comment": "Cycles over on top of itself"
+  },
+  {
+    "scale": 50,
+    "seed": 2558613914,
+    "rules": [
+      "f -> Ff[^",
+      "g -> -><-[<+>v",
+      "f -> ^>f>>|[F[[v]>[|]g",
+      "f -> ][g>[+[]",
+      "F -> F[vvF|"
+    ],
+    "axiom": "f",
+    "iterations": 7,
+    "angle": 30
+  },
+  {
+    "scale": 100,
+    "seed": 3649748248,
+    "rules": [
+      "g -> >|-[+vF>-<+-g<]F[|+",
+      "g -> ][F><[g+>v[^",
+      "F -> ][>F+|F-"
+    ],
+    "axiom": "g",
+    "iterations": 10,
+    "angle": 15
+  },
+  {
+    "scale": 10,
+    "seed": 3036428403,
+    "rules": [
+      "G -> <<++-->]^G+",
+      "f -> +F[][",
+      "F -> GG[-<G+G>v>[[FGF[-["
+    ],
+    "axiom": "F",
+    "iterations": 6,
+    "angle": 20
+  },
+  {
+    "scale": 10,
+    "seed": 3036428403,
+    "rules": [
+      "G -> <<++-->]^G+",
+      "f -> +F[][",
+      "F -> GG[-<G+G>v>[[FGF[-["
+    ],
+    "axiom": "F",
+    "iterations": 8,
+    "angle": 30
+  },
+  {
+    "scale": 10,
+    "seed": 2280762444,
+    "rules": [
+      "g -> F-F]F>",
+      "G -> G[G[^[>[[[-",
+      "G -> Gg-Fgg|^-F[|<[+",
+      "G -> ]gFG]v<+|[[",
+      "F -> gg-<^F^"
+    ],
+    "axiom": "G",
+    "iterations": 8,
+    "angle": 2
+  },
+  {
+    "scale": 10,
+    "seed": 3509081966,
+    "rules": [
+      "G -> F]fFg^+f<>F[g",
+      "f -> <^>-|+[[g[f[>F>]f",
+      "g -> ||FFG|GG",
+      "g -> F>>^^[>|v^[[]ff[]g[",
+      "f -> vFf>F<+",
+      "g -> <fvG[f<[>",
+      "F -> G]|"
+    ],
+    "axiom": "G",
+    "iterations": 5,
+    "angle": 90
+  },
+  {
+    "scale": 10,
+    "seed": 3509081966,
+    "rules": [
+      "G -> F]fFg^+f<>F[g",
+      "f -> <^>-|+[[g[f[>F>]f",
+      "g -> ||FFG|GG",
+      "g -> F>>^^[>|v^[[]ff[]g[",
+      "f -> vFf>F<+",
+      "g -> <fvG[f<[>",
+      "F -> G]|"
+    ],
+    "axiom": "G",
+    "iterations": 6,
+    "angle": 11
+  }
+]
