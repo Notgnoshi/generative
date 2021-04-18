@@ -22,7 +22,7 @@ from shapely.geometry import (
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from generative.wkio import deserialize_geometries  # isort:skip
+from generative.wkio import deserialize_geometries
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
@@ -63,11 +63,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--format",
-        "-f",
+        "--input-format",
+        "-I",
         default="wkt",
-        choices=["wkt", "wkb"],
-        help="The input and output format. Defaults to WKT.",
+        choices=["wkt", "wkb", "flat"],
+        help="The input geometry format. Defaults to WKT.",
     )
     parser.add_argument(
         "-l",
@@ -112,7 +112,7 @@ def add(geometry: Geometry, points, segments):
 
 def main(args):
     logger.debug(args)
-    geometries = deserialize_geometries(args.input, args.format)
+    geometries = deserialize_geometries(args.input, args.input_format)
 
     canvas = vispy.scene.SceneCanvas(title=__file__, keys="interactive")
     # TODO: After the points are loaded, use PCA to pick an appropriate default camera view?
@@ -126,7 +126,8 @@ def main(args):
     # Each segment is a 2-tuple of 3D coordinates.
     segments = []
 
-    logger.info("Loading geometries...")
+    logger.debug("Loading geometries...")
+    # TODO: Examine performance.
     for geometry in geometries:
         add(geometry, points, segments)
     logger.info("Loaded %d segments and %d points.", len(segments), len(points))
@@ -138,7 +139,7 @@ def main(args):
     logger.debug("segments: %s", segments)
     logger.debug("points: %s", points)
 
-    logger.info("Adding geometries to scene...")
+    logger.debug("Adding geometries to scene...")
     if len(points) != 0:
         markers = vispy.scene.visuals.Markers(parent=view.scene)
         markers.set_data(
@@ -159,14 +160,16 @@ def main(args):
     if args.axis:
         # TODO: Figure out how to scale the axis up?
         # TODO: Decide if I actually want the axis pinned to a corner of the viewbox.
-        # TODO: In the general case, it may not be reasonable to put the axis at (0, 0, 0)
+        # TODO: Put the axis at the geometries' centroid.
         vispy.scene.visuals.XYZAxis(parent=view.scene)
-    logger.info("Added geometries to scene.")
+    logger.debug("Added geometries to scene.")
 
     # Auto-scale
     view.camera.set_range()
     canvas.show()
     try:
+        # TODO: Add a button that, when clicked, outputs the geometries using the current camera's
+        # perspective as the 3D -> 2D projection.
         vispy.app.run()
     except KeyboardInterrupt:
         vispy.app.quit()

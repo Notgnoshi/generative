@@ -21,9 +21,8 @@ import sys
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from generative.lsystem.interpreter import LSystemInterpeter  # isort:skip
-from generative.wkio import serialize_geometries  # isort:skip
-
+from generative.lsystem.interpreter import LSystemInterpeter
+from generative.wkio import serialize_geometries
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
@@ -80,11 +79,11 @@ def parse_args():
         help="The angle in degrees used for the turtle's orientation modifications. Defaults to 45.",
     )
     parser.add_argument(
-        "--format",
-        "-f",
+        "--output-format",
+        "-O",
         type=str,
         default="wkt",
-        choices=["wkt", "wkb"],
+        choices=["wkt", "wkb", "flat"],
         help="The output format for the turtle path. Defaults to WKT.",
     )
     parser.add_argument(
@@ -100,12 +99,10 @@ def parse_args():
 
 
 def main(args):
-    logger.debug(f"args: {args}")
-
     interpreter = LSystemInterpeter(args.commandset, args.stepsize, args.angle)
     tokens = interpreter.tokenize(args.input)
-    lines = interpreter.interpret(tokens)
-    serialize_geometries(lines, args.output, args.format)
+    geometries = interpreter.interpret(tokens)
+    serialize_geometries(geometries, args.output, args.output_format)
 
 
 if __name__ == "__main__":
