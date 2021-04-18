@@ -244,7 +244,7 @@ sys     0m7.274s
 
 We can see that the flat format _does_ save time, but not by a significant enough amount to make it worth while.
 
-¯\_(ツ)_/¯
+¯\\_(ツ)_/¯
 
 # Visualization
 
@@ -319,7 +319,6 @@ See `tools/project.py --help` for details. The script supports the following pro
 * [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#sklearn.decomposition.PCA)
 * [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD)
 * **TODO:** Isometric
-* **TODO:** 3D variants of the above
 
 I intend on implementing a few more techniques because for this kind of geometric data, none of the above techniques work well with 3D data.
 PCA and SVD work pretty well on 3D data with a missing component (like the Sierpinski tree example).
@@ -376,7 +375,7 @@ Let's try each of the projection techniques on the following plant.
 ```shell
 tools/parse.py --config examples/fractal-plant-3d.json | tools/interpret.py --stepsize=3 --angle=22.5 >/tmp/plant.wkt
 for projection in pca svd; do
-    tools/project.py --kind=$projection --input /tmp/plant.wkt | tools/wkt2svg.py -o examples/plant-$projection.svg
+    tools/project.py --kind=$projection --scale 10 --input /tmp/plant.wkt | tools/wkt2svg.py -o examples/plant-$projection.svg
 done
 ```
 
@@ -533,53 +532,48 @@ This is because the `geom2graph` tool is broken in 3D. The `z` coordinate is ign
 # Generating Random L-Systems
 
 Using the [random-production-rules.py](tools/random-production-rules.py) tool, you can generate random production rules.
-Notice that in many of the following examples, I've used `tr`/`sed` to edit the generated rules.
-Most of the generated L-Systems aren't interesting, and many of the ones that are, use `d`/`D` and `f`,`g` liberally, so they don't actually generate an image.
+
+In the following examples, I've generated many random L-Systems, and saved the configuration for ones I like in [examples/random-lsystems/saved.json](examples/random-lsystems/saved.json).
+Alternatively, you can just use [examples/random-lsystem.sh](examples/random-lsystem.sh) to generate and render random L-Systems of your own.
+It will output the configuration in JSON, along with the random seed for reproducibility.
 
 ```shell
-./tools/random-production-rules.py -d -t 0.8 -s 794256548 |
-    # Manually convert non-drawing to drawing turtle commands to get a sense for some of the random generation.
-    tr f-g F-G |
-    ./tools/parse.py -c - -n 6 | tee /dev/tty |
-    tools/interpret.py |
-    tools/project.py --kind pca --scale 10 |
-    tools/wkt2svg.py -o examples/random-794256548.svg
-firefox examples/random-794256548.svg
+mkdir -p examples/random-lsystems
+for i in $(seq 0 13); do
+    # tools/geom2graph/build/src/geom2graph --tolerance 1e-3 |  # Use geom2graph round trip to simplify geometries
+    # tools/geom2graph/build/src/geom2graph --tolerance 1e-3 --graph2geom |
+    jq ".[$i]" examples/random-lsystems/saved.json |
+    tools/parse.py -c - -n $(jq ".[$i].iterations" examples/random-lsystems/saved.json) |
+    tools/interpret.py -l ERROR -a $(jq ".[$i].angle" examples/random-lsystems/saved.json) |
+    tools/project.py --scale $(jq ".[$i].scale" examples/random-lsystems/saved.json) --kind pca |
+    tools/wkt2svg.py --output examples/random-lsystems/random-$i.svg
+done
 ```
 
-![Random L-System](examples/random-794256548.svg)
+![random-0](examples/random-lsystems/random-0.svg)
 
-```shell
-./tools/random-production-rules.py -s 3688899091 -d -t 0.8 |
-    tr f F | tr -d D | tee /dev/tty |
-    ./tools/parse.py -c - -n 8 |
-    ./tools/interpret.py --log-level ERROR |  # Silence warnings because there's an unmatched ']'
-    ./tools/project.py --kind pca --scale 10 |
-    ./tools/wkt2svg.py -o examples/random-3688899091.svg
-firefox examples/random-3688899091.svg
-```
+![random-1](examples/random-lsystems/random-1.svg)
 
-![Random L-System](examples/random-3688899091.svg)
+![random-2](examples/random-lsystems/random-2.svg)
 
-```shell
-./tools/random-production-rules.py -s 431572725 -d |
-    tr f F | sed 's/</<<+F>>+F/g' | tee /dev/tty |
-    ./tools/parse.py -c - -n 6 |
-    ./tools/interpret.py |
-    ./tools/project.py --kind pca --scale 20 |
-    ./tools/wkt2svg.py -o examples/random-431572725.svg
-firefox examples/random-431572725.svg
-```
+![random-3](examples/random-lsystems/random-3.svg)
 
-![Random L-System](examples/random-431572725.svg)
+![random-4](examples/random-lsystems/random-4.svg)
 
-```shell
-./tools/random-production-rules.py -s 1006065088 -d |
-    ./tools/parse.py -c - -n 6 |
-    ./tools/interpret.py |
-    ./tools/project.py --kind pca --scale 20 |
-    ./tools/wkt2svg.py -o examples/random-1006065088.svg
-firefox examples/random-1006065088.svg
-```
+![random-5](examples/random-lsystems/random-5.svg)
 
-![Random L-System](examples/random-1006065088.svg)
+![random-6](examples/random-lsystems/random-6.svg)
+
+![random-7](examples/random-lsystems/random-7.svg)
+
+![random-8](examples/random-lsystems/random-8.svg)
+
+![random-9](examples/random-lsystems/random-9.svg)
+
+![random-10](examples/random-lsystems/random-10.svg)
+
+![random-11](examples/random-lsystems/random-11.svg)
+
+![random-12](examples/random-lsystems/random-12.svg)
+
+![random-13](examples/random-lsystems/random-13.svg)
