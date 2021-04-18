@@ -406,7 +406,7 @@ def main(args):
         formatted_rules.append(rule)
 
     axiom = rng.choice(lhs_tokens)
-    json.dump({"rules": formatted_rules, "axiom": axiom}, args.output)
+    json.dump({"seed": args.seed, "rules": formatted_rules, "axiom": axiom}, args.output)
     args.output.write("\n")
 
 
