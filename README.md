@@ -27,9 +27,9 @@ Usage:
 # Include the submodules if you intend to build the geom2graph tool
 git clone --recurse-submodules https://github.com/Notgnoshi/generative.git
 cd generative
-python -m venv --prompt generative .venv
+python3 -m venv --prompt generative .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 # Optionally run the tests to make sure your environment is sufficient
 pytest
 # Optionally build the geom2graph tool. However, there's currently no real point to doing so :(
