@@ -147,7 +147,7 @@ def generate_lhs_tokens(distribution, rng):
     tokens = []
     token_pool = list(distribution.keys())
     token_probabilities = list(distribution.values())
-    while "f" not in tokens:
+    while "F" not in tokens:
         tokens.append(rng.choice(token_pool, p=token_probabilities))
 
     return tokens
