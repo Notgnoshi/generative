@@ -1,7 +1,7 @@
-use std::io::Write;
 use log::trace;
 mod cmdline;
 mod dla;
+mod wkio;
 
 fn main() {
     let args = cmdline::Options::from_args();
@@ -30,11 +30,12 @@ fn main() {
     trace!("Model {:?}", model);
 
     let mut writer = args.get_output_writer();
-    writeln!(&mut writer, "placeholder output").expect("Failed to write output");
-
-    // let formatter = match args.format {
-    //     cmdline::OutputFormat::GraphTGF => TGFFormatter::new(),
-    //     cmdline::OutputFormat::PointCloudWKT => PointCloudFormatter::new(),
-    // };
-    // formatter.format(&mut writer, &model.particle_graph);
+    match args.format {
+        cmdline::OutputFormat::GraphTGF => {
+            wkio::format_tgf(&mut writer, model.particle_graph);
+        }
+        cmdline::OutputFormat::PointCloudWKT => {
+            wkio::format_wkt(&mut writer, model.particle_graph);
+        }
+    };
 }

@@ -23,7 +23,7 @@ pub struct Particle {
 type NodeDataType = Particle;
 /// Data associated with the edges.
 type EdgeDataType = ();
-type GraphType = Graph<NodeDataType, EdgeDataType, Undirected>;
+pub type GraphType = Graph<NodeDataType, EdgeDataType, Undirected>;
 
 #[derive(Debug)]
 pub struct Model {
