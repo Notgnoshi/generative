@@ -91,7 +91,7 @@ pub struct Options {
 
     /// Dimensionality of the particles.
     #[structopt(short, long, default_value = "2")]
-    pub dimensions: usize,
+    pub dimensions: u8,
 
     /// Number of particles to add.
     #[structopt(short, long, default_value = "10000")]
