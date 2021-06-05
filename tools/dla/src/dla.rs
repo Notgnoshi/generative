@@ -152,13 +152,17 @@ impl Model {
         debug!("Adding {} seed particles", particles);
 
         for _ in 0..particles {
+            let coords = self.generate_random_coord();
             let particle = Particle {
                 // TODO: Variable dimensionality
                 coordinates: if particles == 1 {
                     [0.0, 0.0]
                 } else {
                     // TODO: Maybe there's other seed patterns that could be neat.
-                    self.generate_random_coord()
+                    [
+                        coords[0] * (5.0 + particles as f64 / 10.0),
+                        coords[1] * (5.0 + particles as f64 / 10.0),
+                    ]
                 },
                 join_attempts: 0,
             };
@@ -216,7 +220,8 @@ impl Model {
     }
 
     fn generate_random(&mut self) -> f64 {
-        self.rng.gen_range(-self.bounding_radius..self.bounding_radius)
+        self.rng
+            .gen_range(-self.bounding_radius..self.bounding_radius)
     }
 
     // TODO: ndarray::Array1
