@@ -44,6 +44,7 @@ tools/geom2graph/build/src/geom2graph --help
 
 ## Table of Contents
 
+- [Diffusion Limited Aggregation](#diffusion-limited-aggregation)
 - [L-System Rule Parsing](#l-system-rule-parsing)
   - [Basic Usage](#basic-usage)
   - [Stochastic Grammars](#stochastic-grammars)
@@ -60,6 +61,10 @@ tools/geom2graph/build/src/geom2graph --help
   - [Example 3](#example-3)
 - [Converting the WKT to a graph](#converting-the-wkt-to-a-graph)
 - [Generating Random L-Systems](#generating-random-l-systems)
+
+# [Diffusion Limited Aggregation](tools/dla)
+
+[![organic](/examples/diffusion-limited-aggregation/organic.svg)](tools/dla)
 
 # L-System Rule Parsing
 
