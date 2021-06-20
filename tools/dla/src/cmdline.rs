@@ -83,9 +83,9 @@ pub struct Options {
     #[structopt(long, default_value = "1")]
     pub seeds: usize,
 
-    /// The random seed to use, for reproducibility.
-    #[structopt(long, default_value = "-1")]
-    pub seed: i64,
+    /// The random seed to use, for reproducibility. Zero for a random seed.
+    #[structopt(long, default_value = "0")]
+    pub seed: u64,
 
     // TODO: Need to define different methods of placing the seed points.
 

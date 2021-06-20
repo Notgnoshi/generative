@@ -55,7 +55,7 @@ impl Model {
     pub fn new(
         dimensions: u8,
         seeds: usize,
-        seed: i64,
+        seed: u64,
         particle_spacing: f64,
         attraction_distance: f64,
         min_move_distance: f64,
@@ -245,12 +245,12 @@ impl Model {
     }
 
     /// Generate a random seed, or pass one through if specified.
-    fn generate_random_seed_if_not_specified(seed: i64) -> u64 {
-        if seed < 0 {
+    fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
+        if seed == 0 {
             let mut rng = rand::thread_rng();
             rng.gen()
         } else {
-            seed as u64
+            seed
         }
     }
 }
