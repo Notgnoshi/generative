@@ -10,6 +10,7 @@ pylint
 pyparsing
 pytest
 scikit-learn
+setuptools-rust
 shapely
 svgwrite
 vispy
