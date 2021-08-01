@@ -4,6 +4,7 @@ isort
 more-itertools
 multidict
 numpy
+pybind11
 pydocstyle
 pyglet
 pylint
