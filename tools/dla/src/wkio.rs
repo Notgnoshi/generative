@@ -1,5 +1,4 @@
 use crate::dla;
-use petgraph::visit::EdgeRef;
 use std::io::{BufWriter, Write};
 
 pub fn format_tgf(writer: &mut BufWriter<Box<dyn Write>>, graph: dla::GraphType) {
@@ -17,14 +16,10 @@ pub fn format_tgf(writer: &mut BufWriter<Box<dyn Write>>, graph: dla::GraphType)
         .expect("Failed to write node label");
     }
     writeln!(writer, "#").expect("Failed to write node/edge separator");
-    for edge in graph.edge_references() {
-        writeln!(
-            writer,
-            "{}\t {}",
-            edge.source().index(),
-            edge.target().index()
-        )
-        .expect("Failed to write edge");
+    for edge_index in graph.edge_indices() {
+        let edge = graph.edge_endpoints(edge_index);
+        let (source, target) = edge.expect("Failed to get source or target from edge");
+        writeln!(writer, "{}\t{}", source.index(), target.index()).expect("Failed to write edge");
     }
 }
 
