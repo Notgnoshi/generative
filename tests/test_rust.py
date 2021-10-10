@@ -118,3 +118,60 @@ def test_dla_particle_coordinates():
         p.x = "str"
     with pytest.raises(TypeError):
         p.y = "str"
+
+
+def test_dla_empty_graph():
+    g = gr.Graph()
+
+    nodes = list(g.node_indices())
+    assert len(nodes) == 0
+
+    edges = list(g.edge_indices())
+    assert len(edges) == 0
+
+
+def test_dla_example_graph_nodes():
+    g = gr.Graph.new_example_graph()
+
+    nodes = list(g.node_indices())
+    node_indices = [n.index() for n in nodes]
+    particles = [g.node_weight(n) for n in nodes]
+
+    assert len(nodes) == 3
+    assert len(node_indices) == 3
+    assert len(particles) == 3
+
+    assert isinstance(g.node_indices(), gr.NodeIndices)
+    assert isinstance(nodes[0], gr.NodeIndex)
+    assert isinstance(particles[0], gr.Particle)
+
+    assert node_indices == [0, 1, 2]
+
+    assert particles[0].coordinates == [0, 0]
+    assert particles[1].coordinates == [1, 0]
+    assert particles[2].coordinates == [0, 1]
+
+
+def test_dla_example_graph_edges():
+    g = gr.Graph.new_example_graph()
+
+    edges = list(g.edge_indices())
+    nodes = list(g.node_indices())
+    edge_indices = [e.index() for e in edges]
+    edge_nodeindex_pairs = [g.edge_endpoints(e) for e in edges]
+    edge_index_pairs = [(s.index(), t.index()) for s, t in edge_nodeindex_pairs]
+
+    assert len(nodes) == 3
+    assert len(edges) == 2
+
+    assert isinstance(g.edge_indices(), gr.EdgeIndices)
+    assert isinstance(edges[0], gr.EdgeIndex)
+    assert isinstance(edge_nodeindex_pairs[0][0], gr.NodeIndex)
+
+    assert len(edge_indices) == 2
+    assert edge_indices == [0, 1]
+
+    assert len(edge_nodeindex_pairs) == 2
+    assert len(edge_index_pairs) == 2
+
+    assert edge_index_pairs == [(0, 1), (0, 2)]

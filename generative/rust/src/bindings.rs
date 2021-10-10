@@ -1,5 +1,6 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::PyIterProtocol;
 use std::convert::TryInto;
 
 /// TODO: Move to dla module
@@ -171,8 +172,149 @@ struct Py_Graph {
     graph: crate::dla::model::GraphType,
 }
 
+#[pyclass(unsendable, name = "NodeIndex")]
+#[derive(Debug, Clone)]
+#[allow(non_camel_case_types)]
+struct Py_NodeIndex {
+    node_index: petgraph::graph::NodeIndex,
+}
+
 #[pymethods]
-impl Py_Graph {}
+impl Py_NodeIndex {
+    fn index(&self) -> usize {
+        self.node_index.index()
+    }
+}
+
+#[pyclass(unsendable, name = "NodeIndices")]
+#[derive(Debug, Clone)]
+#[allow(non_camel_case_types)]
+struct Py_NodeIndices {
+    node_indices: petgraph::graph::NodeIndices,
+}
+
+#[pyproto]
+impl PyIterProtocol<'_> for Py_NodeIndices {
+    fn __iter__(slf: PyRef<Self>) -> PyRef<Self> {
+        slf
+    }
+
+    fn __next__(mut slf: PyRefMut<Self>) -> Option<Py_NodeIndex> {
+        slf.node_indices
+            .next()
+            .map(|i| Py_NodeIndex { node_index: i })
+    }
+}
+
+#[pyclass(unsendable, name = "EdgeIndex")]
+#[derive(Debug, Clone)]
+#[allow(non_camel_case_types)]
+struct Py_EdgeIndex {
+    edge_index: petgraph::graph::EdgeIndex,
+}
+#[pymethods]
+impl Py_EdgeIndex {
+    fn index(&self) -> usize {
+        self.edge_index.index()
+    }
+}
+
+#[pyclass(unsendable, name = "EdgeIndices")]
+#[derive(Debug, Clone)]
+#[allow(non_camel_case_types)]
+struct Py_EdgeIndices {
+    edge_indices: petgraph::graph::EdgeIndices,
+}
+
+#[pyproto]
+impl PyIterProtocol<'_> for Py_EdgeIndices {
+    fn __iter__(slf: PyRef<Self>) -> PyRef<Self> {
+        slf
+    }
+
+    fn __next__(mut slf: PyRefMut<Self>) -> Option<Py_EdgeIndex> {
+        slf.edge_indices
+            .next()
+            .map(|i| Py_EdgeIndex { edge_index: i })
+    }
+}
+
+#[pymethods]
+impl Py_Graph {
+    #[new]
+    fn new() -> Self {
+        Py_Graph {
+            graph: crate::dla::model::GraphType::new_undirected(),
+        }
+    }
+
+    /// Create an example graph to use in the Python-side unit tests.
+    /// This is because I don't need, nor want, to implement the API necessary to modify
+    /// an existing Py_Graph.
+    /// TODO: Implement node/edge insertion.
+    #[staticmethod]
+    fn new_example_graph() -> Self {
+        let mut graph = crate::dla::model::GraphType::new_undirected();
+
+        let p1 = crate::dla::model::Particle {
+            coordinates: [0.0, 0.0],
+            join_attempts: 0,
+        };
+        let p2 = crate::dla::model::Particle {
+            coordinates: [1.0, 0.0],
+            join_attempts: 0,
+        };
+        let p3 = crate::dla::model::Particle {
+            coordinates: [0.0, 1.0],
+            join_attempts: 0,
+        };
+        let p1_index = graph.add_node(p1);
+        let p2_index = graph.add_node(p2);
+        let p3_index = graph.add_node(p3);
+
+        graph.add_edge(p1_index, p2_index, ());
+        graph.add_edge(p1_index, p3_index, ());
+
+        Py_Graph { graph }
+    }
+
+    fn node_indices(&self) -> Py_NodeIndices {
+        Py_NodeIndices {
+            node_indices: self.graph.node_indices(),
+        }
+    }
+
+    /// TODO: Can you do argument dependent lookup with pyo3?
+    /// TODO: fn node(&self, index: Py_NodeIndex) -> ???
+    /// TODO: fn node(&self, index: usize) -> Option<Py_NodeIndex>
+    /// TODO: fn edge(&self, index: Py_EdgeIndex) -> Option<(Py_NodeIndex, Py_NodeIndex)>
+    /// TODO: fn edge(&self, index: usize) -> Option<Py_EdgeIndex>
+
+    fn node_weight(&self, index: Py_NodeIndex) -> Option<Py_Particle> {
+        let internal_index = index.node_index;
+        let particle = self.graph.node_weight(internal_index);
+        particle.map(|p| Py_Particle::from_dla_particle(*p))
+    }
+
+    fn edge_indices(&self) -> Py_EdgeIndices {
+        Py_EdgeIndices {
+            edge_indices: self.graph.edge_indices(),
+        }
+    }
+
+    fn edge_endpoints(&self, index: Py_EdgeIndex) -> Option<(Py_NodeIndex, Py_NodeIndex)> {
+        let internal_index = index.edge_index;
+        let edge = self.graph.edge_endpoints(internal_index);
+
+        if let Some((source, target)) = edge {
+            return Some((
+                Py_NodeIndex { node_index: source },
+                Py_NodeIndex { node_index: target },
+            ));
+        }
+        return None;
+    }
+}
 
 /// TODO: How should the graph be wrapped? I think perhaps it should be a mutable reference?
 #[pyclass(unsendable, name = "Model")]
@@ -191,6 +333,10 @@ impl Py_Model {}
 fn rust(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Py_Parameters>()?;
     m.add_class::<Py_Particle>()?;
+    m.add_class::<Py_NodeIndex>()?;
+    m.add_class::<Py_NodeIndices>()?;
+    m.add_class::<Py_EdgeIndex>()?;
+    m.add_class::<Py_EdgeIndices>()?;
     m.add_class::<Py_Graph>()?;
     m.add_class::<Py_Model>()?;
     Ok(())
