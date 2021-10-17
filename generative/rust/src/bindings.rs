@@ -227,6 +227,13 @@ impl PyIterProtocol<'_> for Py_EdgeIndices {
     }
 }
 
+impl Py_Graph {
+    fn new_from(other: &crate::dla::model::GraphType) -> Self {
+        Py_Graph {
+            graph: other.clone(),
+        }
+    }
+}
 #[pymethods]
 impl Py_Graph {
     #[new]
@@ -304,18 +311,30 @@ impl Py_Graph {
     }
 }
 
-/// TODO: How should the graph be wrapped? I think perhaps it should be a mutable reference?
 #[pyclass(unsendable, name = "Model")]
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 struct Py_Model {
     model: crate::dla::model::Model,
-    #[pyo3(get, set)]
-    particle_graph: Py_Graph,
 }
 
 #[pymethods]
-impl Py_Model {}
+impl Py_Model {
+    #[new]
+    fn new(params: Py_Parameters) -> Self {
+        Py_Model {
+            model: crate::dla::model::Model::new(params.to_dla_params()),
+        }
+    }
+
+    fn run(&mut self, particles: usize) {
+        self.model.run(particles);
+    }
+
+    fn graph(&self) -> Py_Graph {
+        Py_Graph::new_from(&self.model.particle_graph)
+    }
+}
 
 #[pymodule]
 fn rust(py: Python, m: &PyModule) -> PyResult<()> {

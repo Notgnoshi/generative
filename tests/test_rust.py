@@ -1,5 +1,6 @@
-import generative.rust as gr
 import pytest
+
+import generative.rust as gr
 
 
 def test_dla_parameters():
@@ -175,3 +176,30 @@ def test_dla_example_graph_edges():
     assert len(edge_index_pairs) == 2
 
     assert edge_index_pairs == [(0, 1), (0, 2)]
+
+
+def test_dla_model():
+    p = gr.Parameters(
+        seeds=2,
+        seed=2,
+        particle_spacing=3,
+        attraction_distance=4,
+        min_move_distance=5,
+        stubbornness=6,
+        stickiness=7,
+    )
+    m = gr.Model(p)
+
+    # This does a copy of the internal graph :/
+    g1 = m.graph()
+    assert isinstance(g1, gr.Graph)
+    nodes = list(g1.node_indices())
+    assert len(nodes) == p.seeds
+
+    new_particles = 2
+    m.run(new_particles)
+    g2 = m.graph()
+    assert isinstance(g2, gr.Graph)
+
+    nodes = list(g2.node_indices())
+    assert len(nodes) == p.seeds + new_particles
