@@ -26,6 +26,17 @@ type EdgeDataType = ();
 pub type GraphType = Graph<NodeDataType, EdgeDataType, Undirected>;
 
 #[derive(Debug)]
+pub struct Parameters {
+    pub seeds: usize,
+    pub seed: u64,
+    pub particle_spacing: f64,
+    pub attraction_distance: f64,
+    pub min_move_distance: f64,
+    pub stubbornness: usize,
+    pub stickiness: f64,
+}
+
+#[derive(Debug)]
 pub struct Model {
     /// The particles and their parent associations.
     pub particle_graph: GraphType,
@@ -52,32 +63,11 @@ pub struct Model {
 
 impl Model {
     /// Create a new model with the given tunable parameters.
-    pub fn new(
-        dimensions: u8,
-        seeds: usize,
-        seed: u64,
-        particle_spacing: f64,
-        attraction_distance: f64,
-        min_move_distance: f64,
-        stubbornness: usize,
-        stickiness: f64,
-    ) -> Model {
-        let seed = Model::generate_random_seed_if_not_specified(seed);
+    pub fn new(params: Parameters) -> Model {
+        let seed = Model::generate_random_seed_if_not_specified(params.seed);
         info!("Intializing rng with seed {}", seed);
 
-        if dimensions != 2 {
-            warn!("{} dimensions not supported (yet?). Using 2D.", dimensions);
-        }
-
-        debug!("Initializing model with parameters <seeds={}, seed={}, particle_spacing={}, attraction_distance={}, min_move_distance={}, stubbornness={}, stickiness={}>",
-               seeds,
-               seed,
-               particle_spacing,
-               attraction_distance,
-               min_move_distance,
-               stubbornness,
-               stickiness,
-        );
+        debug!("Initializing model with parameters {:?}", params);
 
         let mut model = Model {
             particle_graph: Graph::new_undirected(),
@@ -86,17 +76,17 @@ impl Model {
             rng: StdRng::seed_from_u64(seed),
             dimensions: 2,
             bounding_radius: 5.0,
-            particle_spacing,
-            attraction_distance,
-            min_move_distance,
-            stubbornness,
-            stickiness,
+            particle_spacing: params.particle_spacing,
+            attraction_distance: params.attraction_distance,
+            min_move_distance: params.min_move_distance,
+            stubbornness: params.stubbornness,
+            stickiness: params.stickiness,
         };
 
-        if seeds == 0 {
+        if params.seeds == 0 {
             warn!("Cannot run DLA model with no initial seed particles. Using one seed.");
         }
-        model.add_seeds(if seeds == 0 { 1 } else { seeds });
+        model.add_seeds(if params.seeds == 0 { 1 } else { params.seeds });
 
         return model;
     }

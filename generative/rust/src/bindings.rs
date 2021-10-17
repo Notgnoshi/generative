@@ -3,22 +3,10 @@ use pyo3::prelude::*;
 use pyo3::PyIterProtocol;
 use std::convert::TryInto;
 
-/// TODO: Move to dla module
-#[derive(Debug)]
-struct Parameters {
-    seeds: usize,
-    seed: u64,
-    particle_spacing: f64,
-    attraction_distance: f64,
-    min_move_distance: f64,
-    stubbornness: usize,
-    stickiness: f64,
-}
-
 /// TODO: Implement the Send trait to allow multithreaded access?
 /// TODO: DLA stuff shouldn't go in the top level python library!
 #[pyclass(unsendable, name = "Parameters")]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[allow(non_camel_case_types)]
 struct Py_Parameters {
     #[pyo3(get, set)]
@@ -62,8 +50,8 @@ impl Py_Parameters {
 }
 
 impl Py_Parameters {
-    fn to_dla_params(&self) -> Parameters {
-        Parameters {
+    fn to_dla_params(&self) -> crate::dla::model::Parameters {
+        crate::dla::model::Parameters {
             seeds: self.seeds,
             seed: self.seed,
             particle_spacing: self.particle_spacing,
