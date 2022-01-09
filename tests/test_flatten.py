@@ -74,13 +74,13 @@ class TestToTaggedPoints(unittest.TestCase):
         m = MultiPoint([(0, 1), (2, 3), (4, 5), (6, 7)])
         tagged = list(flatten_single(m))
 
-        self.assertEqual(len(tagged), len(m))
+        self.assertEqual(len(tagged), len(m.geoms))
 
         expected = [
-            (m[0].coords[0], (PointTag.MULTIPOINT_BEGIN,)),
-            (m[1].coords[0], ()),
-            (m[2].coords[0], ()),
-            (m[3].coords[0], (PointTag.MULTIPOINT_END,)),
+            (m.geoms[0].coords[0], (PointTag.MULTIPOINT_BEGIN,)),
+            (m.geoms[1].coords[0], ()),
+            (m.geoms[2].coords[0], ()),
+            (m.geoms[3].coords[0], (PointTag.MULTIPOINT_END,)),
         ]
         for actual, desired in zip(tagged, expected):
             self.assertTupleEqual(actual, desired)

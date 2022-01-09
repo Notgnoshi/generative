@@ -50,7 +50,7 @@ class InterpreterTests(unittest.TestCase):
         lines = list(self.i.interpret(tokens))
         self.assertEqual(len(lines), len(expected))
         for actual, desired in zip(lines, expected):
-            self.assertTrue(actual.almost_equals(desired))
+            self.assertTrue(actual.equals_exact(desired, tolerance=1e-6))
 
     def test_draw_no_draw(self):
         commands = io.StringIO("dF+FDFF")
@@ -59,7 +59,7 @@ class InterpreterTests(unittest.TestCase):
         lines = list(self.i.interpret(tokens))
         self.assertEqual(len(lines), len(expected))
         for actual, desired in zip(lines, expected):
-            self.assertTrue(actual.almost_equals(desired))
+            self.assertTrue(actual.equals_exact(desired, tolerance=1e-6))
 
     def test_draw_no_draw_cuts_line(self):
         commands = io.StringIO("dF+DFdFDF")
@@ -72,7 +72,8 @@ class InterpreterTests(unittest.TestCase):
         self.assertEqual(len(lines), len(expected))
         for actual, desired in zip(lines, expected):
             self.assertTrue(
-                actual.almost_equals(desired), f"actual: {actual.wkt} expected: {desired.wkt}"
+                actual.equals_exact(desired, tolerance=1e-6),
+                f"actual: {actual.wkt} expected: {desired.wkt}",
             )
 
     def test_pitch(self):
@@ -82,7 +83,7 @@ class InterpreterTests(unittest.TestCase):
         lines = list(self.i.interpret(tokens))
         self.assertEqual(len(lines), len(expected))
         for actual, desired in zip(lines, expected):
-            self.assertTrue(actual.almost_equals(desired))
+            self.assertTrue(actual.equals_exact(desired, tolerance=1e-6))
 
     def test_roll(self):
         # Roll is about the longitudinal axis, so roll + forward won't change direction.
@@ -92,7 +93,7 @@ class InterpreterTests(unittest.TestCase):
         lines = list(self.i.interpret(tokens))
         self.assertEqual(len(lines), len(expected))
         for actual, desired in zip(lines, expected):
-            self.assertTrue(actual.almost_equals(desired))
+            self.assertTrue(actual.equals_exact(desired, tolerance=1e-6))
 
     def test_flip(self):
         commands = io.StringIO("F|F")
@@ -101,7 +102,7 @@ class InterpreterTests(unittest.TestCase):
         lines = list(self.i.interpret(tokens))
         self.assertEqual(len(lines), len(expected))
         for actual, desired in zip(lines, expected):
-            self.assertTrue(actual.almost_equals(desired))
+            self.assertTrue(actual.equals_exact(desired, tolerance=1e-6))
 
     def test_stack(self):
         commands = io.StringIO("FF[+FF]-FF")
