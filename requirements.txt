@@ -7,7 +7,7 @@ numpy
 pydocstyle
 pyglet
 pylint
-pyparsing
+pyparsing>=2.0,<3.0
 pytest
 scikit-learn
 shapely
