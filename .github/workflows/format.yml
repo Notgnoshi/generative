@@ -13,11 +13,11 @@ jobs:
             - name: Install dependencies
               run: |
                   python -m pip install --upgrade pip
-                  pip install isort black
+                  pip install isort>=5.10 black>=22.1
             - name: Format
               # Both isort and black have a --check option, but to get the imports sorted and formatted correctly,
               # I need to run isort _and then_ black, _and then_ check for differences.
               run: |
-                  find generative/ tests/ tools/ -name '*.py' -exec isort {} +
-                  find generative/ tests/ tools/ -name '*.py' -exec black --line-length 100 {} +
+                  find generative/ tests/ tools/ -name '*.py' -and -not -path '*geom2graph*' -exec isort {} +
+                  find generative/ tests/ tools/ -name '*.py' -and -not -path '*geom2graph*' -exec black --line-length 100 {} +
                   git diff --exit-code
