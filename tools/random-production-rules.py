@@ -21,7 +21,7 @@ DEFAULT_LEVEL = "INFO"
 
 
 def generate_random_seed():
-    return random.randint(0, 2 ** 32 - 1)
+    return random.randint(0, 2**32 - 1)
 
 
 def parse_args():

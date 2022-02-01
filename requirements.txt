@@ -1,6 +1,6 @@
-black
+black>=22.1
 commentjson
-isort
+isort>=5.10
 more-itertools
 multidict
 numpy

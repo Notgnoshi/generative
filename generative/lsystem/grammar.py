@@ -88,7 +88,7 @@ class LSystemGrammar:
         self.ignore: Set[TokenName] = ignore if ignore is not None else set()
         self.rules: MultiDict[TokenName, RuleMapping] = rules
 
-        self.seed = seed if seed is not None else random.randint(0, 2 ** 32 - 1)
+        self.seed = seed if seed is not None else random.randint(0, 2**32 - 1)
         np.random.seed(self.seed)
         logger.info(f"Using random seed: {self.seed}")
 
