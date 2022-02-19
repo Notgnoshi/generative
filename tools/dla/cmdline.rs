@@ -37,7 +37,7 @@ impl FromStr for OutputFormat {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "dla", about = env!("CARGO_PKG_DESCRIPTION"))]
+#[structopt(name = "dla")]
 pub struct Options {
     /// Silence all logging
     #[structopt(short, long)]
@@ -88,7 +88,6 @@ pub struct Options {
     pub seed: u64,
 
     // TODO: Need to define different methods of placing the seed points.
-
     /// Dimensionality of the particles.
     #[structopt(short, long, default_value = "2")]
     pub dimensions: u8,

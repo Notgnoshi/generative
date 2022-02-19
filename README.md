@@ -62,9 +62,9 @@ tools/geom2graph/build/src/geom2graph --help
 - [Converting the WKT to a graph](#converting-the-wkt-to-a-graph)
 - [Generating Random L-Systems](#generating-random-l-systems)
 
-# [Diffusion Limited Aggregation](tools/dla)
+# [Diffusion Limited Aggregation](tools/dla/)
 
-[![organic](/examples/diffusion-limited-aggregation/organic.svg)](tools/dla)
+![organic](/examples/diffusion-limited-aggregation/organic.svg)
 
 # L-System Rule Parsing
 

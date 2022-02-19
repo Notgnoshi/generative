@@ -2,18 +2,18 @@ use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use log::{debug, info, trace, warn};
 use petgraph::graph::{Graph, NodeIndex};
+use petgraph::visit::EdgeRef;
 use petgraph::Undirected;
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
+use std::io::{BufWriter, Write};
 
 type DimensionType = f64;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Particle {
-    /// For best results, you probably want 2 or 3 dimensions.
     /// TODO: Variable dimensionality
-    /// TODO: This is best if it's an ndarray::Array1
     pub coordinates: [f64; 2],
     /// The number of times this particle has been attempted to be joined to.
     pub join_attempts: usize,
@@ -252,5 +252,45 @@ impl Model {
         } else {
             seed
         }
+    }
+}
+
+pub fn format_tgf(writer: &mut BufWriter<Box<dyn Write>>, graph: GraphType) {
+    // let (nodes, edges) = graph.into_nodes_edges();
+    for idx in graph.node_indices() {
+        let particle = graph
+            .node_weight(idx)
+            .expect("Got index to nonexistent node.");
+        let label = idx.index();
+        writeln!(
+            writer,
+            "{}\tPOINT({} {})",
+            label, particle.coordinates[0], particle.coordinates[1]
+        )
+        .expect("Failed to write node label");
+    }
+    writeln!(writer, "#").expect("Failed to write node/edge separator");
+    for edge in graph.edge_references() {
+        writeln!(
+            writer,
+            "{}\t {}",
+            edge.source().index(),
+            edge.target().index()
+        )
+        .expect("Failed to write edge");
+    }
+}
+
+pub fn format_wkt(writer: &mut BufWriter<Box<dyn Write>>, graph: GraphType) {
+    for idx in graph.node_indices() {
+        let particle = graph
+            .node_weight(idx)
+            .expect("Got index to nonexistent node.");
+        writeln!(
+            writer,
+            "POINT ({} {})",
+            particle.coordinates[0], particle.coordinates[1]
+        )
+        .expect("Failed to write node WKT.");
     }
 }
