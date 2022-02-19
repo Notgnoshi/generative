@@ -42,7 +42,7 @@ Because of the CWD constraints on the `cargo run` invocation, it's helpful to sp
 
 ```shell
 cd <path/to/repository/root>
-./tools/dla/target/release/dla \
+./target/release/dla \
     --seeds=20 \
     --min-move-distance=1 \
     --attraction-distance=20 \

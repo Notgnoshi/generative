@@ -1,0 +1,19 @@
+[package]
+name = "generative"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "generative/lib.rs"
+
+[[bin]]
+name = "dla"
+path = "tools/dla/main.rs"
+
+[dependencies]
+kdtree = "0.6"
+log = "0.4"
+petgraph = "0.5"
+rand = "0.8"
+stderrlog = "0.5"
+structopt = "0.3"
