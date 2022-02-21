@@ -39,6 +39,7 @@ pub struct Model {
     rng: StdRng,
 
     /// Particle dimensionality
+    #[allow(dead_code)]
     dimensions: u8,
 
     // Tunable parameters
