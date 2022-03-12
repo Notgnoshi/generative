@@ -10,10 +10,15 @@ path = "generative/lib.rs"
 name = "dla"
 path = "tools/dla/main.rs"
 
+[[bin]]
+name = "point-cloud"
+path = "tools/point-cloud/main.rs"
+
 [dependencies]
 kdtree = "0.6"
 log = "0.4"
 petgraph = "0.5"
 rand = "0.8"
 stderrlog = "0.5"
-structopt = "0.3"
+structopt = "0.3"  # Deprecated in favor of clap 3.1
+clap = {version="3.1", features=["derive"]}
