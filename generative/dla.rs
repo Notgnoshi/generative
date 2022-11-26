@@ -53,6 +53,7 @@ pub struct Model {
 
 impl Model {
     /// Create a new model with the given tunable parameters.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         dimensions: u8,
         seeds: usize,
@@ -99,7 +100,7 @@ impl Model {
         }
         model.add_seeds(if seeds == 0 { 1 } else { seeds });
 
-        return model;
+        model
     }
 
     /// Add the specified number of particles to the model.
@@ -177,47 +178,49 @@ impl Model {
 
     fn attempt_to_join(&mut self, new_coords: &mut [f64; 2], parent_index: NodeIndex) -> bool {
         // Get parent particle from handle on parent.
-        let mut parent = self.particle_graph.node_weight_mut(parent_index).expect(
-            format!(
-                "Failed to get node from parent index {}",
-                parent_index.index()
-            )
-            .as_str(),
-        );
+        let mut parent = self
+            .particle_graph
+            .node_weight_mut(parent_index)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Failed to get node from parent index {}",
+                    parent_index.index()
+                )
+            });
         parent.join_attempts += 1;
 
-        if parent.join_attempts >= self.stubbornness {
-            if self.rng.gen_range(0.0..1.0) <= self.stickiness {
-                // Bump the new particle away from the parent by the particle spacing
-                *new_coords = Model::lerp(&parent.coordinates, &new_coords, self.particle_spacing);
-                self.bounding_radius = self
-                    .bounding_radius
-                    .max(Model::length(new_coords) + self.attraction_distance);
+        if parent.join_attempts >= self.stubbornness
+            && self.rng.gen_range(0.0..1.0) <= self.stickiness
+        {
+            // Bump the new particle away from the parent by the particle spacing
+            *new_coords = Model::lerp(&parent.coordinates, new_coords, self.particle_spacing);
+            self.bounding_radius = self
+                .bounding_radius
+                .max(Model::length(new_coords) + self.attraction_distance);
 
-                let new_particle = Particle {
-                    coordinates: *new_coords,
-                    join_attempts: 0,
-                };
+            let new_particle = Particle {
+                coordinates: *new_coords,
+                join_attempts: 0,
+            };
 
-                // Place the particle in the graph and the spatial index
-                let graph_index = self.particle_graph.add_node(new_particle);
-                self.particle_graph.add_edge(graph_index, parent_index, ());
-                self.index
-                    .add(new_particle.coordinates, graph_index)
-                    .expect("Failed to add new particle to index");
+            // Place the particle in the graph and the spatial index
+            let graph_index = self.particle_graph.add_node(new_particle);
+            self.particle_graph.add_edge(graph_index, parent_index, ());
+            self.index
+                .add(new_particle.coordinates, graph_index)
+                .expect("Failed to add new particle to index");
 
-                return true;
-            }
+            return true;
         }
 
         // Nudge the new particle
         *new_coords = Model::lerp(
             &parent.coordinates,
-            &new_coords,
+            new_coords,
             self.attraction_distance + self.min_move_distance,
         );
 
-        return false;
+        false
     }
 
     fn generate_random(&mut self) -> f64 {
