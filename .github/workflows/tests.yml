@@ -16,3 +16,36 @@ jobs:
                   pip install --requirement requirements.txt
             - name: Run tests
               run: pytest
+    rust-test:
+        runs-on: ubuntu-latest
+        env:
+            RUSTFLAGS: -D warnings
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Rust stable
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  profile: minimal
+                  override: true
+                  components: rustfmt, clippy
+            - name: Run rustfmt
+              uses: actions-rs/cargo@v1
+              with:
+                  command: fmt
+                  args: --check
+            - name: Build
+              uses: actions-rs/cargo@v1
+              with:
+                  command: build
+                  args: --release --all-features --all-targets
+            - name: Lint
+              uses: actions-rs/cargo@v1
+              with:
+                  command: clippy
+                  args: --release --all-features --all-targets
+            - name: Test
+              uses: actions-rs/cargo@v1
+              with:
+                  command: test
+                  args: --release --all-features --all-targets
