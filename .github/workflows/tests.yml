@@ -20,6 +20,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
             RUSTFLAGS: -D warnings
+            CARGO_TERM_COLOR: always
         steps:
             - uses: actions/checkout@v3
             - name: Set up Rust stable
@@ -29,6 +30,7 @@ jobs:
                   profile: minimal
                   override: true
                   components: rustfmt, clippy
+            - uses: Swatinem/rust-cache@v2
             - name: Run rustfmt
               uses: actions-rs/cargo@v1
               with:
@@ -38,14 +40,14 @@ jobs:
               uses: actions-rs/cargo@v1
               with:
                   command: build
-                  args: --release --all-features --all-targets
+                  args: --release --all-targets
             - name: Lint
               uses: actions-rs/cargo@v1
               with:
                   command: clippy
-                  args: --release --all-features --all-targets
+                  args: --release --all-targets
             - name: Test
               uses: actions-rs/cargo@v1
               with:
                   command: test
-                  args: --release --all-features --all-targets
+                  args: --release --all-targets
