@@ -1,24 +1,10 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, ValueEnum)]
 pub enum RandomDomain {
     UnitSquare,
     UnitCircle,
-}
-
-impl std::str::FromStr for RandomDomain {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.to_lowercase();
-        let s = s.as_str();
-        match s {
-            "square" => Ok(RandomDomain::UnitSquare),
-            "circle" => Ok(RandomDomain::UnitCircle),
-            _ => Err(format!("Could not convert '{}' to RandomDomain", s)),
-        }
-    }
 }
 
 /// Generate random point clouds in a unit square or circle
@@ -26,7 +12,7 @@ impl std::str::FromStr for RandomDomain {
 #[clap(name = "point-cloud")]
 pub struct CmdlineOptions {
     /// Output file to write result to. Defaults to stdout.
-    #[clap(short, long, parse(from_os_str))]
+    #[clap(short, long)]
     pub output: Option<PathBuf>,
 
     // TODO: Allow a normal random number of points.
@@ -35,8 +21,7 @@ pub struct CmdlineOptions {
     pub num_points: usize,
 
     /// The random domain to generate points inside.
-    /// One of "circle" or "square".
-    #[clap(short, long, default_value = "circle")]
+    #[clap(short, long, default_value = "unit-circle", value_enum)]
     pub domain: RandomDomain,
 
     /// Optionally scale the generated points.

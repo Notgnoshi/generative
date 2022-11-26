@@ -1,3 +1,4 @@
+use clap::Parser;
 use generative::dla::format_tgf;
 use generative::dla::format_wkt;
 use generative::dla::Model;
@@ -6,11 +7,11 @@ use log::trace;
 mod cmdline;
 
 fn main() {
-    let args = cmdline::Options::from_args();
+    let args = cmdline::CmdlineOptions::parse();
 
     stderrlog::new()
         .quiet(args.quiet)
-        .verbosity(args.verbose + 2) // Default to INFO level
+        .verbosity((args.verbose + 2) as usize) // Default to INFO level
         .init()
         .unwrap();
 
@@ -32,10 +33,10 @@ fn main() {
 
     let mut writer = args.get_output_writer();
     match args.format {
-        cmdline::OutputFormat::GraphTGF => {
+        cmdline::OutputFormat::Tgf => {
             format_tgf(&mut writer, model.particle_graph);
         }
-        cmdline::OutputFormat::PointCloudWKT => {
+        cmdline::OutputFormat::Wkt => {
             format_wkt(&mut writer, model.particle_graph);
         }
     };
