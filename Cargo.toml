@@ -15,10 +15,14 @@ name = "point-cloud"
 path = "tools/point-cloud/main.rs"
 
 [dependencies]
+clap = {version="4.0", features=["derive"]}
+hex = "0.4"
+geo = "0.23"
 kdtree = "0.6"
 log = "0.4"
 petgraph = "0.6"
 rand = "0.8"
 rand_distr = "0.4"
 stderrlog = "0.5"
-clap = {version="4.0", features=["derive"]}
+wkb = "0.7"
+wkt = "0.10"
