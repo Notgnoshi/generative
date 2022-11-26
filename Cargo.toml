@@ -14,6 +14,10 @@ path = "tools/dla/main.rs"
 name = "point-cloud"
 path = "tools/point-cloud/main.rs"
 
+[[bin]]
+name = "transform"
+path = "tools/transform/main.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 hex = "0.4"

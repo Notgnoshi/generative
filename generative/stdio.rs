@@ -2,9 +2,9 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 
-pub fn get_output_writer(output: Option<PathBuf>) -> Result<BufWriter<Box<dyn Write>>, String> {
+pub fn get_output_writer(output: &Option<PathBuf>) -> Result<BufWriter<Box<dyn Write>>, String> {
     match output {
-        Some(path) => match File::create(&path) {
+        Some(path) => match File::create(path) {
             Err(why) => Err(format!(
                 "Couldn't create: '{}' because: '{}'",
                 path.display(),
@@ -16,9 +16,9 @@ pub fn get_output_writer(output: Option<PathBuf>) -> Result<BufWriter<Box<dyn Wr
     }
 }
 
-pub fn get_input_reader(input: Option<PathBuf>) -> Result<BufReader<Box<dyn Read>>, String> {
+pub fn get_input_reader(input: &Option<PathBuf>) -> Result<BufReader<Box<dyn Read>>, String> {
     match input {
-        Some(path) => match File::open(&path) {
+        Some(path) => match File::open(path) {
             Err(why) => Err(format!(
                 "Couldn't open: '{}' because: '{}'",
                 path.display(),

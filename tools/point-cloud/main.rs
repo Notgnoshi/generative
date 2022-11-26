@@ -85,7 +85,7 @@ fn main() {
     eprintln!("Generating {} points with seed {}", num_points, seed);
 
     let points = generate(num_points as usize, args.domain, &mut rng);
-    let mut writer = get_output_writer(args.output).unwrap();
+    let mut writer = get_output_writer(&args.output).unwrap();
     for point in points {
         writeln!(
             writer,
