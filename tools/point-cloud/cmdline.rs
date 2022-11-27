@@ -15,16 +15,23 @@ pub struct CmdlineOptions {
     #[clap(short, long)]
     pub output: Option<PathBuf>,
 
-    // TODO: Allow a normal random number of points.
+    /// The random seed to use. Use zero to let the tool pick its own random seed.
+    #[clap(long, default_value = "0")]
+    pub seed: u64,
+
     /// The number of points to generate.
     #[clap(short, long)]
-    pub num_points: usize,
+    pub points: u64,
+
+    /// Generate a random number of points with mean '--points'
+    #[clap(short, long)]
+    pub random_number: bool,
 
     /// The random domain to generate points inside.
     #[clap(short, long, default_value = "unit-circle", value_enum)]
     pub domain: RandomDomain,
 
-    /// Optionally scale the generated points.
+    /// Scale the generated points.
     #[clap(short, long, default_value = "1.0")]
     pub scale: f64,
 }
