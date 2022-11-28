@@ -12,4 +12,4 @@ pytest
 scikit-learn
 shapely
 svgwrite
-vispy
+vispy<=0.12

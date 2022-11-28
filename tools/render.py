@@ -149,7 +149,6 @@ def main(args):
             edge_width_rel=None,
             face_color=(0.8, 0.8, 0.8, 0.4),
             size=8,
-            scaling=False,
         )
 
     if len(segments) != 0:
