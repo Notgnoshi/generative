@@ -175,7 +175,7 @@ where
 /// Expects one geometry per line (LF or CRLF). Parsing any given line ends after either the first
 /// failure or the first geometry yielded, whichever comes first. That is, a line can have trailing
 /// garbage, but not leading garbage.
-fn read_wkt_geometries<R>(reader: R) -> WktGeometries<R>
+pub(crate) fn read_wkt_geometries<R>(reader: R) -> WktGeometries<R>
 where
     R: Read,
 {
