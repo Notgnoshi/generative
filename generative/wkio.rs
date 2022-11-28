@@ -206,7 +206,7 @@ where
 /// Write the given geometries with the given Writer in WKT format
 ///
 /// Each geometry will be written on its own line.
-fn write_wkt_geometries<W, G>(mut writer: W, geometries: G)
+pub(crate) fn write_wkt_geometries<W, G>(mut writer: W, geometries: G)
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,
