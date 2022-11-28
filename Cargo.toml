@@ -20,6 +20,7 @@ path = "tools/transform/main.rs"
 
 [dependencies]
 clap = {version="4.0", features=["derive"]}
+delaunator = "1.0"
 hex = "0.4"
 geo = "0.23"
 kdtree = "0.6"
