@@ -148,13 +148,59 @@ impl Triangulation {
 
         graph
     }
+
+    #[allow(non_snake_case)]
+    fn longest_edge(&self, a: usize, b: usize, c: usize) -> (usize, usize) {
+        let A = &self.points[a];
+        let B = &self.points[b];
+        let C = &self.points[c];
+
+        let mut longest_distance = (A.x - B.x).powi(2) + (A.y - B.y).powi(2);
+        let mut longest = (a, b);
+
+        let distance = (B.x - C.x).powi(2) + (B.y - C.y).powi(2);
+        if distance > longest_distance {
+            longest_distance = distance;
+            longest = (b, c);
+        }
+
+        let distance = (A.x - C.x).powi(2) + (A.y - C.y).powi(2);
+        if distance > longest_distance {
+            longest = (a, c);
+        }
+
+        longest
+    }
+
+    pub fn urquhart(&self) -> Graph {
+        let mut graph = self.graph();
+
+        // According to https://en.wikipedia.org/wiki/Urquhart_graph you can construct the Urquhart
+        // graph by removing the longest edge of each triangle in the Delaunay triangulation.
+
+        for (a, b, c) in self.triangle_indices() {
+            let (src, dst) = self.longest_edge(a, b, c);
+
+            let src_index = petgraph::graph::NodeIndex::<NodeIndex>::new(src);
+            let dst_index = petgraph::graph::NodeIndex::<NodeIndex>::new(dst);
+            if let Some(edge_index) = graph.find_edge(src_index, dst_index) {
+                // It's not very efficient to remove one edge at a time, but that's the best I can
+                // do with the graph API
+                graph.remove_edge(edge_index);
+            }
+        }
+
+        graph
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::flatten::flatten_geometries_into_points_ref;
-    use crate::wkio::{read_wkt_geometries, write_wkt_geometries};
+    use crate::wkio::read_wkt_geometries;
+    #[cfg(feature = "test-io")]
+    use crate::wkio::write_wkt_geometries;
     use delaunator::EMPTY;
 
     #[test]
@@ -207,10 +253,13 @@ mod tests {
 
         // NOTE: This all makes much more sense if you draw a picture! Pipe the following through
         // render.py:
-        //      cargo test test_graph -- --nocapture | ./tools/render.py
-        let lines = triangulation.lines().map(geo::Geometry::Line);
-        write_wkt_geometries(std::io::stdout(), geometries);
-        write_wkt_geometries(std::io::stdout(), lines);
+        //      cargo test --all-features test_graph -- --nocapture | ./tools/render.py
+        #[cfg(feature = "test-io")]
+        {
+            let lines = triangulation.lines().map(geo::Geometry::Line);
+            write_wkt_geometries(std::io::stdout(), geometries);
+            write_wkt_geometries(std::io::stdout(), lines);
+        }
 
         let triangles = [3, 5, 4, 4, 2, 3, 2, 1, 3, 1, 0, 3];
         assert_eq!(triangulation.triangulation.triangles, triangles);
@@ -266,5 +315,65 @@ mod tests {
             (3, 1),
         ];
         assert_eq!(edges, expected);
+    }
+
+    #[test]
+    fn test_urquhart() {
+        let wkt = b"POINT (65.85186826230156 -39.36525618186133)\n\
+                    POINT (61.35756898870892 -34.85194590696902)\n\
+                    POINT (38.25507241174806 -24.06029365638358)\n\
+                    POINT (9.25896849065506 -63.356505724778266)\n\
+                    POINT (-5.692741678486288 -17.181741298068346)\n\
+                    POINT (-32.93567551272198 -61.274655097506745)\n";
+        let geometries: Vec<_> = read_wkt_geometries(&wkt[..]).collect();
+        assert_eq!(geometries.len(), 6);
+        let points = flatten_geometries_into_points_ref(geometries.iter());
+        let triangulation = triangulate(points);
+
+        let graph = triangulation.graph();
+        let edges: Vec<_> = graph
+            .raw_edges()
+            .iter()
+            .map(|e| (e.source().index(), e.target().index()))
+            .collect();
+        let expected = vec![
+            (1, 0),
+            (0, 3),
+            (3, 5),
+            (5, 4),
+            (4, 2),
+            (2, 1),
+            (3, 4),
+            (3, 2),
+            (3, 1),
+        ];
+        assert_eq!(edges, expected);
+
+        let graph = triangulation.urquhart();
+        let edges: Vec<_> = graph
+            .raw_edges()
+            .iter()
+            .map(|e| (e.source().index(), e.target().index()))
+            .collect();
+        let expected = vec![(1, 0), (2, 1), (3, 5), (3, 4), (4, 2)];
+        assert_eq!(edges, expected);
+
+        // NOTE: This all makes much more sense if you draw a picture! Pipe the following through
+        // render.py:
+        //      cargo test --all-features test_urquhart -- --nocapture | ./tools/render.py
+        //
+        #[cfg(feature = "test-io")]
+        {
+            let points: Vec<_> = triangulation
+                .points
+                .iter()
+                .map(|p| geo::coord! {x: p.x, y: p.y})
+                .collect();
+            let lines = edges
+                .iter()
+                .map(|(a, b)| geo::Line::new(points[*a], points[*b]))
+                .map(geo::Geometry::Line);
+            write_wkt_geometries(std::io::stdout(), lines);
+        }
     }
 }
