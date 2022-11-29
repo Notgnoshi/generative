@@ -22,6 +22,10 @@ path = "tools/transform/main.rs"
 name = "triangulate"
 path = "tools/triangulate/main.rs"
 
+[[bin]]
+name = "urquhart"
+path = "tools/urquhart/main.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"

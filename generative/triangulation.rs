@@ -1,5 +1,7 @@
+use crate::wkio::write_wkt_geometries;
+use clap::ValueEnum;
 use geo::Point;
-use petgraph::{Directed, Undirected};
+use petgraph::{visit::EdgeRef, Directed, Undirected};
 
 type NodeData = Point;
 type EdgeWeight = ();
@@ -194,13 +196,73 @@ impl Triangulation {
     }
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+pub enum GraphFormat {
+    Tgf,
+    Wkt,
+}
+
+pub fn write_graph<Direction, W>(
+    writer: W,
+    graph: petgraph::Graph<NodeData, EdgeWeight, Direction, NodeIndex>,
+    format: &GraphFormat,
+) where
+    W: std::io::Write,
+    Direction: petgraph::EdgeType,
+{
+    match format {
+        GraphFormat::Tgf => write_graph_tgf(writer, graph),
+        GraphFormat::Wkt => write_graph_wkt(writer, graph),
+    }
+}
+
+fn write_graph_tgf<Direction, W>(
+    mut writer: W,
+    graph: petgraph::Graph<NodeData, EdgeWeight, Direction, NodeIndex>,
+) where
+    W: std::io::Write,
+    Direction: petgraph::EdgeType,
+{
+    // let (nodes, edges) = graph.into_nodes_edges();
+    for idx in graph.node_indices() {
+        let coord = graph
+            .node_weight(idx)
+            .expect("Got index to nonexistent node.");
+        let index = idx.index();
+        writeln!(writer, "{}\tPOINT({} {})", index, coord.x(), coord.y())
+            .expect("Failed to write node label");
+    }
+    writeln!(writer, "#").expect("Failed to write node/edge separator");
+    for edge in graph.edge_references() {
+        writeln!(
+            writer,
+            "{}\t {}",
+            edge.source().index(),
+            edge.target().index()
+        )
+        .expect("Failed to write edge");
+    }
+}
+
+fn write_graph_wkt<Direction, W>(
+    writer: W,
+    graph: petgraph::Graph<NodeData, EdgeWeight, Direction, NodeIndex>,
+) where
+    W: std::io::Write,
+    Direction: petgraph::EdgeType,
+{
+    let edges = graph
+        .edge_references()
+        .map(|e| geo::Line::new(graph[e.source()], graph[e.target()]))
+        .map(geo::Geometry::Line);
+    write_wkt_geometries(writer, edges);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::flatten::flatten_geometries_into_points_ref;
     use crate::wkio::read_wkt_geometries;
-    #[cfg(feature = "test-io")]
-    use crate::wkio::write_wkt_geometries;
     use delaunator::EMPTY;
 
     #[test]
