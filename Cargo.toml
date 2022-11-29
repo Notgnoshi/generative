@@ -35,3 +35,6 @@ rand_distr = "0.4"
 stderrlog = "0.5"
 wkb = "0.7"
 wkt = "0.10"
+
+[features]
+test-io = []
