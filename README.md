@@ -5,169 +5,152 @@
 [![GitHub Actions status](https://github.com/Notgnoshi/generative/workflows/Black/badge.svg)](https://github.com/Notgnoshi/generative/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A (re)exploration of 3D Lindenmayer Systems, with the intent of building a composable set of scripts useful for general purpose generative artwork.
+A polyglot collection of composable generative art tools, with a focus on computational geometry.
 
-I worked on a [class project](https://github.com/macattackftw/fractal_trees) to implement 3D context-free Lindenmayer systems in graduate school.
-This is an attempt on doing the same, but with the following improvements:
+# Table of contents
 
-* Supports context-free, context-sensitive, and stochastic grammars.
-* More robust 3D turtle implementation.
-* Implemented as a series of scripts that read from `stdin` and write to `stdout`.
-    * Intended to be used as a pipeline to allow for inspection and modification of the geometric data.
-    * Uses WKT or WKB (in hex) as a standard geometric data format.
-    * Each script uses the `logging` module to log at varying levels of verbosity to `stderr`.
-* Support for several dimensionality-reduction techniques to project inherently 3D L-System trees to 2D
-* 3D OpenGL WKT renderer
-* 2D WKT to SVG generation
-* Random production rule generation
+- [Prerequisites](#prerequisites)
+  - [How to build](#how-to-build)
+  - [How to test](#how-to-test)
+- [The tools](#the-tools)
+  - [A note on composability](#a-note-on-composability)
+  - [dla](#dla)
+  - [Lindenmayer systems](#lindenmayer-systems)
+    - [random-production-rules](#random-production-rules)
+    - [parse-production-rules](#parse-production-rules)
+    - [interpret-lstring](#interpret-lstring)
+  - [render](#render)
+  - [wkt2svg](#wkt2svg)
+  - [project](#project)
+  - [transform](#transform)
+  - [point-cloud](#point-cloud)
+  - [triangulate](#triangulate)
+  - [urquhart](#urquhart)
+  - [geom2graph](#geom2graph)
+  - [format](#format)
+- [Examples](#examples)
+  - [Random L-Systems](#random-l-systems)
 
-Usage:
+# Prerequisites
+This is a mixed Python, C++, and Rust project that uses submodules to satisfy the C++ dependencies.
+
+* **Rust** - https://www.rust-lang.org/tools/install
+  ```shell
+  # First time
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  # Check for updates
+  rustup update
+  ```
+* **C++** - a C++17 compiler and CMake
+  ```shell
+  sudo apt install build-essential cmake
+  git submodule update --init --recursive
+  ```
+* **Python**
+  ```shell
+  python3 -m venv --prompt generative .venv
+  source .venv/bin/activate
+  python3 -m pip install -r requirements.txt
+  ```
+
+## How to build
+
+The Rust build has been configured to also perform the C++ CMake build, so all you need to do is
 
 ```shell
-# Include the submodules if you intend to build the geom2graph tool
-git clone --recurse-submodules https://github.com/Notgnoshi/generative.git
-cd generative
-python3 -m venv --prompt generative .venv
-source .venv/bin/activate
-python3 -m pip install -r requirements.txt
-# Optionally run the tests to make sure your environment is sufficient
-pytest
-# Optionally build the geom2graph tool. However, there's currently no real point to doing so :(
-pushd
-mkdir -p tools/geom2graph/build
-pushd tools/geom2graph/build
-cmake ..
-make
-popd
-tools/geom2graph/build/src/geom2graph --help
+cargo build
 ```
 
-## Table of Contents
+## How to test
 
-- [Diffusion Limited Aggregation](#diffusion-limited-aggregation)
-- [L-System Rule Parsing](#l-system-rule-parsing)
-  - [Basic Usage](#basic-usage)
-  - [Stochastic Grammars](#stochastic-grammars)
-  - [Context Sensitive Grammars](#context-sensitive-grammars)
-  - [All of the Above](#all-of-the-above)
-  - [Why not Parametric?](#why-not-parametric)
-- [L-String Interpretation](#l-string-interpretation)
-- [Geometry Formats](#geometry-formats)
-- [Visualization](#visualization)
-- [Projections](#projections)
-- [SVG Generation](#svg-generation)
-  - [Example 1](#example-1)
-  - [Example 2](#example-2)
-  - [Example 3](#example-3)
-- [Converting the WKT to a graph](#converting-the-wkt-to-a-graph)
-- [Generating Random L-Systems](#generating-random-l-systems)
+To run the Python tests:
+```shell
+source .venv/bin/activate
+pytest
+```
 
-# [Diffusion Limited Aggregation](tools/dla/)
+To run the Rust tests:
+```shell
+cargo test
+```
 
-![organic](/examples/diffusion-limited-aggregation/organic.svg)
+To run the C++ tests: ¯\\_(ツ)\_/¯
 
-# L-System Rule Parsing
+# The tools
 
-In [*The Algorithmic Beauty of Plants*](http://algorithmicbotany.org/papers/#abop), Lindenmayer and Prusinkiewicz outlined several types of grammars that could be interpreted as algorithmic models of plants.
-These grammars are
+## A note on composability
+
+I'm enamored with the Unix philosophy. As a result, each of the tools provided by this project:
+* Have a highly structured interface
+    * Geometries are formatted at WKT (or WKB)
+    * Graphs are formatted as TGF
+* Read/write from `stdin`/`stdout`
+* Log to `stderr`
+
+## dla
+
+The `dla` tool uses Diffusion Limited Aggregation to generate fractal growths like snowflakes,
+lightning, and river networks.
+
+```shell
+$ cargo run --release --
+        --seed 461266331856721221 \
+        --seeds 2 \
+        --attraction-distance 10 \
+        --min-move-distance 1 \
+        --stubbornness 10 \
+        --particle-spacing 0.1 |
+    ./target/release/geom2graph --graph2geom |
+    ./tools/project.py --kind I --scale 20 |
+    ./tools/wkt2svg.py --output ./examples/diffusion-limited-aggregation/organic.svg
+```
+
+![Diffusion limited aggregation](examples/diffusion-limited-aggregation/organic.svg)
+
+## Lindenmayer systems
+
+### random-production-rules
+
+You can generate random L-System production rules with the `random-production-rules.py` tool:
+```shell
+$ ./tools/random-production-rules.py
+{"seed": 3603894766, "rules": ["G -> |G<", "F -> F[F<>^[|]"], "axiom": "G"}
+```
+
+### parse-production-rules
+
+You can parse hand-written L-System production rules with the `parse-production-rules.py` tool:
+```shell
+$ ./tools/parse-production-rules.py --rule 'a -> ab' --rule 'b -> a' --axiom a --iterations 3
+abaab
+```
+
+You can chain `random-production-rules.py` and `parse-production-rules.py` together too:
+```shell
+$ ./tools/random-production-rules.py --seed 4290989563 |
+    ./tools/parse-production-rules.py --config - --iterations 3
+|v]->^][<>^[[
+```
+
+In _[The Algorithmic Beauty of Plants](http://algorithmicbotany.org/papers/#abop)_, Lindenmayer and
+Prusinkiewicz outlined several types of grammars that could be interpreted as algorithmic models of
+plants. These grammars are
 
 1. Context-free grammars
 2. Stochastic grammars
 3. Context-sensitive grammars
 4. Parametric grammars
 
-This project implements a [parser](tools/parse.py) for the first three kinds of grammars.
+This tool supports the first three kinds of grammars. Parametric grammars are unsupported because
+I'm working on this project for fun ;)
 
-## Basic Usage
+### interpret-lstring
 
-The default mode supports single character tokens.
-
+You can interpret the L-Strings generated by `parse-production-rules.py` and interprets it with a 3D
+turtle with `interpret-lstring.py`:
 ```shell
-$ tools/parse.py --rule 'a -> ab' --rule 'b -> a' --axiom=a --iterations=3
-abaab
-$ # The default mode also supports comma/whitespace separated tokens if you _really_ like commas
-$ tools/parse.py --rule 'a -> a, b' --rule 'b -> a' --axiom=a --iterations=3
-abaab
-```
-
-There's also parser support for longer tokens, but note this is just an academic exercise in premature flexibility.
-The interpreter does not support long tokens, so you almost always want to use the default mode.
-
-```shell
-$ tools/parse.py --rule 'a -> a, b' --rule 'b -> a' --axiom=a --iterations=3 --long-tokens
-a b a a b
-$ tools/parse.py --rule 'a -> ab' --rule 'b -> a' --axiom=a --iterations=30 --long-tokens
-ab
-$ tools/parse.py --rule 'a -> ab' --rule 'ab -> a, a' --axiom=a --iterations=3 --long-tokens
-ab ab
-```
-## Stochastic Grammars
-
-If more than one production rule is given for a single token, the first rule given will be chosen.
-
-```shell
-$ tools/parse.py --rule 'a -> a' --rule 'a -> b' --axiom='aa' --iterations=100
-aa
-```
-
-Probabilities can be specified like so:
-
-```shell
-$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='aa' --iterations=1 --log-level INFO
-2020-08-30 11:36:24,129 - lsystem.grammar - INFO - Using random seed: 4162256033
-aa
-$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='aa' --iterations=1 --log-level INFO
-2020-08-30 11:36:26,368 - lsystem.grammar - INFO - Using random seed: 635680691
-ba
-$ tools/parse.py --rule 'a : 0.5 -> a' --rule 'a : 0.5 -> b' --axiom='aa' --iterations=1 --log-level INFO
-2020-08-30 11:36:28,439 - lsystem.grammar - INFO - Using random seed: 2707414783
-bb
-```
-
-A random seed may be given via `--seed`.
-
-## Context Sensitive Grammars
-
-One token of left or right (or both) context may be specified.
-
-```shell
-$ tools/parse.py --rule 'a>b -> c' --axiom='ab' --iterations=1
-cb
-$ tools/parse.py --rule 'b<a -> c' --axiom='ba' --iterations=1
-bc
-$ tools/parse.py --rule 'b<a>b -> c' --axiom='bab' --iterations=1
-bcb
-```
-
-Note that tokens without any matching rules are simply passed-through.
-
-You can also specify a list of tokens to ignore when considering context.
-
-```shell
-$ tools/parse.py --rule 'b<a>b -> c' --rule='#ignore:a' --axiom='baab' --iterations=1
-bccb
-```
-
-## All of the Above
-
-See `tools/parse.py --help`. You can mix and match stochastic, context-sensitive, and context-free rules.
-It's also possible to pass a JSON config file to avoid incredibly long and hard-to-remember commandline invocations.
-
-However, be aware I've made no attempt at reconciling any cases where rules don't make sense.
-If rules are poorly-formatted, expect an exception.
-If probabilities don't sum to 1, expect an exception.
-
-## Why not Parametric?
-
-Because I'm writing this for fun.
-
-# L-String Interpretation
-
-`tools/interpret.py` reads L-Strings generated by `tools/parse.py` from `stdin` and writes WKT `LINESTRING Z` output to `stdout`.
-
-```shell
-$ tools/parse.py --config examples/sierpinski-tree.json |
-    tools/interpret.py |
+$ tools/parse-production-rules.py --config examples/sierpinski-tree.json |
+    tools/interpret-lstring.py |
     tail -n 4
 LINESTRING Z (0 -15.48528137423857 32.48528137423855, 0 -16.48528137423857 32.48528137423855, 0 -17.48528137423857 32.48528137423855, 0 -17.48528137423857 32.48528137423855, 0 -17.48528137423857 32.48528137423855, 0 -18.19238815542512 33.1923881554251)
 LINESTRING Z (0 -18.48528137423857 32.48528137423855, 0 -18.19238815542512 31.77817459305201)
@@ -175,128 +158,44 @@ LINESTRING Z (0 -15.19238815542512 31.77817459305201, 0 -15.89949493661167 31.07
 LINESTRING Z (0 -17.31370849898476 29.65685424949237, 0 -16.60660171779822 29.36396103067892)
 ```
 
-There are fewer options than `tools/parse.py`, but you can at least configure the step size and angle used by the turtle.
-See `tools/interpret.py --help` for more information on how the L-Strings are interpreted.
+**Note:** even for 2D L-Systems this will generate 3D geometries.
 
-# Geometry Formats
+## render
 
-Each tool, where it makes sense, supports three different input and output formats.
-
-* WKT
-* WKB (hex)
-* Flattened and tagged points
-
-Choose the input geometry format by passing `--input-format` or `-I` with any of `wkt`, `wkb` or `flat` as an argument.
-Similarly, use `--output-format` or `-O` with the same formats.
-
-You can use the [`tools/format.py`](tools/format.py) tool to convert between any of the three formats.
-
+You can render 3D WKT geometries in an interactive OpenGL window using the
+`render.py` tool:
 ```shell
-$ ./tools/format.py --input examples/maya-tree-2.wkt --output-format flat --output examples/maya-tree-2.flat
-$ head examples/maya-tree-2.flat
-(0.0, 0.0, 0.0)	LINESTRING_BEGIN
-(0.0, 0.0, 1.0)
-(0.0, -0.4999999999999999, 1.866025403784439)
-(0.0, -1.366025403784439, 2.366025403784439)
-(0.0, -2.366025403784438, 2.366025403784439)
-(0.0, -3.232050807568877, 1.866025403784439)	LINESTRING_END
-(0.0, -2.366025403784438, 2.366025403784439)	LINESTRING_BEGIN
-(-0.4330127018922194, -3.232050807568877, 2.616025403784439)	LINESTRING_END
-(0.0, -2.366025403784438, 2.366025403784439)	LINESTRING_BEGIN
-(0.4330127018922194, -3.232050807568877, 2.616025403784439)	LINESTRING_END
-$ ./tools/format.py --input-format flat --input examples/maya-tree-2.flat --output-format wkb --output examples/maya-tree-2.wkb
-$ # WKB isn't very interesting to look at:
-$ #head examples/maya-tree-2.wkb
-$ # Ensure that a round trip leaves us where we started:
-$ diff <(./tools/format.py --input-format wkb --input examples/maya-tree-2.wkb --output-format wkt) examples/maya-tree-2.wkt
-$ echo $?
-0
-```
-
-The flattened format is primarily useful for the `tools/project.py` tool, as it flattens a sequence of geometries into an array of points, each of which is tagged with enough metadata to reconstruct the geometry after the point cloud is transformed.
-Using `tools/project.py --output-format=flat` allows you to chain multiple projections together, where subsequent invocations use `--input-format=flat`.
-Doing so is more efficient, because reconstructing the geometries from the tagged array of points requires an inefficient recursive algorithm, that is best avoided when possible.
-
-```shell
-$ tail -n 1 examples/maya-tree-2.wkt
-LINESTRING Z (0.4349557589700654 0.7176281754730549 3.74042421983235, 0.863952186562879 1.001046676532934 4.598116483041933)
-$ Use the identity projection and a scale to rescale a set of geometries
-$ ./tools/project.py --input-format flat --input examples/maya-tree-2.flat --kind I --scale 100 | tail -n 1
-LINESTRING Z (43.49557589700654 71.76281754730549 374.042421983235, 86.39521865628789 100.1046676532934 459.8116483041933)
-$ ./tools/random-production-rules.py --seed 2127293550 |
-    ./tools/parse.py -c - -n 9 |
-    ./tools/interpret.py -l ERROR -o /tmp/example.wkt
-$ ./tools/format.py -i /tmp/example.wkt -O flat -o /tmp/example.flat
-$ time ./tools/project.py -i /tmp/example.wkt --kind I -o /dev/null
-real    0m2.352s
-user    0m3.528s
-sys     0m4.563s
-$ time ./tools/project.py -I flat -i /tmp/example.flat --kind I -o /dev/null
-real    0m1.714s
-user    0m3.008s
-sys     0m4.266s
-$ time ./tools/project.py --kind I --scale 100 -I flat -i /tmp/example.flat -O flat |
-    ./tools/project.py -I flat --kind pca --dimensions 3 -o /dev/null
-real    0m2.569s
-user    0m4.912s
-sys     0m7.299s
-$ time ./tools/project.py --kind I --scale 100 -i /tmp/example.wkt |
-    ./tools/project.py --kind pca --dimensions 3 -o /dev/null
-real    0m4.002s
-user    0m7.231s
-sys     0m7.274s
-```
-
-We can see that the flat format _does_ save time, but not by a significant enough amount to make it worth while.
-
-¯\\_(ツ)_/¯
-
-# Visualization
-
-The [`tools/render.py`](tools/render.py) OpenGL render was implemented to support any WKT/WKB, not just the output of [`tools/interpret.py`](tools/interpret.py) (`LINESTRING Z`).
-
-```shell
-{
-  echo "POLYGON ((0.1 0.1, 0 1, 1 1, 1 0, 0.1 0.1))";
-  echo "Point z (0 1 1)";
-} | tools/render.py --axis
-```
-
-![Rendering some random WKT](examples/wkt-renderer-1.png)
-
-```shell
-tools/parse.py --config examples/fractal-plant-3d.json |
-    tools/interpret.py |
+$ tools/parse-production-rules.py --config examples/maya-tree-2.json |
+    tools/interpret-lstring.py --angle 30 |
     tools/render.py --axis
 ```
 
-![Rendering a 3D fractal plant](examples/wkt-renderer-2.png)
+![Maya tree 2](examples/maya-tree-2.png)
 
+## wkt2svg
+
+You can convert 2D WKT geometries to SVG using the `wkt2svg.py` tool:
 ```shell
-tools/parse.py --config examples/maya-tree-2.json |
-    tools/interpret.py --angle 30 |
-    tools/render.py --axis
+$ tools/parse-production-rules.py --config examples/sierpinski-tree.json |
+    tools/interpret-lstring.py |
+    tools/project.py --kind=yz |
+    tools/wkt2svg.py -o examples/sierpinski-tree.svg
+$ xdg-open examples/sierpinski-tree.svg
 ```
 
-![Rendering a 3D fractal plant](examples/maya-tree-2.png)
+![Sierpinski tree](examples/sierpinski-tree.svg)
 
-And as a teaser for [2D Projections](#2d-projections), here's the same fractal plant after running PCA.
+**Note:** If you feed `wkt2svg.py` 3D geometries, the Z coordinate will be ignored.
 
-```shell
-tools/parse.py --config examples/fractal-plant-3d.json |
-    tools/interpret.py |
-    tools/project.py --kind=pca |
-    tools/render.py
-```
+## project
 
-![Rendering a 3D fractal plant after PCA](examples/wkt-renderer-pca.png)
+You can use the `project.py` tool to perform 3D -> 2D projections. There are multiple projections
+available:
+* Drop one of the X, Y, or Z coordinates
+* PCA or SVD
+* Isometric
 
-This appears to be a top-down view, which is undesirable. I'd rather have an isometric-ish side view.
-
-# Projections
-
-Notice that even 2D L-Systems generate 3D geometric data.
-Before this data can be plotted, it must be projected onto a plane.
+I recommend using PCA (the default), even for 2D -> 2D projections.
 
 ```shell
 $ tools/parse.py --config examples/sierpinski-tree.json |
@@ -304,125 +203,129 @@ $ tools/parse.py --config examples/sierpinski-tree.json |
     tail -n 1
 LINESTRING Z (0 -17.31370849898476 29.65685424949237, 0 -16.60660171779822 29.36396103067892)
 ```
-
-Notice that for this particular L-System, it's the X coordinate that's unused. This can vary.
-Sometimes you may need to drop coordinates, or sometimes you may have truly 3D geometries that you need to project to 2D before you can generate an SVG.
-`tools/project.py` handles both of these cases.
-
-Using the same example as above, perform PCA on the 3D geometric data to pick an appropriate 2D projection.
-
+Notice that these are 3D geometries (with a constant zero X coordinate). We can project these to 2D
+like so:
 ```shell
-$ tools/parse.py --config examples/sierpinski-tree.json |
-    tools/interpret.py |
+$ tools/parse-production-rules.py --config examples/sierpinski-tree.json |
+    tools/interpret-lstring.py |
     tools/project.py
 LINESTRING (-1256.101730552664 934.7205554818272, -1249.030662740799 927.6494876699617)
 ```
 
-See `tools/project.py --help` for details. The script supports the following projection methods
+## transform
 
-* Drop the X, Y, or Z coordinates
-* [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#sklearn.decomposition.PCA)
-* [SVD](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html#sklearn.decomposition.TruncatedSVD)
-* **TODO:** Isometric
+You can perform affine transformations on 2D geomtries with the `transform` tool. It will not accept
+3D geometries.
 
-I intend on implementing a few more techniques because for this kind of geometric data, none of the above techniques work well with 3D data.
-PCA and SVD work pretty well on 3D data with a missing component (like the Sierpinski tree example).
-
-# SVG Generation
-
-Requires using [2D Projections](#2d-projections) to project 3D geometric data onto a plane so it can be converted to SVG.
-
-## Example 1
+`transform` is a compiled Rust tool that you can run with `cargo run --bin transform -- ...` or with
+the `./target/debug/transform` binary directly.
 
 ```shell
-$ tools/parse.py --config examples/sierpinski-tree.json |
-    tools/interpret.py |
-    tools/project.py --kind=yz |
-    tools/wkt2svg.py -o examples/sierpinski-tree.svg
-$ xdg-open examples/sierpinski-tree.svg
+$ echo -e "POINT(0 0)\nPOINT(1 0)\nPOINT(1 1)\nPOINT(0 1)" |
+    cargo run --bin transform -- \
+        --center=whole-collection \
+        --rotation=45
+POINT(0.49999999999999994 -0.20710678118654752)
+POINT(1.2071067811865475 0.49999999999999994)
+POINT(0.5 1.2071067811865475)
+POINT(-0.20710678118654752 0.5)
 ```
 
-![the sierpinski tree](examples/sierpinski-tree.svg)
+## point-cloud
 
-We can also use PCA to reduce the dimensionality of our 3D geometries as shown below:
+`point-cloud` is a simple tool to generate a random point cloud in the unit square or the unit
+circle.
 
 ```shell
-$ tools/parse.py --config examples/sierpinski-tree.json |
-    tools/interpret.py |
-    tools/project.py --kind=pca |
-    tools/wkt2svg.py -o examples/sierpinski-tree-pca.svg
-$ xdg-open examples/sierpinski-tree-pca.svg
+$ cargo run --bin point-cloud -- --points 3 --scale 5
+POINT (-2.630254885041603 -3.710131141349175)
+POINT (-0.14425253510856784 1.3723340850155374)
+POINT (2.137536655881525 0.7953499219109705)0
 ```
 
-Interestingly, this flips the tree right-side-up.
+## triangulate
 
-![the sierpinski tree](examples/sierpinski-tree-pca.svg)
+`triangulate` is a tool to perform Delaunay triangulation of a set of geometries. You can
+triangulate each geometry, or relax the collection of geometries into a point cloud and triangulate
+the point cloud.
 
-## Example 2
-
-Here's another example, showing how all of the scripts in `tools/` were designed to work in a pipeline.
 ```shell
-$ tools/parse.py --config examples/fractal-plant-1.json |
-  tools/interpret.py --stepsize=3 --angle=22.5 |
-  tools/project.py --kind=yz |
-  tools/wkt2svg.py -o examples/fractal-plant-1.svg
-$ xdg-open examples/fractal-plant-1.svg
+$ echo -e "POINT(0 0)\nPOINT(1 0)\nPOINT(1 1)\nPOINT(0 1)" |
+    cargo run --bin triangulate -- --strategy=whole-collection
+LINESTRING(0 0,1 1)
+LINESTRING(1 1,1 0)
+LINESTRING(0 0,1 0)
+LINESTRING(0 0,0 1)
+LINESTRING(0 1,1 1)
+LINESTRING(0 0,1 1)
 ```
 
-![One of Lindenmayer's original fractal plants](examples/fractal-plant-1.svg)
+## urquhart
 
-## Example 3
-
-Let's try each of the projection techniques on the following plant.
-
-![Rendering a 3D fractal plant](examples/wkt-renderer-2.png)
+`urquhart` is a tool to generate the Urquhart graph from a point cloud (or set of geometries). The
+Urquhart graph is a sub graph of the Delaunay triangulation and a super graph of the minimal
+spanning tree.
 
 ```shell
-tools/parse.py --config examples/fractal-plant-3d.json | tools/interpret.py --stepsize=3 --angle=22.5 >/tmp/plant.wkt
-for projection in pca svd; do
-    tools/project.py --kind=$projection --scale 10 --input /tmp/plant.wkt | tools/wkt2svg.py -o examples/plant-$projection.svg
-done
+$ cargo run --bin point-cloud -- --points 20 --scale 100 >/tmp/points.wkt
+$ cargo run --bin triangulate </tmp/points.wkt >/tmp/delaunay.wkt
+$ ./tools/wkt2svg.py </tmp/delaunay.wkt >examples/delaunay.svg
 ```
 
-* PCA ![PCA](examples/plant-pca.svg)
-* SVD ![SVD](examples/plant-svd.svg)
-
-# Converting the WKT to a graph
-
-The [`geom2graph` tool](tools/geom2graph) can convert WKT input to [TGF](https://en.wikipedia.org/wiki/Trivial_Graph_Format), where each node in the graph is tagged with its WKT coordinates.
-Optionally, the tool can also perform "fuzzy" snapping, where vertices within a specified tolerance are snapped together, and treated as the same vertex.
+![Delaunay triangulation](examples/delaunay.svg)
 
 ```shell
-$ tools/parse.py --config examples/fractal-plant-1.json |
-    tools/interpret.py --stepsize=3 --angle=22.5 |
+$ cargo run --bin urquhart </tmp/points.wkt >/tmp/urquhart.wkt
+$ ./tools/wkt2svg.py </tmp/urquhart.wkt >examples/urquhart.svg
+```
+
+![Urquhart graph](examples/urquhart.svg)
+
+The `urquhart` tool can also output the graph in Trivial Graph Format:
+```shell
+$ echo -e "POINT(0 0)\nPOINT(1 0)\nPOINT(1 1)\nPOINT(0 1)" | cargo run --bin urquhart -- --output-format tgf
+0	POINT(0 0)
+1	POINT(1 0)
+2	POINT(1 1)
+3	POINT(0 1)
+#
+0	 3
+3	 2
+2	 1
+1	 0
+```
+
+## geom2graph
+
+The `geom2graph` tool is the lone C++ tool in the project. It uses GEOS to convert back and forth
+between geometries and their graph representations (using a fuzzy tolerance, as well as duplicate
+node and overlapping edge detection).
+
+That means you can go Geometry Collection -> Graph -> Geometry Collection to perform dramatic
+geometry simplification!
+
+**Note:** `geom2graph` only works in 2D, and does funky stuff with 3D geometries.
+
+```shell
+$ tools/parse-production-rules.py --config examples/fractal-plant-1.json |
+    tools/interpret-lstring.py --stepsize=3 --angle=22.5 |
     tools/project.py --kind=pca --output examples/fractal-plant-1.wkt
-$ head examples/fractal-plant-1.wkt
+$ head -n 5 examples/fractal-plant-1.wkt
 LINESTRING (-244.6453794276828 189.4413011320319, -167.1020575851201 132.8459547012428, -142.1107643324939 91.86504131999683, -138.4076504660449 68.15245083114208, -141.2342426714309 56.49010216097916, -144.7714518233552 51.64364454581902, -147.3327589096831 50.08168871752988, -150.2968327207899 49.61879948422376)
 LINESTRING (-147.3327589096831 50.08168871752988, -149.894065996011 48.51973288924074)
 LINESTRING (-147.3327589096831 50.08168871752988, -149.894065996011 48.51973288924074, -153.4312751479352 43.6732752740806)
 LINESTRING (-149.894065996011 48.51973288924074, -152.8581398071178 48.05684365593462)
-LINESTRING (-144.7714518233552 51.64364454581902, -146.5400563993173 49.22041573823896, -149.1013634856452 47.65845990994982)
-LINESTRING (-146.5400563993173 49.22041573823896, -148.3086609752794 46.7971869306589)
-LINESTRING (-146.5400563993173 49.22041573823896, -148.3086609752794 46.7971869306589, -149.7219570779724 40.96601259557747)
-LINESTRING (-148.3086609752794 46.7971869306589, -150.8699680616073 45.23523110236977)
-LINESTRING (-144.7714518233552 51.64364454581902, -148.3086609752794 46.7971869306589, -150.4286051293189 38.0504254280367, -152.197209705281 35.62719662045667)
-LINESTRING (-150.4286051293189 38.0504254280367, -151.1352531806654 35.134838260496)
-$ tools/geom2graph/build/src/geom2graph \
+$ ./target/debug/geom2graph \
     --tolerance=0.001 \
     --input examples/fractal-plant-1.wkt \
     --output examples/fractal-plant-1.tgf
-$ head examples/fractal-plant-1.tgf
+$ head -n 5 examples/fractal-plant-1.tgf
 0	POINT (-244.6453794276828 189.4413011320319)
 1	POINT (-167.1020575851201 132.8459547012428)
 2	POINT (-142.1107643324939 91.86504131999683)
 3	POINT (-138.4076504660449 68.15245083114208)
 4	POINT (-141.2342426714309 56.49010216097916)
-5	POINT (-144.7714518233552 51.64364454581902)
-6	POINT (-147.3327589096831 50.08168871752988)
-7	POINT (-150.2968327207899 49.61879948422376)
-8	POINT (-149.894065996011 48.51973288924074)
-9	POINT (-152.4741132487238 44.98471725450483)
-$ tail examples/fractal-plant-1.tgf
+$ tail -n 5 examples/fractal-plant-1.tgf
 6254	6259
 6254	6265
 6255	6259
@@ -435,121 +338,23 @@ $ tail examples/fractal-plant-1.tgf
 6262	6264
 ```
 
-~~The `geom2graph` tool also works on 3D geometries, and even mixed 2D and 3D input, where it assumes the Z coordinate of the 2D geometries is 0.~~
-The `geom2graph` tool is _supposed_ to work on 3D geometries, but due to the limitations of the GEOS library, the z coordinate is ignored when line-line intersections are calculated and snapped together (the graph noding process).
-For now, it will only work on 2D geometries, because fixing GEOS, open source as it is, is no small task, and, well, this project is for fun.
+## format
 
-```shell
-$ tools/parse.py --config examples/maya-tree-2.json |
-    tools/interpret.py \
-        --stepsize=1 \
-        --angle=30 \
-        --output=examples/maya-tree-2.wkt
-$ head examples/maya-tree-2.wkt
-LINESTRING Z (0 0 0, 0 0 1, 0 -0.4999999999999999 1.866025403784439, 0 -1.366025403784439 2.366025403784439, 0 -2.366025403784438 2.366025403784439, 0 -3.232050807568877 1.866025403784439)
-LINESTRING Z (0 -2.366025403784438 2.366025403784439, -0.4330127018922194 -3.232050807568877 2.616025403784439)
-LINESTRING Z (0 -2.366025403784438 2.366025403784439, 0.4330127018922194 -3.232050807568877 2.616025403784439)
-LINESTRING Z (0 -1.366025403784439 2.366025403784439, -0.4330127018922194 -1.991025403784439 3.015544456622768, -1.183012701892219 -2.207531754730549 3.640544456622768)
-LINESTRING Z (-0.4330127018922194 -1.991025403784439 3.015544456622768, -0.4040063509461099 -2.507171044359295 3.871553983041933)
-LINESTRING Z (-0.4330127018922194 -1.991025403784439 3.015544456622768, -0.837019052838329 -2.882171044359295 3.222034930203604)
-LINESTRING Z (0 -1.366025403784439 2.366025403784439, 0.4330127018922194 -1.991025403784439 3.015544456622768, 1.183012701892219 -2.207531754730549 3.640544456622768)
-LINESTRING Z (0.4330127018922194 -1.991025403784439 3.015544456622768, 0.837019052838329 -2.882171044359295 3.222034930203604)
-LINESTRING Z (0.4330127018922194 -1.991025403784439 3.015544456622768, 0.4040063509461099 -2.507171044359295 3.871553983041933)
-LINESTRING Z (0 -0.4999999999999999 1.866025403784439, -0.4330127018922194 -0.7165063509461098 2.741025403784439, -1.18301270189222 -0.59150635094611 3.390544456622768, -2.049038105676659 -0.1584936490538911 3.640544456622768)
-```
+The `format.py` tool can be used to convert between different equivalent geometry formats (primarily
+WKT and WKB).
 
-This is what the geometries look like when rendered:
+# Examples
 
-![Rendering a 3D fractal plant](examples/maya-tree-2.png)
-
-So let's run the `geom2graph` tool, and visualize the resulting directed graph.
-
-```shell
-$ tools/geom2graph/build/src/geom2graph \
-    --tolerance=0.001 \
-    --input examples/maya-tree-2.wkt \
-    --output examples/maya-tree-2.tgf
-$ head examples/maya-tree-2.tgf
-0	POINT Z (0 0 0)
-1	POINT Z (0 -0.4999999999999999 1.866025403784439)
-2	POINT Z (0 -0.5819930716951528 3.184712085553997)
-3	POINT Z (0 -1.366025403784439 2.366025403784439)
-4	POINT Z (0 -2.366025403784438 2.366025403784439)
-5	POINT Z (0 -3.232050807568877 1.866025403784439)
-6	POINT Z (-0.4330127018922194 -3.232050807568877 2.616025403784439)
-7	POINT Z (0.4330127018922194 -3.232050807568877 2.616025403784439)
-8	POINT Z (-0.4330127018922194 -1.991025403784439 3.015544456622768)
-9	POINT Z (-1.06002309434949 -2.172027713219388 3.538053117003827)
-$ tail examples/maya-tree-2.tgf
-127	130
-131	132
-131	141
-131	143
-132	137
-132	141
-133	135
-133	136
-137	139
-141	144
-```
-
-which, when visualized in a graph viewer, looks like this:
-
-![yEd TGF visualization](examples/maya-tree-2-viz.png)
-
-The origin has been colored orange, and you can see the remarkable symmetry that's displayed, even with an organic layout.
-Notice that the edges are directed, and thus there's two directed edges for every logical edge.
-
-Interestingly, there seems to be three nodes adjacent to the origin, when the OpenGL visualizer shows a single vertical trunk.
-Given my understanding of the problem, I think this is because the turtle spends a lot of time retracing its steps.
-
-Note that we were able to **significantly** reduce the amount of retracing from the original `maya-tree`, by rewriting its L-System rules, while maintaining the same visual appearance.
-Let's visualize the points close to the origin to double check.
-
-A pruned version of the TGF output is shown below, showing the origin's neighbors.
-
-```tgf
-0	POINT Z (0 0 0)
-1	POINT Z (0 -0.4999999999999999 1.866025403784439)
-52	POINT Z (-0.4330127018922194 0.2499999999999999 1.866025403784439)
-100	POINT Z (0.4330127018922194 0.2499999999999999 1.866025403784439)
-#
-0	1
-0	52
-0	100
-```
-
-We can visualize these four nodes by piping them directly into the OpenGL renderer:
-
-```shell
-tools/renderer.py --axis << EOF
-POINT Z (0 0 0)
-POINT Z (0 -0.4999999999999999 1.866025403784439)
-POINT Z (-0.4330127018922194 0.2499999999999999 1.866025403784439)
-POINT Z (0.4330127018922194 0.2499999999999999 1.866025403784439)
-EOF
-```
-
-![Maya tree 2 near the origin](examples/maya-tree-2-origin.png)
-
-This is because the `geom2graph` tool is broken in 3D. The `z` coordinate is ignored when the LINESTRING intersections are calculated, which results in three nodes adjacent to `(0, 0, 0)`.
-
-# Generating Random L-Systems
-
-Using the [random-production-rules.py](tools/random-production-rules.py) tool, you can generate random production rules.
-
-In the following examples, I've generated many random L-Systems, and saved the configuration for ones I like in [examples/random-lsystems/saved.json](examples/random-lsystems/saved.json).
-Alternatively, you can just use [examples/random-lsystem.sh](examples/random-lsystem.sh) to generate and render random L-Systems of your own.
-It will output the configuration in JSON, along with the random seed for reproducibility.
+## Random L-Systems
 
 ```shell
 mkdir -p examples/random-lsystems
 for i in $(seq 0 13); do
-    # tools/geom2graph/build/src/geom2graph --tolerance 1e-3 |  # Use geom2graph round trip to simplify geometries
-    # tools/geom2graph/build/src/geom2graph --tolerance 1e-3 --graph2geom |
+    # ./target/release/geom2graph --tolerance 1e-3 |  # Use geom2graph round trip to simplify geometries
+    # ./target/release/geom2graph --tolerance 1e-3 --graph2geom |
     jq ".[$i]" examples/random-lsystems/saved.json |
-    tools/parse.py -c - -n $(jq ".[$i].iterations" examples/random-lsystems/saved.json) |
-    tools/interpret.py -l ERROR -a $(jq ".[$i].angle" examples/random-lsystems/saved.json) |
+    tools/parse-production-rules.py -c - -n $(jq ".[$i].iterations" examples/random-lsystems/saved.json) |
+    tools/interpret-lstring.py -l ERROR -a $(jq ".[$i].angle" examples/random-lsystems/saved.json) |
     tools/project.py --scale $(jq ".[$i].scale" examples/random-lsystems/saved.json) --kind pca |
     tools/wkt2svg.py --output examples/random-lsystems/random-$i.svg
 done
