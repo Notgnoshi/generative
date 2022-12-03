@@ -4,8 +4,7 @@ cmake_minimum_required(VERSION 3.15)
 project(
   generative
   VERSION 0.1
-  DESCRIPTION
-  "A C++ generative art library"
+  DESCRIPTION "A C++ generative art library"
   LANGUAGES CXX)
 # TODO: Add the description to a macro, and replace the string literal in the
 # application source.
@@ -24,11 +23,14 @@ add_library(project_warnings INTERFACE)
 include(cmake/compiler-warnings.cmake)
 set_project_warnings(project_warnings)
 
-include(cmake/doxygen.cmake)
-enable_doxygen()
+option(GENERATIVE_BUILD_DOCS "Build Doxygen documentation" ON)
+if(GENERATIVE_BUILD_DOCS)
+  include(cmake/doxygen.cmake)
+  enable_doxygen()
+endif()
 
-option(ENABLE_PCH "Enable Precompiled Headers" ON)
-if(ENABLE_PCH)
+option(GENERATIVE_ENABLE_PCH "Enable Precompiled Headers" ON)
+if(GENERATIVE_ENABLE_PCH)
   target_precompile_headers(
     project_options
     INTERFACE
@@ -40,6 +42,8 @@ if(ENABLE_PCH)
     <set>
     <memory>)
 endif()
+
+option(GENERATIVE_ENABLE_LTO "Enable link time optimization" ON)
 
 set(ROOT submodules/geos)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/submodules/geos/cmake")
@@ -69,13 +73,13 @@ set(WITH_UNIT_TESTS
     CACHE BOOL "enable log4cplus tests" FORCE)
 add_subdirectory(submodules/log4cplus)
 
-# Needs to be set before we add the src/ directory.
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 add_subdirectory(generative/)
 add_subdirectory(tools/)
 
 # TODO: Overwrite the geos-defined 'make check' target to run the tests.
-option(ENABLE_TESTING "Enable unit tests" ON)
-if(ENABLE_TESTING)
+option(GENERATIVE_ENABLE_TESTING "Enable unit tests" ON)
+if(GENERATIVE_ENABLE_TESTING)
   # TODO: Decide if CTest is worth using TODO: Add coverage instrumentation
   add_subdirectory(submodules/googletest)
   add_subdirectory(tests)
