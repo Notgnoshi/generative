@@ -1,15 +1,47 @@
-mod cmdline;
-
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+use generative::stdio::get_output_writer;
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
 use rand_distr::Binomial;
 use std::io::Write;
+use std::path::PathBuf;
 
-use cmdline::RandomDomain;
-use generative::stdio::get_output_writer;
+#[derive(Debug, Clone, ValueEnum)]
+pub enum RandomDomain {
+    UnitSquare,
+    UnitCircle,
+}
+
+/// Generate random point clouds in a unit square or circle
+#[derive(Debug, Parser)]
+#[clap(name = "point-cloud")]
+pub struct CmdlineOptions {
+    /// Output file to write result to. Defaults to stdout.
+    #[clap(short, long)]
+    pub output: Option<PathBuf>,
+
+    /// The random seed to use. Use zero to let the tool pick its own random seed.
+    #[clap(long, default_value = "0")]
+    pub seed: u64,
+
+    /// The number of points to generate.
+    #[clap(short, long)]
+    pub points: u64,
+
+    /// Generate a random number of points with mean '--points'
+    #[clap(short, long)]
+    pub random_number: bool,
+
+    /// The random domain to generate points inside.
+    #[clap(short, long, default_value = "unit-circle", value_enum)]
+    pub domain: RandomDomain,
+
+    /// Scale the generated points.
+    #[clap(short, long, default_value = "1.0")]
+    pub scale: f64,
+}
 
 struct Double2 {
     x: f64,
@@ -68,7 +100,7 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
 }
 
 fn main() {
-    let args = cmdline::CmdlineOptions::parse();
+    let args = CmdlineOptions::parse();
     let seed = generate_random_seed_if_not_specified(args.seed);
     let mut rng = StdRng::seed_from_u64(seed);
 
