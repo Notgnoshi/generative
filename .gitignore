@@ -1,6 +1,10 @@
 *.sw*
 .vscode/
 Cargo.lock
+build/
+.vscode/
+.clangd
+.cache
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
