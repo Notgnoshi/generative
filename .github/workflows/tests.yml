@@ -21,8 +21,13 @@ jobs:
         env:
             RUSTFLAGS: -D warnings
             CARGO_TERM_COLOR: always
+            NUM_JOBS: 2
+            # TODO: Update submodules and perform C++ build
+            GENERATIVE_CARGO_ENABLE_CMAKE_BUILD: ""
         steps:
             - uses: actions/checkout@v3
+            # - run: |
+            #       sudo apt-get install cmake build-essential
             - name: Set up Rust stable
               uses: actions-rs/toolchain@v1
               with:
