@@ -1,16 +1,16 @@
 [submodule "tools/geom2graph/depends/googletest"]
-	path = tools/geom2graph/depends/googletest
+	path = submodules/googletest
 	url = https://github.com/google/googletest.git
 	branch = master
 [submodule "tools/geom2graph/depends/geos"]
-	path = tools/geom2graph/depends/geos
+	path = submodules/geos
 	url = https://github.com/libgeos/geos.git
 	branch = 3.9
 [submodule "tools/geom2graph/depends/cxxopts"]
-	path = tools/geom2graph/depends/cxxopts
+	path = submodules/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
 	branch = master
 [submodule "tools/geom2graph/depends/log4cplus"]
-	path = tools/geom2graph/depends/log4cplus
+	path = submodules/log4cplus
 	url = https://github.com/log4cplus/log4cplus.git
 	branch = master
