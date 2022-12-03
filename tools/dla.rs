@@ -1,4 +1,5 @@
 use clap::{Parser, ValueEnum};
+use generative::dla::{format_tgf, format_wkt, Model};
 use log::trace;
 use std::fs::File;
 use std::io::{BufWriter, Write};
@@ -95,4 +96,39 @@ impl CmdlineOptions {
             }
         }
     }
+}
+fn main() {
+    let args = CmdlineOptions::parse();
+
+    stderrlog::new()
+        .quiet(args.quiet)
+        .verbosity((args.verbose + 2) as usize) // Default to INFO level
+        .init()
+        .unwrap();
+
+    let mut model = Model::new(
+        args.dimensions,
+        // TODO: Seed type.
+        args.seeds,
+        args.seed,
+        args.particle_spacing,
+        args.attraction_distance,
+        args.min_move_distance,
+        args.stubbornness,
+        args.stickiness,
+    );
+
+    model.run(args.particles);
+
+    trace!("Model {:?}", model);
+
+    let mut writer = args.get_output_writer();
+    match args.format {
+        OutputFormat::Tgf => {
+            format_tgf(&mut writer, model.particle_graph);
+        }
+        OutputFormat::Wkt => {
+            format_wkt(&mut writer, model.particle_graph);
+        }
+    };
 }

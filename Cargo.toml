@@ -8,23 +8,23 @@ path = "generative/lib.rs"
 
 [[bin]]
 name = "dla"
-path = "tools/dla/main.rs"
+path = "tools/dla.rs"
 
 [[bin]]
 name = "point-cloud"
-path = "tools/point-cloud/main.rs"
+path = "tools/point-cloud.rs"
 
 [[bin]]
 name = "transform"
-path = "tools/transform/main.rs"
+path = "tools/transform.rs"
 
 [[bin]]
 name = "triangulate"
-path = "tools/triangulate/main.rs"
+path = "tools/triangulate.rs"
 
 [[bin]]
 name = "urquhart"
-path = "tools/urquhart/main.rs"
+path = "tools/urquhart.rs"
 
 [dependencies]
 clap = {version="4.0", features=["derive"]}
