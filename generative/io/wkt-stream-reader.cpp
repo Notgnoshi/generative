@@ -1,4 +1,5 @@
 #include "generative/io/wkt-stream-reader.h"
+
 #include "generative/io/wkt.h"
 
 #include <geos/geom/Geometry.h>
