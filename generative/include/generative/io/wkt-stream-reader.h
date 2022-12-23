@@ -43,7 +43,9 @@ class WKTStreamReader
 public:
     using iterator = GeometryIterator;
     explicit WKTStreamReader(std::istream& input_stream) :
-        m_input(input_stream), m_factory(geos::geom::GeometryFactory::create()), m_factory_ref(*m_factory)
+        m_input(input_stream),
+        m_factory(geos::geom::GeometryFactory::create()),
+        m_factory_ref(*m_factory)
     {
     }
     WKTStreamReader(std::istream& input_stream, geos::geom::GeometryFactory& factory) :
