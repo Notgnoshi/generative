@@ -8,9 +8,8 @@ fn main() {
         std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_PCH").unwrap_or_else(|_| "OFF".to_string());
     let enable_lto =
         std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_LTO").unwrap_or_else(|_| "OFF".to_string());
-    // TODO: https://github.com/Notgnoshi/generative/issues/124
     let enable_tests =
-        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_TESTS").unwrap_or_else(|_| "OFF".to_string());
+        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_TESTS").unwrap_or_else(|_| "ON".to_string());
     if enable_cmake_build.is_empty() {
         return;
     }
