@@ -10,7 +10,6 @@
 #include <gtest/gtest.h>
 
 using generative::io::from_wkt;
-using generative::io::operator<<;
 
 TEST(GeometryNoderTests, DisjointPoint)
 {
@@ -153,7 +152,7 @@ TEST(GeometryNoderTests, SnappingNoder)
     // std::cerr << noded->toString() << std::endl;
 
     EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
-    EXPECT_TRUE(noded->equals(expected.get())) << "actual: " << noded << " expected: " << expected;
+    EXPECT_TRUE(noded->equals(expected.get()));
 }
 
 //! @todo Use google benchmark.
