@@ -2,6 +2,10 @@
 """Convert 2D WKT/WKB to SVG.
 
 3D WKT/WKB input will have the Z coordinate stripped.
+
+Examples
+    ... | wkt2svg.py | display -density 500 -
+    ... | wkt2svg.py --output /tmp/geometries.svg
 """
 import argparse
 import logging
