@@ -30,6 +30,10 @@ path = "tools/urquhart.rs"
 name = "template"
 path = "tools/template.rs"
 
+[[bin]]
+name = "wkt2svg"
+path = "tools/wkt2svg.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"
@@ -41,6 +45,7 @@ petgraph = "0.6"
 rand = "0.8"
 rand_distr = "0.4"
 stderrlog = "0.5"
+svg = "0.13"
 wkb = "0.7"
 wkt = "0.10"
 
