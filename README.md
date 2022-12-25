@@ -174,18 +174,19 @@ $ tools/parse-production-rules.py --config examples/maya-tree-2.json |
 
 ## wkt2svg
 
-You can convert 2D WKT geometries to SVG using the `wkt2svg.py` tool:
+You can convert 2D WKT geometries to SVG using the `wkt2svg` tool:
 ```shell
 $ tools/parse-production-rules.py --config examples/sierpinski-tree.json |
     tools/interpret-lstring.py |
     tools/project.py --kind=yz |
-    tools/wkt2svg.py -o examples/sierpinski-tree.svg
+    cargo run --bin wkt2svg -- --output examples/sierpinski-tree.svg
 $ xdg-open examples/sierpinski-tree.svg
 ```
 
 ![Sierpinski tree](examples/sierpinski-tree.svg)
 
-**Note:** If you feed `wkt2svg.py` 3D geometries, the Z coordinate will be ignored.
+**Note:** `wkt2svg` will only accept 2D geometries as input.
+Use the `project.py` tool to project 3D geometries to two dimensions.
 
 ## project
 
