@@ -37,7 +37,7 @@ fn main() {
         .define("GENERATIVE_ENABLE_PCH", enable_pch)
         .define("GENERATIVE_ENABLE_LTO", enable_lto)
         .define("GENERATIVE_ENABLE_TESTING", enable_tests)
-        .define("CMAKE_INSTALL_RPATH", "$ORIGIN/lib") // binaries just stashed in /target/debug/
+        .define("GENERATIVE_TOOL_INSTALL_RPATH", "$ORIGIN/lib") // binaries just stashed in /target/debug/
         .build();
 
     // Copy ./target/debug/build/generative-<hash>/out/lib/ -> ./target/debug/lib/
