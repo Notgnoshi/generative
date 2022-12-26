@@ -64,16 +64,21 @@ set(ROOT ../../)
 # party.
 add_subdirectory(submodules/cxxopts)
 
+# Prevents duplicate target failure :(
 set(LOG4CPLUS_BUILD_TESTING
     OFF
-    CACHE BOOL "enable log4cplus tests" FORCE) # Prevents duplicate target
-                                               # failure :(
+    CACHE BOOL "enable log4cplus tests" FORCE)
 set(WITH_UNIT_TESTS
     OFF
     CACHE BOOL "enable log4cplus tests" FORCE)
 add_subdirectory(submodules/log4cplus)
 
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
+if(DEFINED GENERATIVE_TOOL_INSTALL_RPATH)
+  set(CMAKE_INSTALL_RPATH "${GENERATIVE_TOOL_INSTALL_RPATH}")
+else()
+  set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib/")
+endif()
+
 add_subdirectory(generative/)
 add_subdirectory(tools/)
 
