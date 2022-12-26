@@ -9,6 +9,8 @@ A polyglot collection of composable generative art tools, with a focus on comput
 
 # Table of contents
 
+- [Generative Art](#generative-art)
+- [Table of contents](#table-of-contents)
 - [Prerequisites](#prerequisites)
   - [How to build](#how-to-build)
   - [How to test](#how-to-test)
@@ -102,7 +104,7 @@ $ cargo run --release --
         --particle-spacing 0.1 |
     ./target/release/geom2graph --graph2geom |
     ./tools/project.py --kind I --scale 20 |
-    ./tools/wkt2svg.py --output ./examples/diffusion-limited-aggregation/organic.svg
+    cargo run --bin wkt2svg -- --output ./examples/diffusion-limited-aggregation/organic.svg
 ```
 
 ![Diffusion limited aggregation](examples/diffusion-limited-aggregation/organic.svg)
@@ -213,6 +215,10 @@ $ tools/parse-production-rules.py --config examples/sierpinski-tree.json |
 LINESTRING (-1256.101730552664 934.7205554818272, -1249.030662740799 927.6494876699617)
 ```
 
+Surprisingly, this flips the tree right side up.
+
+![Sierpinski tree after PCA](examples/sierpinski-tree-pca.svg)
+
 ## transform
 
 You can perform affine transformations on 2D geomtries with the `transform` tool. It will not accept
@@ -222,14 +228,16 @@ You can perform affine transformations on 2D geomtries with the `transform` tool
 the `./target/debug/transform` binary directly.
 
 ```shell
-$ echo -e "POINT(0 0)\nPOINT(1 0)\nPOINT(1 1)\nPOINT(0 1)" |
-    cargo run --bin transform -- \
-        --center=whole-collection \
-        --rotation=45
+$ cat examples/unit-square.wkt
+POINT(0 0)
+POINT(0 1)
+POINT(1 1)
+POINT(1 0)
+$ cargo run --bin transform -- --center=whole-collection --rotation=45 <examples/unit-square.wkt
 POINT(0.49999999999999994 -0.20710678118654752)
-POINT(1.2071067811865475 0.49999999999999994)
-POINT(0.5 1.2071067811865475)
 POINT(-0.20710678118654752 0.5)
+POINT(0.5 1.2071067811865475)
+POINT(1.2071067811865475 0.49999999999999994)
 ```
 
 ## point-cloud
@@ -251,15 +259,12 @@ triangulate each geometry, or relax the collection of geometries into a point cl
 the point cloud.
 
 ```shell
-$ echo -e "POINT(0 0)\nPOINT(1 0)\nPOINT(1 1)\nPOINT(0 1)" |
-    cargo run --bin triangulate -- --strategy=whole-collection
-LINESTRING(0 0,1 1)
-LINESTRING(1 1,1 0)
-LINESTRING(0 0,1 0)
-LINESTRING(0 0,0 1)
-LINESTRING(0 1,1 1)
-LINESTRING(0 0,1 1)
+$ cargo run --bin point-cloud -- --points 20 --scale 100 >/tmp/points.wkt
+$ cargo run --bin triangulate </tmp/points.wkt >/tmp/delaunay.wkt
+$ cargo run --bin wkt2svg </tmp/delaunay.wkt >examples/delaunay.svg
 ```
+
+![Delaunay triangulation](examples/delaunay.svg)
 
 ## urquhart
 
@@ -268,16 +273,8 @@ Urquhart graph is a sub graph of the Delaunay triangulation and a super graph of
 spanning tree.
 
 ```shell
-$ cargo run --bin point-cloud -- --points 20 --scale 100 >/tmp/points.wkt
-$ cargo run --bin triangulate </tmp/points.wkt >/tmp/delaunay.wkt
-$ ./tools/wkt2svg.py </tmp/delaunay.wkt >examples/delaunay.svg
-```
-
-![Delaunay triangulation](examples/delaunay.svg)
-
-```shell
 $ cargo run --bin urquhart </tmp/points.wkt >/tmp/urquhart.wkt
-$ ./tools/wkt2svg.py </tmp/urquhart.wkt >examples/urquhart.svg
+$ cargo run --bin wkt2svg </tmp/urquhart.wkt >examples/urquhart.svg
 ```
 
 ![Urquhart graph](examples/urquhart.svg)
@@ -357,7 +354,7 @@ for i in $(seq 0 13); do
     tools/parse-production-rules.py -c - -n $(jq ".[$i].iterations" examples/random-lsystems/saved.json) |
     tools/interpret-lstring.py -l ERROR -a $(jq ".[$i].angle" examples/random-lsystems/saved.json) |
     tools/project.py --scale $(jq ".[$i].scale" examples/random-lsystems/saved.json) --kind pca |
-    tools/wkt2svg.py --output examples/random-lsystems/random-$i.svg
+    cargo run --bin wkt2svg -- --output examples/random-lsystems/random-$i.svg
 done
 ```
 
