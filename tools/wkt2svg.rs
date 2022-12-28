@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{ArgGroup, Parser};
+use generative::flatten::flatten_nested_geometries;
 use generative::stdio::{get_input_reader, get_output_writer};
 use generative::wkio::{read_geometries, GeometryFormat};
 use geo::{
@@ -191,11 +192,7 @@ fn to_svg(
         Geometry::Polygon(p) => add_polygon_to_document(p, document, options),
         Geometry::Rect(r) => add_rect_to_document(r, document, options),
         Geometry::Triangle(t) => add_triangle_to_document(t, document, options),
-        // TODO: https://github.com/Notgnoshi/generative/issues/119
-        _ => {
-            log::error!("Geometry {:?} unsupported", transformed_geometry);
-            document
-        }
+        _ => unreachable!("MULTI-geometries get flattened before conversion to SVG"),
     }
 }
 
@@ -270,7 +267,8 @@ fn main() {
     let reader = get_input_reader(&args.input).unwrap();
     // Can't lazily convert to SVG because we have to know the whole collection's bounding box to
     // know how to scale.
-    let geometries: Vec<_> = read_geometries(reader, &args.input_format).collect();
+    let geometries = read_geometries(reader, &args.input_format);
+    let geometries: Vec<_> = flatten_nested_geometries(geometries).collect();
     if geometries.is_empty() {
         return;
     }
