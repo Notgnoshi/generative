@@ -1,35 +1,86 @@
-use geo::{CoordsIter, Geometry, Point};
+use geo::{Coord, CoordsIter, Geometry, LineString, Point};
+
+use crate::flatten::flatten_nested_geometries;
+
+fn implicitly_open_linestring(ls: LineString) -> impl Iterator<Item = Coord> {
+    let length = if ls.0.first() == ls.0.last() {
+        ls.0.len() - 1
+    } else {
+        ls.0.len()
+    };
+    ls.0.into_iter().take(length)
+}
+
+fn implicitly_open(geometry: Geometry) -> Box<dyn Iterator<Item = Coord>> {
+    match geometry {
+        Geometry::Point(_) | Geometry::Line(_) | Geometry::Rect(_) | Geometry::Triangle(_) => {
+            // This collect _is_ actually needed :(
+            //
+            // .coords_iter() doesn't consume the geometry, but the function signature for
+            // implicitly_open() requires that we do, so that's what we'll do then.
+            #[allow(clippy::needless_collect)]
+            let coords: Vec<_> = geometry.coords_iter().collect();
+            Box::new(coords.into_iter())
+        }
+        Geometry::LineString(ls) => Box::new(implicitly_open_linestring(ls)),
+        Geometry::Polygon(p) => {
+            let (exterior, interiors) = p.into_inner();
+
+            let exterior = implicitly_open_linestring(exterior);
+            let interiors = interiors.into_iter().flat_map(implicitly_open_linestring);
+            let all_points = exterior.chain(interiors);
+            Box::new(all_points)
+        }
+        _ => unreachable!("MULTI-geometries are flattened in the caller of this function"),
+    }
+}
+
+fn implicitly_open_ref(geometry: &Geometry) -> Box<dyn Iterator<Item = Coord> + '_> {
+    match geometry {
+        Geometry::Point(_) | Geometry::Line(_) | Geometry::Rect(_) | Geometry::Triangle(_) => {
+            Box::new(geometry.coords_iter())
+        }
+        Geometry::LineString(ls) => {
+            let ls = ls.clone();
+            Box::new(implicitly_open_linestring(ls))
+        }
+        Geometry::Polygon(p) => {
+            let p = p.clone();
+            let (exterior, interiors) = p.into_inner();
+
+            let exterior = implicitly_open_linestring(exterior);
+            let interiors = interiors.into_iter().flat_map(implicitly_open_linestring);
+            let all_points = exterior.chain(interiors);
+            Box::new(all_points)
+        }
+        _ => unimplemented!(
+            "You can't flatten multi-geometries into point clouds without consuming the geometry"
+        ),
+    }
+}
 
 /// Flatten the given geometries into a point cloud
 ///
-/// NOTE: Polygons are closed - meaning that you'll always get a 'duplicate' start and end point
-/// for each ring.
+/// NOTE: Closed rings are implicitly opened.
 pub fn flatten_geometries_into_points(
-    geometries: impl Iterator<Item = Geometry<f64>>,
-) -> impl Iterator<Item = Point<f64>> {
-    geometries
-        .flat_map(|geom| {
-            // TODO: Consider implicitly opening each ring. Would need to recursively flatten
-            // MULTI-geometries first though, so that I wouldn't have to sort and remove duplicates
-            // after the fact.
+    geometries: impl Iterator<Item = Geometry>,
+) -> impl Iterator<Item = Point> {
+    let geometries = flatten_nested_geometries(geometries);
 
-            // It's ridiculous that I have to collect() here. It's not actually needless. The geom
-            // is dropped when the closure returns, so we need an iterator that moves the geom,
-            // rather than coords_iter(), which just borrows it.
-            #[allow(clippy::needless_collect)]
-            let coords: Vec<geo::Coord<f64>> = geom.coords_iter().collect();
-            coords.into_iter()
-        })
+    geometries
+        .flat_map(implicitly_open)
         .map(|coord| coord.into())
 }
 
 /// A variant of [`flatten_geometries_into_points`](flatten_geometries_into_points) that doesn't
 /// consume the geometries
+///
+/// NOTE: Closed rings are implicitly opened.
 pub fn flatten_geometries_into_points_ref<'geom>(
-    geometries: impl Iterator<Item = &'geom Geometry<f64>> + 'geom,
-) -> impl Iterator<Item = Point<f64>> + 'geom {
+    geometries: impl Iterator<Item = &'geom Geometry> + 'geom,
+) -> impl Iterator<Item = Point> + 'geom {
     geometries
-        .flat_map(|geom| geom.coords_iter())
+        .flat_map(implicitly_open_ref)
         .map(|coord| coord.into())
 }
 
@@ -71,19 +122,19 @@ mod tests {
         let wkt = b"POLYGON((0 0, 1 0, 1 1, 0 1, 0 0), (0.25 0.25, 0.75 0.25, 0.75 0.75, 0.25 0.75, 0.25 0.25))";
         let geometries = read_wkt_geometries(&wkt[..]);
         let points: Vec<Point<f64>> = flatten_geometries_into_points(geometries).collect();
-        assert_eq!(points.len(), 10);
+        assert_eq!(points.len(), 10 - 2);
 
         let expected = vec![
             Point::new(0.0, 0.0),
             Point::new(1.0, 0.0),
             Point::new(1.0, 1.0),
             Point::new(0.0, 1.0),
-            Point::new(0.0, 0.0),
+            // Point::new(0.0, 0.0),
             Point::new(0.25, 0.25),
             Point::new(0.75, 0.25),
             Point::new(0.75, 0.75),
             Point::new(0.25, 0.75),
-            Point::new(0.25, 0.25),
+            // Point::new(0.25, 0.25),
         ];
         assert_eq!(points, expected);
     }
