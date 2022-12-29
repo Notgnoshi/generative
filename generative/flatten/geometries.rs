@@ -66,6 +66,16 @@ where
     }
 }
 
+// TODO: This is seemingly impossible, because you can't create a &Geometry::Point from a &Point
+// (and the same for the other concrete geometry types).
+//
+// pub fn flatten_nested_geometry_refs<'g, G>(geometries: G) -> impl Iterator<Item = &'g Geometry>
+// where
+//     G: IntoIterator<Item = &'g Geometry>,
+// {
+//     ...
+// }
+
 #[cfg(test)]
 mod tests {
     use geo::Point;
