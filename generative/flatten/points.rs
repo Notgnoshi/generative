@@ -53,6 +53,8 @@ fn implicitly_open_ref(geometry: &Geometry) -> Box<dyn Iterator<Item = Coord> + 
             let all_points = exterior.chain(interiors);
             Box::new(all_points)
         }
+        // TODO: Is there an alternative implementation of flatten_nested_geometries that could
+        // operate on an 'impl Iterator<Item = &Geometry>'?
         _ => unimplemented!(
             "You can't flatten multi-geometries into point clouds without consuming the geometry"
         ),
