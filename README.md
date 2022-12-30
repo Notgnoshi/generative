@@ -293,6 +293,40 @@ $ echo -e "POINT(0 0)\nPOINT(1 0)\nPOINT(1 1)\nPOINT(0 1)" | cargo run --bin urq
 1	 0
 ```
 
+## traverse
+
+The `traverse` tool performs a number of random walks on the given graph.
+
+```shell
+$ cargo run --bin point-cloud -- --points 10 --random-number --scale 100 |
+    cargo run --bin urquhart -- --output-format tgf |
+    tee /dev/stderr |
+    cargo run --bin traverse
+0	POINT(1.4221680046796048 6.892391411315225)
+1	POINT(51.02134491003232 0.6487222679151086)
+2	POINT(-87.43423465744652 -36.640073588742034)
+3	POINT(-53.32869827823558 -36.81488145119792)
+4	POINT(39.775679688196526 -60.815089241236706)
+5	POINT(-3.9364031512509543 -1.3260847841305947)
+6	POINT(-5.227579053253153 11.906826772505774)
+7	POINT(-21.196556955861993 -4.680162402196327)
+8	POINT(10.746096436047983 -5.805460290529319)
+9	POINT(-61.21362196843825 -48.31087367645215)
+10	POINT(-17.686828550226732 -14.407621602513812)
+#
+9	2
+3	10
+3	9
+8	1
+4	8
+7	10
+5	7
+5	8
+0	6
+5	0
+LINESTRING(-3.9364031512509543 -1.3260847841305947,10.746096436047983 -5.805460290529319,39.775679688196526 -60.815089241236706)
+```
+
 ## geom2graph
 
 The `geom2graph` tool is the lone C++ tool in the project. It uses GEOS to convert back and forth

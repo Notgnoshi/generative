@@ -3,7 +3,7 @@ use geo::{Coord, CoordsIter, Geometry, LineString, Point};
 use crate::flatten::flatten_nested_geometries;
 
 fn implicitly_open_linestring(ls: LineString) -> impl Iterator<Item = Coord> {
-    let length = if ls.0.first() == ls.0.last() {
+    let length = if ls.is_closed() {
         ls.0.len() - 1
     } else {
         ls.0.len()
