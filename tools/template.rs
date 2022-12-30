@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use generative::stdio::{get_input_reader, get_output_writer};
-use generative::wkio::{read_geometries, write_geometries, GeometryFormat};
+use generative::io::{
+    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+};
 use stderrlog::ColorChoice;
 
 /// A template tool

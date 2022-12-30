@@ -1,5 +1,4 @@
 pub mod dla;
 pub mod flatten;
-pub mod stdio;
+pub mod io;
 pub mod triangulation;
-pub mod wkio;

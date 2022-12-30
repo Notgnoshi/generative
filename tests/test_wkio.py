@@ -12,7 +12,7 @@ from shapely.geometry import (
 )
 
 from generative.flatten import flatten
-from generative.wkio import deserialize_flat, deserialize_geometries, serialize_flat
+from generative.io import deserialize_flat, deserialize_geometries, serialize_flat
 
 test_geometries = [
     Point(0, 0),

@@ -89,7 +89,7 @@ pub fn flatten_geometries_into_points_ref<'geom>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::wkio::read_wkt_geometries;
+    use crate::io::read_wkt_geometries;
 
     #[test]
     fn test_flatten_single_point() {

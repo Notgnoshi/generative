@@ -1,7 +1,9 @@
-use crate::wkio::write_wkt_geometries;
 use clap::ValueEnum;
 use geo::Point;
-use petgraph::{visit::EdgeRef, Directed, Undirected};
+use petgraph::visit::EdgeRef;
+use petgraph::{Directed, Undirected};
+
+use crate::io::write_wkt_geometries;
 
 type NodeData = Point;
 type EdgeWeight = ();
@@ -260,10 +262,11 @@ fn write_graph_wkt<Direction, W>(
 
 #[cfg(test)]
 mod tests {
+    use delaunator::EMPTY;
+
     use super::*;
     use crate::flatten::flatten_geometries_into_points_ref;
-    use crate::wkio::read_wkt_geometries;
-    use delaunator::EMPTY;
+    use crate::io::read_wkt_geometries;
 
     #[test]
     fn test_triangulate_unit_square() {

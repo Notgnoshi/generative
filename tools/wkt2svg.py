@@ -17,7 +17,7 @@ import svgwrite
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
-from generative.wkio import deserialize_geometries
+from generative.io import deserialize_geometries
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,

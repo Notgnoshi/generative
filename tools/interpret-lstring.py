@@ -21,8 +21,8 @@ import sys
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
+from generative.io import serialize_geometries
 from generative.lsystem.interpreter import LSystemInterpeter
-from generative.wkio import serialize_geometries
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,

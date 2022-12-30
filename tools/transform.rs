@@ -1,8 +1,10 @@
-use clap::{Parser, ValueEnum};
-use generative::stdio::{get_input_reader, get_output_writer};
-use generative::wkio::{read_geometries, write_geometries, GeometryFormat};
-use geo::{coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, Rect};
 use std::path::PathBuf;
+
+use clap::{Parser, ValueEnum};
+use generative::io::{
+    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+};
+use geo::{coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, Rect};
 use stderrlog::ColorChoice;
 use wkt::ToWkt;
 
