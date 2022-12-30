@@ -2,8 +2,10 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use generative::flatten::flatten_geometries_into_points;
-use generative::io::{get_input_reader, get_output_writer, read_geometries, GeometryFormat};
-use generative::triangulation::{triangulate, write_graph, GraphFormat};
+use generative::io::{
+    get_input_reader, get_output_writer, read_geometries, write_graph, GeometryFormat, GraphFormat,
+};
+use generative::triangulation::triangulate;
 use stderrlog::ColorChoice;
 
 /// Generate the Urquhart graph of the given geometries
