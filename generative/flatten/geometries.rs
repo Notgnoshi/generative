@@ -81,7 +81,7 @@ mod tests {
     use geo::Point;
 
     use super::*;
-    use crate::wkio::read_wkt_geometries;
+    use crate::io::read_wkt_geometries;
 
     #[test]
     fn test_flatten_single_point() {

@@ -1,9 +1,11 @@
+use std::path::PathBuf;
+
 use clap::{Parser, ValueEnum};
 use generative::flatten::flatten_geometries_into_points;
-use generative::stdio::{get_input_reader, get_output_writer};
+use generative::io::{
+    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+};
 use generative::triangulation::triangulate;
-use generative::wkio::{read_geometries, write_geometries, GeometryFormat};
-use std::path::PathBuf;
 use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, ValueEnum)]

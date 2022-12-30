@@ -1,9 +1,10 @@
+use std::io::{BufRead, BufReader, Lines, Read, Write};
+use std::str::FromStr;
+
 use clap::ValueEnum;
 use geo::Geometry;
 use hex::{decode, encode_upper};
 use log::warn;
-use std::io::{BufRead, BufReader, Lines, Read, Write};
-use std::str::FromStr;
 use wkb::{geom_to_wkb, wkb_to_geom, write_geom_to_wkb};
 use wkt::{ToWkt, Wkt};
 
@@ -175,7 +176,7 @@ where
 /// Expects one geometry per line (LF or CRLF). Parsing any given line ends after either the first
 /// failure or the first geometry yielded, whichever comes first. That is, a line can have trailing
 /// garbage, but not leading garbage.
-pub(crate) fn read_wkt_geometries<R>(reader: R) -> WktGeometries<R>
+pub fn read_wkt_geometries<R>(reader: R) -> WktGeometries<R>
 where
     R: Read,
 {
@@ -206,7 +207,7 @@ where
 /// Write the given geometries with the given Writer in WKT format
 ///
 /// Each geometry will be written on its own line.
-pub(crate) fn write_wkt_geometries<W, G>(mut writer: W, geometries: G)
+pub fn write_wkt_geometries<W, G>(mut writer: W, geometries: G)
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,
@@ -249,8 +250,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use geo::{Geometry, Point};
+
+    use super::*;
 
     #[test]
     fn test_read_simple_point() {

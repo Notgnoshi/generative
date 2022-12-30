@@ -2,8 +2,7 @@ use std::path::PathBuf;
 
 use clap::{ArgGroup, Parser};
 use generative::flatten::flatten_nested_geometries;
-use generative::stdio::{get_input_reader, get_output_writer};
-use generative::wkio::{read_geometries, GeometryFormat};
+use generative::io::{get_input_reader, get_output_writer, read_geometries, GeometryFormat};
 use geo::{
     AffineOps, AffineTransform, BoundingRect, Coord, CoordsIter, Geometry, Line, LineString, Point,
     Polygon, Rect, Triangle,

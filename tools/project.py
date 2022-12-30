@@ -8,13 +8,13 @@ import sys
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from generative.flatten import flatten, unflatten
-from generative.projection import project
-from generative.wkio import (
+from generative.io import (
     deserialize_flat,
     deserialize_geometries,
     serialize_flat,
     serialize_geometries,
 )
+from generative.projection import project
 
 LOG_LEVELS = {
     "CRITICAL": logging.CRITICAL,
