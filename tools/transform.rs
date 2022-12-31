@@ -33,9 +33,9 @@ pub enum TransformCenter {
 #[derive(Debug, Parser)]
 #[clap(name = "transform", verbatim_doc_comment)]
 pub struct CmdlineOptions {
-    /// Increase logging verbosity. Defaults to ERROR level.
-    #[clap(short, long, action = clap::ArgAction::Count)]
-    pub verbosity: u8,
+    /// The log level
+    #[clap(short, long, default_value_t = log::Level::Info)]
+    pub log_level: log::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
@@ -94,7 +94,7 @@ fn main() {
     let args = CmdlineOptions::parse();
 
     stderrlog::new()
-        .verbosity(args.verbosity as usize + 1) // Default to WARN level.
+        .verbosity(args.log_level)
         .color(ColorChoice::Auto)
         .init()
         .expect("Failed to initialize stderrlog");
