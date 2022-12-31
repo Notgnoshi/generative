@@ -1,12 +1,13 @@
+use std::io::Write;
+use std::path::PathBuf;
+
 use clap::{Parser, ValueEnum};
 use generative::stdio::get_output_writer;
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
-use rand::Rng;
-use rand::SeedableRng;
+use rand::{Rng, SeedableRng};
 use rand_distr::Binomial;
-use std::io::Write;
-use std::path::PathBuf;
+use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum RandomDomain {
@@ -18,6 +19,10 @@ pub enum RandomDomain {
 #[derive(Debug, Parser)]
 #[clap(name = "point-cloud")]
 pub struct CmdlineOptions {
+    /// The log level
+    #[clap(long, default_value_t = log::Level::Info)]
+    pub log_level: log::Level,
+
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
     pub output: Option<PathBuf>,
@@ -101,6 +106,13 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
 
 fn main() {
     let args = CmdlineOptions::parse();
+
+    stderrlog::new()
+        .verbosity(args.log_level)
+        .color(ColorChoice::Auto)
+        .init()
+        .expect("Failed to initialize stderrlog");
+
     let seed = generate_random_seed_if_not_specified(args.seed);
     let mut rng = StdRng::seed_from_u64(seed);
 
@@ -114,7 +126,7 @@ fn main() {
         args.points
     };
 
-    eprintln!("Generating {} points with seed {}", num_points, seed);
+    log::info!("Generating {} points with seed {}", num_points, seed);
 
     let points = generate(num_points as usize, args.domain, &mut rng);
     let mut writer = get_output_writer(&args.output).unwrap();

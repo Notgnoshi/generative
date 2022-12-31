@@ -1,9 +1,11 @@
-use clap::{Parser, ValueEnum};
-use generative::dla::{format_tgf, format_wkt, Model};
-use log::trace;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
+
+use clap::{Parser, ValueEnum};
+use generative::dla::{format_tgf, format_wkt, Model};
+use log::trace;
+use stderrlog::ColorChoice;
 
 /// Specifies the plaintext output format.
 /// In all cases, the seed points will be written first.
@@ -21,13 +23,9 @@ pub enum OutputFormat {
 #[derive(Debug, Parser)]
 #[clap(name = "dla")]
 pub struct CmdlineOptions {
-    /// Silence all logging
-    #[clap(short, long)]
-    pub quiet: bool,
-
-    /// Increase logging verbosity.
-    #[clap(short, long, action = clap::ArgAction::Count)]
-    pub verbose: u8,
+    /// The log level
+    #[clap(short, long, default_value_t = log::Level::Info)]
+    pub log_level: log::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
@@ -101,8 +99,8 @@ fn main() {
     let args = CmdlineOptions::parse();
 
     stderrlog::new()
-        .quiet(args.quiet)
-        .verbosity((args.verbose + 2) as usize) // Default to INFO level
+        .verbosity(args.log_level)
+        .color(ColorChoice::Auto)
         .init()
         .unwrap();
 
