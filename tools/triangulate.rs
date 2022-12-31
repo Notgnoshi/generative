@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 use generative::flatten::flatten_geometries_into_points;
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+    get_input_reader, get_output_writer, read_geometries, write_graph, GeometryFormat, GraphFormat,
 };
 use generative::triangulation::triangulate;
 use stderrlog::ColorChoice;
@@ -31,8 +31,8 @@ pub struct CmdlineOptions {
     pub output: Option<PathBuf>,
 
     /// Output geometry format.
-    #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    pub output_format: GeometryFormat,
+    #[clap(short = 'O', long, default_value_t = GraphFormat::Wkt)]
+    pub output_format: GraphFormat,
 
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
@@ -66,15 +66,15 @@ fn main() {
                 .map(|geom| flatten_geometries_into_points(std::iter::once(geom)))
                 .map(triangulate);
             for triangulation in triangulations {
-                let lines = triangulation.lines().map(geo::Geometry::Line);
-                write_geometries(&mut writer, lines, &args.output_format);
+                let graph = triangulation.graph();
+                write_graph(&mut writer, graph, &args.output_format);
             }
         }
         TriangulationStrategy::WholeCollection => {
             let points = flatten_geometries_into_points(geometries);
             let triangulation = triangulate(points);
-            let lines = triangulation.lines().map(geo::Geometry::Line);
-            write_geometries(writer, lines, &args.output_format);
+            let graph = triangulation.graph();
+            write_graph(writer, graph, &args.output_format);
         }
     }
 }
