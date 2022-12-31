@@ -23,7 +23,7 @@ pub struct CmdlineOptions {
     pub output: Option<PathBuf>,
 
     /// Output geometry format.
-    #[clap(short = 'O', long, default_value = "wkt")]
+    #[clap(short = 'O', long, default_value_t = GraphFormat::Wkt)]
     pub output_format: GraphFormat,
 
     /// Input file to read input from. Defaults to stdin.

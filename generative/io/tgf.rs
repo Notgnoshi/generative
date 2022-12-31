@@ -12,8 +12,22 @@ use crate::io::write_wkt_geometries;
 
 #[derive(Debug, Clone, ValueEnum)]
 pub enum GraphFormat {
+    /// Output the graph in Trivial Graph Format
+    ///
+    /// Each node will be labeled with the WKT POINT where it's located.
     Tgf,
+    /// Output the geometry graph as pure WKT geometries, one per line.
     Wkt,
+}
+
+impl std::fmt::Display for GraphFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            // important: Should match clap::ValueEnum format
+            GraphFormat::Wkt => write!(f, "wkt"),
+            GraphFormat::Tgf => write!(f, "tgf"),
+        }
+    }
 }
 
 pub fn write_graph<Direction, W>(writer: W, graph: GeometryGraph<Direction>, format: &GraphFormat)
