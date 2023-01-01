@@ -4,19 +4,22 @@ use petgraph::{Directed, Undirected};
 use crate::graph::{GeometryGraph, NodeIndex};
 
 /// Calculate the Delaunay triangulation of the given point cloud
-pub fn triangulate(points: impl Iterator<Item = geo::Point>) -> Triangulation {
+pub fn triangulate(points: impl Iterator<Item = geo::Point>) -> Option<Triangulation> {
     let points: Vec<delaunator::Point> = points
         .map(|gp| delaunator::Point {
             x: gp.x(),
             y: gp.y(),
         })
         .collect();
+    if points.len() < 3 {
+        return None;
+    }
     let triangulation = delaunator::triangulate(&points);
 
-    Triangulation {
+    Some(Triangulation {
         points,
         triangulation,
-    }
+    })
 }
 
 pub struct Triangulation {
@@ -205,7 +208,7 @@ mod tests {
         let geometries: Vec<_> = read_wkt_geometries(&wkt[..]).collect();
         let points = flatten_geometries_into_points_ref(geometries.iter());
 
-        let triangulation = triangulate(points);
+        let triangulation = triangulate(points).unwrap();
 
         let triangles: Vec<_> = triangulation.triangles().collect();
         assert_eq!(triangles.len(), 2);
@@ -245,7 +248,7 @@ mod tests {
         let geometries: Vec<_> = read_wkt_geometries(&wkt[..]).collect();
         assert_eq!(geometries.len(), 6);
         let points = flatten_geometries_into_points_ref(geometries.iter());
-        let triangulation = triangulate(points);
+        let triangulation = triangulate(points).unwrap();
 
         // NOTE: This all makes much more sense if you draw a picture! Pipe the following through
         // render.py:
@@ -324,7 +327,7 @@ mod tests {
         let geometries: Vec<_> = read_wkt_geometries(&wkt[..]).collect();
         assert_eq!(geometries.len(), 6);
         let points = flatten_geometries_into_points_ref(geometries.iter());
-        let triangulation = triangulate(points);
+        let triangulation = triangulate(points).unwrap();
 
         let graph = triangulation.graph();
         let edges: Vec<_> = graph
