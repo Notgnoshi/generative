@@ -64,7 +64,7 @@ fn main() {
         TriangulationStrategy::EachGeometry => {
             let triangulations = geometries
                 .map(|geom| flatten_geometries_into_points(std::iter::once(geom)))
-                .map(triangulate);
+                .filter_map(triangulate);
             for triangulation in triangulations {
                 let graph = triangulation.graph();
                 write_graph(&mut writer, graph, &args.output_format);
@@ -72,9 +72,10 @@ fn main() {
         }
         TriangulationStrategy::WholeCollection => {
             let points = flatten_geometries_into_points(geometries);
-            let triangulation = triangulate(points);
-            let graph = triangulation.graph();
-            write_graph(writer, graph, &args.output_format);
+            if let Some(triangulation) = triangulate(points) {
+                let graph = triangulation.graph();
+                write_graph(writer, graph, &args.output_format);
+            }
         }
     }
 }

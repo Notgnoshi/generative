@@ -48,9 +48,10 @@ fn main() {
     let geometries = read_geometries(reader, &args.input_format); // lazily loaded
 
     let points = flatten_geometries_into_points(geometries);
-    let triangulation = triangulate(points);
-    let urquhart = triangulation.urquhart();
+    if let Some(triangulation) = triangulate(points) {
+        let urquhart = triangulation.urquhart();
 
-    let writer = get_output_writer(&args.output).unwrap();
-    write_graph(writer, urquhart, &args.output_format);
+        let writer = get_output_writer(&args.output).unwrap();
+        write_graph(writer, urquhart, &args.output_format);
+    }
 }
