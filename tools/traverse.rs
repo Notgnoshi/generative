@@ -76,6 +76,11 @@ fn random_traversal<D>(
 where
     D: EdgeType,
 {
+    if graph.edge_count() == 0 {
+        log::warn!("Graph has no edges. Can't do a traversal");
+        return None;
+    }
+
     let mut result = Vec::<Point>::with_capacity(length);
 
     // Pick a random starting point
@@ -154,11 +159,6 @@ fn main() {
         args.traversals as u64
     };
     log::debug!("Making {} traversals", num_traversals);
-
-    if graph.edge_count() == 0 {
-        log::warn!("Graph has no edges. Can't do a traversal");
-        return;
-    }
 
     let traversals = std::iter::repeat_with(|| {
         let mut length = if args.random_length {
