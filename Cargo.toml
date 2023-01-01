@@ -38,6 +38,10 @@ path = "tools/wkt2svg.rs"
 name = "traverse"
 path = "tools/traverse.rs"
 
+[[bin]]
+name = "smooth"
+path = "tools/smooth.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"
