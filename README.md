@@ -25,9 +25,11 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [wkt2svg](#wkt2svg)
   - [project](#project)
   - [transform](#transform)
+  - [smooth](#smooth)
   - [point-cloud](#point-cloud)
   - [triangulate](#triangulate)
   - [urquhart](#urquhart)
+  - [traverse](#traverse)
   - [geom2graph](#geom2graph)
   - [format](#format)
 - [Examples](#examples)
@@ -238,6 +240,17 @@ POINT(0.49999999999999994 -0.20710678118654752)
 POINT(-0.20710678118654752 0.5)
 POINT(0.5 1.2071067811865475)
 POINT(1.2071067811865475 0.49999999999999994)
+```
+
+## smooth
+
+The `smooth` tool smooths geometries using [Chaikin's smoothing
+algorithm](http://www.idav.ucdavis.edu/education/CAGDNotes/Chaikins-Algorithm/Chaikins-Algorithm.html)
+
+```shell
+$ echo "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))" |
+    cargo run --bin smooth -- --iterations 1
+POLYGON((0 0.25,0 0.75,0.25 1,0.75 1,1 0.75,1 0.25,0.75 0,0.25 0,0 0.25))
 ```
 
 ## point-cloud
