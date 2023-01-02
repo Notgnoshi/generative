@@ -57,6 +57,10 @@ pub struct CmdlineOptions {
     /// Whether to make the length of each traversal random with mean '--length'
     #[clap(short = 'L', long, default_value_t = false)]
     pub random_length: bool,
+
+    /// Remove edges after traversing them
+    #[clap(short = 'r', long, default_value_t = false)]
+    pub remove_after_traverse: bool,
 }
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
@@ -70,6 +74,7 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
 
 fn random_traversal<D>(
     length: usize,
+    remove_after_traverse: bool,
     graph: &mut GeometryGraph<D>,
     rng: &mut StdRng,
 ) -> Option<LineString>
@@ -110,16 +115,20 @@ where
         result.push(point);
 
         // Remove the traversed edge
-        let traversed_edge = graph.find_edge(start_index, next_index).unwrap();
-        graph.remove_edge(traversed_edge);
+        if remove_after_traverse {
+            let traversed_edge = graph.find_edge(start_index, next_index).unwrap();
+            graph.remove_edge(traversed_edge);
 
-        // If removing the traversed edge left behind orphan nodes, remove them too.
-        if buffer.len() < 2 {
-            graph.remove_node(start_index);
+            // If removing the traversed edge left behind orphan nodes, remove them too.
+            if buffer.len() < 2 {
+                graph.remove_node(start_index);
+            }
         }
         let neighbors = graph.neighbors(next_index).count();
         if neighbors < 2 {
-            graph.remove_node(next_index);
+            if remove_after_traverse {
+                graph.remove_node(next_index);
+            }
             log::debug!("Hit the end of a connected component - nowhere to go!");
             break;
         }
@@ -173,7 +182,12 @@ fn main() {
             length = 2;
         }
         log::debug!("Making random traversal with length {}", length);
-        random_traversal(length as usize, &mut graph, &mut rng)
+        random_traversal(
+            length as usize,
+            args.remove_after_traverse,
+            &mut graph,
+            &mut rng,
+        )
     })
     .take(num_traversals as usize)
     .flatten()
