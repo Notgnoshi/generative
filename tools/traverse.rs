@@ -175,9 +175,9 @@ fn main() {
         log::debug!("Making random traversal with length {}", length);
         random_traversal(length as usize, &mut graph, &mut rng)
     })
+    .take(num_traversals as usize)
     .flatten()
-    .map(Geometry::LineString)
-    .take(num_traversals as usize);
+    .map(Geometry::LineString);
 
     let writer = get_output_writer(&args.output).unwrap();
     write_geometries(writer, traversals, &args.output_format);
