@@ -163,7 +163,7 @@ fn main() {
     let reader = get_input_reader(&args.input).unwrap();
     let mut graph: GeometryGraph<Undirected> = read_tgf_graph(reader);
 
-    let num_traversals = if args.random_traversals {
+    let mut num_traversals = if args.random_traversals {
         let n = args.traversals * 2; // changes mean
         let p = 0.5; // changes skew
         let dist = Binomial::new(n as u64, p).unwrap();
@@ -171,6 +171,9 @@ fn main() {
     } else {
         args.traversals as u64
     };
+    if num_traversals == 0 {
+        num_traversals = 1;
+    }
     log::debug!("Making {} traversals", num_traversals);
 
     let traversals = std::iter::repeat_with(|| {
