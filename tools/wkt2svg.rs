@@ -47,6 +47,10 @@ pub struct CmdlineOptions {
     /// Mutually exclusive with --scale
     #[clap(short, long, group = "sizing", number_of_values = 4)]
     pub viewbox: Option<Vec<f64>>,
+
+    /// Whether to add a little bit of padding all the way around the viewbox
+    #[clap(short, long, default_value_t = false)]
+    pub padding: bool,
     // TODO: Global styling
 }
 
@@ -279,7 +283,17 @@ fn main() {
     let bbox = bbox.unwrap();
     let options = SvgOptions::from(&args);
 
-    let (transform, viewbox) = calculate_transform(&bbox, &options);
+    let (transform, mut viewbox) = calculate_transform(&bbox, &options);
+    if args.padding {
+        const PADDING: Coord = Coord { x: 3.0, y: 3.0 };
+        let min = viewbox.min();
+        let new_min = min - PADDING;
+        viewbox.set_min(new_min);
+
+        let max = viewbox.max();
+        let new_max = max + PADDING;
+        viewbox.set_max(new_max);
+    }
     let min = viewbox.min();
     let viewbox = (min.x, min.y, viewbox.width(), viewbox.height());
     log::debug!(
