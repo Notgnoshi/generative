@@ -42,6 +42,10 @@ path = "tools/traverse.rs"
 name = "smooth"
 path = "tools/smooth.rs"
 
+[[bin]]
+name = "grid"
+path = "tools/grid.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"
