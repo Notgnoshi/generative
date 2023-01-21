@@ -26,6 +26,7 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [project](#project)
   - [transform](#transform)
   - [smooth](#smooth)
+  - [bitwise](#bitwise)
   - [point-cloud](#point-cloud)
   - [triangulate](#triangulate)
   - [urquhart](#urquhart)
@@ -252,6 +253,18 @@ $ echo "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))" |
     cargo run --bin smooth -- --iterations 1
 POLYGON((0 0.25,0 0.75,0.25 1,0.75 1,1 0.75,1 0.25,0.75 0,0.25 0,0 0.25))
 ```
+
+## bitwise
+
+The `bitwise` tool evaluates an expression on `(x, y)`, and visualizes the pattern.
+
+```shell
+$ cargo run --bin bitwise -- --lines |
+    cargo run --bin transform -- --scale 10 10 |
+    cargo run --bin wkt2svg -- --padding
+```
+
+![bitwise](examples/bitwise.svg)
 
 ## point-cloud
 
