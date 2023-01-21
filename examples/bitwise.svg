@@ -1,0 +1,677 @@
+<svg viewBox="7 7 466 466" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { stroke:black; stroke-width:2px; fill:none;}
+</style>
+<circle cx="10" cy="150" r="1"/>
+<polyline points="10 170 20 180"/>
+<circle cx="10" cy="190" r="1"/>
+<polyline points="10 210 20 220"/>
+<circle cx="10" cy="230" r="1"/>
+<polyline points="10 250 20 260"/>
+<circle cx="10" cy="410" r="1"/>
+<polyline points="10 430 20 430"/>
+<circle cx="10" cy="450" r="1"/>
+<polyline points="10 470 20 470"/>
+<polyline points="20 180 30 190"/>
+<polyline points="20 220 30 230"/>
+<polyline points="20 260 30 270"/>
+<polyline points="20 300 30 300"/>
+<polyline points="20 310 30 310"/>
+<polyline points="20 340 30 340"/>
+<polyline points="20 350 30 350"/>
+<polyline points="20 380 30 380"/>
+<polyline points="20 390 30 390"/>
+<polyline points="20 430 30 430"/>
+<polyline points="20 470 30 470"/>
+<circle cx="30" cy="130" r="1"/>
+<polyline points="30 170 20 180"/>
+<circle cx="30" cy="190" r="1"/>
+<polyline points="30 210 40 210"/>
+<polyline points="30 230 40 230"/>
+<circle cx="30" cy="270" r="1"/>
+<polyline points="30 300 30 310"/>
+<circle cx="30" cy="310" r="1"/>
+<polyline points="30 340 30 350"/>
+<polyline points="30 350 40 360"/>
+<polyline points="30 380 30 390"/>
+<circle cx="30" cy="390" r="1"/>
+<polyline points="30 410 30 420"/>
+<polyline points="30 420 30 430"/>
+<circle cx="30" cy="430" r="1"/>
+<polyline points="30 450 30 460"/>
+<polyline points="30 460 40 470"/>
+<polyline points="30 470 40 470"/>
+<polyline points="40 210 50 210"/>
+<polyline points="40 220 50 220"/>
+<polyline points="40 230 50 230"/>
+<polyline points="40 290 50 290"/>
+<polyline points="40 360 50 360"/>
+<polyline points="40 370 50 370"/>
+<polyline points="40 470 50 470"/>
+<circle cx="50" cy="110" r="1"/>
+<polyline points="50 170 60 180"/>
+<polyline points="50 190 60 200"/>
+<polyline points="50 200 60 200"/>
+<polyline points="50 210 60 210"/>
+<polyline points="50 220 60 220"/>
+<polyline points="50 230 60 230"/>
+<polyline points="50 280 50 290"/>
+<polyline points="50 290 60 300"/>
+<polyline points="50 360 50 370"/>
+<polyline points="50 370 60 380"/>
+<circle cx="50" cy="410" r="1"/>
+<polyline points="50 430 60 430"/>
+<polyline points="50 450 60 450"/>
+<polyline points="50 460 60 470"/>
+<polyline points="50 470 60 470"/>
+<polyline points="60 180 70 190"/>
+<polyline points="60 200 70 200"/>
+<polyline points="60 210 70 210"/>
+<polyline points="60 220 70 220"/>
+<polyline points="60 230 70 230"/>
+<polyline points="60 260 70 260"/>
+<polyline points="60 270 70 270"/>
+<polyline points="60 300 70 300"/>
+<polyline points="60 310 70 310"/>
+<polyline points="60 340 70 340"/>
+<polyline points="60 350 70 350"/>
+<polyline points="60 380 70 380"/>
+<polyline points="60 390 70 390"/>
+<polyline points="60 430 70 430"/>
+<polyline points="60 450 70 450"/>
+<polyline points="60 470 70 470"/>
+<circle cx="70" cy="90" r="1"/>
+<polyline points="70 170 60 180"/>
+<polyline points="70 190 70 200"/>
+<polyline points="70 200 70 210"/>
+<polyline points="70 210 70 220"/>
+<polyline points="70 220 70 230"/>
+<circle cx="70" cy="230" r="1"/>
+<polyline points="70 260 70 270"/>
+<circle cx="70" cy="270" r="1"/>
+<polyline points="70 300 80 300"/>
+<polyline points="70 310 80 310"/>
+<polyline points="70 340 70 350"/>
+<circle cx="70" cy="350" r="1"/>
+<polyline points="70 380 70 390"/>
+<circle cx="70" cy="390" r="1"/>
+<polyline points="70 410 80 420"/>
+<polyline points="70 420 80 420"/>
+<polyline points="70 430 80 430"/>
+<polyline points="70 440 80 440"/>
+<polyline points="70 450 80 450"/>
+<polyline points="70 460 80 460"/>
+<circle cx="70" cy="470" r="1"/>
+<polyline points="80 290 90 290"/>
+<polyline points="80 300 90 300"/>
+<polyline points="80 310 90 310"/>
+<polyline points="80 420 90 420"/>
+<polyline points="80 430 90 430"/>
+<polyline points="80 440 90 440"/>
+<polyline points="80 450 90 450"/>
+<polyline points="80 460 90 470"/>
+<circle cx="90" cy="70" r="1"/>
+<polyline points="90 170 100 180"/>
+<polyline points="90 250 100 260"/>
+<polyline points="90 270 100 280"/>
+<polyline points="90 280 100 280"/>
+<polyline points="90 290 100 290"/>
+<polyline points="90 300 100 300"/>
+<polyline points="90 310 100 310"/>
+<circle cx="90" cy="330" r="1"/>
+<polyline points="90 350 100 350"/>
+<circle cx="90" cy="370" r="1"/>
+<polyline points="90 390 100 390"/>
+<polyline points="90 420 100 420"/>
+<polyline points="90 430 100 430"/>
+<polyline points="90 440 100 440"/>
+<polyline points="90 450 100 460"/>
+<polyline points="90 470 100 470"/>
+<polyline points="100 180 110 190"/>
+<polyline points="100 220 110 220"/>
+<polyline points="100 230 110 230"/>
+<polyline points="100 260 110 270"/>
+<polyline points="100 280 110 280"/>
+<polyline points="100 290 110 290"/>
+<polyline points="100 300 110 300"/>
+<polyline points="100 310 110 310"/>
+<polyline points="100 350 110 350"/>
+<polyline points="100 390 110 390"/>
+<polyline points="100 400 110 400"/>
+<polyline points="100 410 110 410"/>
+<polyline points="100 420 110 420"/>
+<polyline points="100 430 110 430"/>
+<polyline points="100 440 110 450"/>
+<polyline points="100 460 110 460"/>
+<polyline points="100 470 110 470"/>
+<circle cx="110" cy="50" r="1"/>
+<circle cx="110" cy="190" r="1"/>
+<polyline points="110 220 110 230"/>
+<circle cx="110" cy="230" r="1"/>
+<polyline points="110 250 120 250"/>
+<polyline points="110 270 120 270"/>
+<polyline points="110 280 120 290"/>
+<polyline points="110 290 120 290"/>
+<polyline points="110 300 120 300"/>
+<polyline points="110 310 120 310"/>
+<polyline points="110 330 110 340"/>
+<polyline points="110 340 110 350"/>
+<circle cx="110" cy="350" r="1"/>
+<polyline points="110 370 110 380"/>
+<polyline points="110 380 120 390"/>
+<polyline points="110 390 120 390"/>
+<polyline points="110 400 120 400"/>
+<polyline points="110 410 120 410"/>
+<polyline points="110 420 120 420"/>
+<polyline points="110 430 120 440"/>
+<polyline points="110 450 120 450"/>
+<polyline points="110 460 120 460"/>
+<polyline points="110 470 120 470"/>
+<polyline points="120 210 130 210"/>
+<polyline points="120 250 130 250"/>
+<polyline points="120 260 130 260"/>
+<polyline points="120 270 130 270"/>
+<polyline points="120 290 130 290"/>
+<polyline points="120 300 130 300"/>
+<polyline points="120 310 130 310"/>
+<polyline points="120 390 130 390"/>
+<polyline points="120 400 130 400"/>
+<polyline points="120 410 130 410"/>
+<polyline points="120 420 130 430"/>
+<polyline points="120 440 130 440"/>
+<polyline points="120 450 130 450"/>
+<polyline points="120 460 130 460"/>
+<polyline points="120 470 130 470"/>
+<circle cx="130" cy="30" r="1"/>
+<polyline points="130 200 130 210"/>
+<polyline points="130 210 140 220"/>
+<polyline points="130 240 140 240"/>
+<polyline points="130 250 140 250"/>
+<polyline points="130 260 140 260"/>
+<polyline points="130 270 140 270"/>
+<polyline points="130 280 140 280"/>
+<polyline points="130 290 140 290"/>
+<polyline points="130 300 140 300"/>
+<polyline points="130 310 140 310"/>
+<circle cx="130" cy="330" r="1"/>
+<polyline points="130 350 140 350"/>
+<polyline points="130 370 140 370"/>
+<polyline points="130 380 140 390"/>
+<polyline points="130 390 140 390"/>
+<polyline points="130 400 140 400"/>
+<polyline points="130 410 140 420"/>
+<polyline points="130 430 140 430"/>
+<polyline points="130 440 140 440"/>
+<polyline points="130 450 140 450"/>
+<polyline points="130 460 140 460"/>
+<polyline points="130 470 140 470"/>
+<polyline points="140 180 150 180"/>
+<polyline points="140 190 150 190"/>
+<polyline points="140 220 150 220"/>
+<polyline points="140 230 150 230"/>
+<polyline points="140 240 150 240"/>
+<polyline points="140 250 150 250"/>
+<polyline points="140 260 150 260"/>
+<polyline points="140 270 150 270"/>
+<polyline points="140 280 150 280"/>
+<polyline points="140 290 150 290"/>
+<polyline points="140 300 150 300"/>
+<polyline points="140 310 150 310"/>
+<polyline points="140 350 150 350"/>
+<polyline points="140 370 150 370"/>
+<polyline points="140 390 150 390"/>
+<polyline points="140 400 150 410"/>
+<polyline points="140 420 150 420"/>
+<polyline points="140 430 150 430"/>
+<polyline points="140 440 150 440"/>
+<polyline points="140 450 150 450"/>
+<polyline points="140 460 150 460"/>
+<polyline points="140 470 150 470"/>
+<circle cx="150" cy="10" r="1"/>
+<polyline points="150 180 150 190"/>
+<circle cx="150" cy="190" r="1"/>
+<polyline points="150 220 150 230"/>
+<polyline points="150 230 150 240"/>
+<polyline points="150 240 150 250"/>
+<polyline points="150 250 150 260"/>
+<polyline points="150 260 150 270"/>
+<polyline points="150 270 150 280"/>
+<polyline points="150 280 150 290"/>
+<polyline points="150 290 150 300"/>
+<polyline points="150 300 150 310"/>
+<circle cx="150" cy="310" r="1"/>
+<polyline points="150 330 150 340"/>
+<polyline points="150 340 150 350"/>
+<polyline points="150 350 150 360"/>
+<polyline points="150 360 150 370"/>
+<polyline points="150 370 150 380"/>
+<polyline points="150 380 150 390"/>
+<polyline points="150 390 140 400"/>
+<polyline points="150 410 150 420"/>
+<polyline points="150 420 150 430"/>
+<polyline points="150 430 150 440"/>
+<polyline points="150 440 150 450"/>
+<polyline points="150 450 150 460"/>
+<polyline points="150 460 150 470"/>
+<circle cx="150" cy="470" r="1"/>
+<polyline points="170 10 180 20"/>
+<circle cx="170" cy="30" r="1"/>
+<polyline points="170 50 180 60"/>
+<circle cx="170" cy="70" r="1"/>
+<polyline points="170 90 180 100"/>
+<circle cx="170" cy="310" r="1"/>
+<circle cx="170" cy="330" r="1"/>
+<polyline points="170 350 180 350"/>
+<polyline points="180 20 190 30"/>
+<polyline points="180 60 190 70"/>
+<polyline points="180 100 190 110"/>
+<polyline points="180 140 190 140"/>
+<polyline points="180 150 190 150"/>
+<polyline points="180 350 190 350"/>
+<polyline points="190 10 180 20"/>
+<circle cx="190" cy="30" r="1"/>
+<polyline points="190 50 200 50"/>
+<polyline points="190 70 200 70"/>
+<circle cx="190" cy="110" r="1"/>
+<polyline points="190 140 190 150"/>
+<circle cx="190" cy="150" r="1"/>
+<circle cx="190" cy="290" r="1"/>
+<polyline points="190 330 190 340"/>
+<polyline points="190 340 190 350"/>
+<circle cx="190" cy="350" r="1"/>
+<polyline points="200 50 210 50"/>
+<polyline points="200 60 210 60"/>
+<polyline points="200 70 210 70"/>
+<polyline points="200 130 210 130"/>
+<polyline points="200 390 210 390"/>
+<polyline points="200 440 210 440"/>
+<polyline points="200 450 210 450"/>
+<polyline points="200 460 210 460"/>
+<polyline points="200 470 210 470"/>
+<polyline points="210 10 220 20"/>
+<polyline points="210 30 220 40"/>
+<polyline points="210 40 220 40"/>
+<polyline points="210 50 220 50"/>
+<polyline points="210 60 220 60"/>
+<polyline points="210 70 220 70"/>
+<polyline points="210 120 210 130"/>
+<polyline points="210 130 220 140"/>
+<circle cx="210" cy="270" r="1"/>
+<polyline points="210 370 220 370"/>
+<polyline points="210 380 220 390"/>
+<polyline points="210 390 220 390"/>
+<polyline points="210 440 220 440"/>
+<polyline points="210 450 220 450"/>
+<polyline points="210 460 220 460"/>
+<polyline points="210 470 220 470"/>
+<polyline points="220 20 230 30"/>
+<polyline points="220 40 230 40"/>
+<polyline points="220 50 230 50"/>
+<polyline points="220 60 230 60"/>
+<polyline points="220 70 230 70"/>
+<polyline points="220 100 230 100"/>
+<polyline points="220 110 230 110"/>
+<polyline points="220 140 230 140"/>
+<polyline points="220 150 230 150"/>
+<polyline points="220 370 230 370"/>
+<polyline points="220 390 230 390"/>
+<polyline points="220 440 230 440"/>
+<polyline points="220 450 230 450"/>
+<polyline points="220 460 230 460"/>
+<polyline points="220 470 230 470"/>
+<polyline points="230 10 220 20"/>
+<polyline points="230 30 230 40"/>
+<polyline points="230 40 230 50"/>
+<polyline points="230 50 230 60"/>
+<polyline points="230 60 230 70"/>
+<circle cx="230" cy="70" r="1"/>
+<polyline points="230 100 230 110"/>
+<circle cx="230" cy="110" r="1"/>
+<polyline points="230 140 240 140"/>
+<polyline points="230 150 240 150"/>
+<circle cx="230" cy="250" r="1"/>
+<polyline points="230 360 230 370"/>
+<polyline points="230 370 230 380"/>
+<polyline points="230 380 230 390"/>
+<polyline points="230 390 240 400"/>
+<polyline points="230 440 230 450"/>
+<polyline points="230 450 230 460"/>
+<polyline points="230 460 230 470"/>
+<circle cx="230" cy="470" r="1"/>
+<polyline points="240 130 250 130"/>
+<polyline points="240 140 250 140"/>
+<polyline points="240 150 250 150"/>
+<polyline points="240 400 250 400"/>
+<polyline points="240 410 250 410"/>
+<polyline points="240 420 250 420"/>
+<polyline points="240 430 250 430"/>
+<polyline points="250 10 260 20"/>
+<polyline points="250 90 260 100"/>
+<polyline points="250 110 260 120"/>
+<polyline points="250 120 260 120"/>
+<polyline points="250 130 260 130"/>
+<polyline points="250 140 260 140"/>
+<polyline points="250 150 260 150"/>
+<circle cx="250" cy="230" r="1"/>
+<polyline points="250 400 260 400"/>
+<polyline points="250 410 260 410"/>
+<polyline points="250 420 260 420"/>
+<polyline points="250 430 260 430"/>
+<polyline points="260 20 270 30"/>
+<polyline points="260 60 270 60"/>
+<polyline points="260 70 270 70"/>
+<polyline points="260 100 270 110"/>
+<polyline points="260 120 270 120"/>
+<polyline points="260 130 270 130"/>
+<polyline points="260 140 270 140"/>
+<polyline points="260 150 270 150"/>
+<polyline points="260 400 270 400"/>
+<polyline points="260 410 270 410"/>
+<polyline points="260 420 270 420"/>
+<polyline points="260 430 270 430"/>
+<circle cx="270" cy="30" r="1"/>
+<polyline points="270 60 270 70"/>
+<circle cx="270" cy="70" r="1"/>
+<polyline points="270 90 280 90"/>
+<polyline points="270 110 280 110"/>
+<polyline points="270 120 280 130"/>
+<polyline points="270 130 280 130"/>
+<polyline points="270 140 280 140"/>
+<polyline points="270 150 280 150"/>
+<circle cx="270" cy="210" r="1"/>
+<polyline points="270 400 270 410"/>
+<polyline points="270 410 270 420"/>
+<polyline points="270 420 270 430"/>
+<polyline points="270 430 280 440"/>
+<polyline points="280 50 290 50"/>
+<polyline points="280 90 290 90"/>
+<polyline points="280 100 290 100"/>
+<polyline points="280 110 290 110"/>
+<polyline points="280 130 290 130"/>
+<polyline points="280 140 290 140"/>
+<polyline points="280 150 290 150"/>
+<polyline points="280 360 290 360"/>
+<polyline points="280 370 290 370"/>
+<polyline points="280 380 290 380"/>
+<polyline points="280 390 290 390"/>
+<polyline points="280 440 290 440"/>
+<polyline points="280 450 290 450"/>
+<polyline points="280 460 290 460"/>
+<polyline points="280 470 290 470"/>
+<polyline points="290 40 290 50"/>
+<polyline points="290 50 300 60"/>
+<polyline points="290 80 300 80"/>
+<polyline points="290 90 300 90"/>
+<polyline points="290 100 300 100"/>
+<polyline points="290 110 300 110"/>
+<polyline points="290 120 300 120"/>
+<polyline points="290 130 300 130"/>
+<polyline points="290 140 300 140"/>
+<polyline points="290 150 300 150"/>
+<circle cx="290" cy="190" r="1"/>
+<polyline points="290 360 300 360"/>
+<polyline points="290 370 300 370"/>
+<polyline points="290 380 300 380"/>
+<polyline points="290 390 300 390"/>
+<polyline points="290 440 300 440"/>
+<polyline points="290 450 300 450"/>
+<polyline points="290 460 300 460"/>
+<polyline points="290 470 300 470"/>
+<polyline points="300 20 310 20"/>
+<polyline points="300 30 310 30"/>
+<polyline points="300 60 310 60"/>
+<polyline points="300 70 310 70"/>
+<polyline points="300 80 310 80"/>
+<polyline points="300 90 310 90"/>
+<polyline points="300 100 310 100"/>
+<polyline points="300 110 310 110"/>
+<polyline points="300 120 310 120"/>
+<polyline points="300 130 310 130"/>
+<polyline points="300 140 310 140"/>
+<polyline points="300 150 310 150"/>
+<polyline points="300 360 310 360"/>
+<polyline points="300 370 310 370"/>
+<polyline points="300 380 310 380"/>
+<polyline points="300 390 310 390"/>
+<polyline points="300 440 310 440"/>
+<polyline points="300 450 310 450"/>
+<polyline points="300 460 310 460"/>
+<polyline points="300 470 310 470"/>
+<polyline points="310 20 310 30"/>
+<circle cx="310" cy="30" r="1"/>
+<polyline points="310 60 310 70"/>
+<polyline points="310 70 310 80"/>
+<polyline points="310 80 310 90"/>
+<polyline points="310 90 310 100"/>
+<polyline points="310 100 310 110"/>
+<polyline points="310 110 310 120"/>
+<polyline points="310 120 310 130"/>
+<polyline points="310 130 310 140"/>
+<polyline points="310 140 310 150"/>
+<circle cx="310" cy="150" r="1"/>
+<circle cx="310" cy="170" r="1"/>
+<polyline points="310 360 310 370"/>
+<polyline points="310 370 310 380"/>
+<polyline points="310 380 310 390"/>
+<circle cx="310" cy="390" r="1"/>
+<polyline points="310 440 310 450"/>
+<polyline points="310 450 310 460"/>
+<polyline points="310 460 310 470"/>
+<circle cx="310" cy="470" r="1"/>
+<circle cx="330" cy="90" r="1"/>
+<polyline points="330 110 340 110"/>
+<circle cx="330" cy="130" r="1"/>
+<polyline points="330 150 340 150"/>
+<circle cx="330" cy="170" r="1"/>
+<polyline points="330 190 340 190"/>
+<circle cx="330" cy="470" r="1"/>
+<polyline points="340 20 350 20"/>
+<polyline points="340 30 350 30"/>
+<polyline points="340 60 350 60"/>
+<polyline points="340 70 350 70"/>
+<polyline points="340 110 350 110"/>
+<polyline points="340 150 350 150"/>
+<polyline points="340 190 350 190"/>
+<polyline points="350 20 350 30"/>
+<polyline points="350 30 360 40"/>
+<polyline points="350 60 350 70"/>
+<circle cx="350" cy="70" r="1"/>
+<polyline points="350 90 350 100"/>
+<polyline points="350 100 350 110"/>
+<circle cx="350" cy="110" r="1"/>
+<polyline points="350 130 350 140"/>
+<polyline points="350 140 360 150"/>
+<polyline points="350 150 360 150"/>
+<polyline points="350 170 350 180"/>
+<polyline points="350 180 350 190"/>
+<circle cx="350" cy="190" r="1"/>
+<circle cx="350" cy="450" r="1"/>
+<polyline points="360 40 370 40"/>
+<polyline points="360 50 370 50"/>
+<polyline points="360 150 370 150"/>
+<polyline points="360 230 370 230"/>
+<polyline points="360 280 370 280"/>
+<polyline points="360 290 370 290"/>
+<polyline points="360 300 370 300"/>
+<polyline points="360 310 370 310"/>
+<polyline points="370 40 370 50"/>
+<polyline points="370 50 380 60"/>
+<circle cx="370" cy="90" r="1"/>
+<polyline points="370 110 380 110"/>
+<polyline points="370 130 380 130"/>
+<polyline points="370 140 380 150"/>
+<polyline points="370 150 380 150"/>
+<polyline points="370 210 380 210"/>
+<polyline points="370 220 380 230"/>
+<polyline points="370 230 380 230"/>
+<polyline points="370 280 380 280"/>
+<polyline points="370 290 380 290"/>
+<polyline points="370 300 380 300"/>
+<polyline points="370 310 380 310"/>
+<circle cx="370" cy="430" r="1"/>
+<polyline points="380 20 390 20"/>
+<polyline points="380 30 390 30"/>
+<polyline points="380 60 390 60"/>
+<polyline points="380 70 390 70"/>
+<polyline points="380 110 390 110"/>
+<polyline points="380 130 390 130"/>
+<polyline points="380 150 390 150"/>
+<polyline points="380 210 390 210"/>
+<polyline points="380 230 390 230"/>
+<polyline points="380 280 390 280"/>
+<polyline points="380 290 390 290"/>
+<polyline points="380 300 390 300"/>
+<polyline points="380 310 390 310"/>
+<polyline points="390 20 390 30"/>
+<circle cx="390" cy="30" r="1"/>
+<polyline points="390 60 390 70"/>
+<circle cx="390" cy="70" r="1"/>
+<polyline points="390 90 400 100"/>
+<polyline points="390 100 400 100"/>
+<polyline points="390 110 400 110"/>
+<polyline points="390 120 400 120"/>
+<polyline points="390 130 400 130"/>
+<polyline points="390 140 400 140"/>
+<circle cx="390" cy="150" r="1"/>
+<polyline points="390 200 390 210"/>
+<polyline points="390 210 390 220"/>
+<polyline points="390 220 390 230"/>
+<polyline points="390 230 400 240"/>
+<polyline points="390 280 390 290"/>
+<polyline points="390 290 390 300"/>
+<polyline points="390 300 390 310"/>
+<circle cx="390" cy="310" r="1"/>
+<circle cx="390" cy="410" r="1"/>
+<polyline points="400 100 410 100"/>
+<polyline points="400 110 410 110"/>
+<polyline points="400 120 410 120"/>
+<polyline points="400 130 410 130"/>
+<polyline points="400 140 410 150"/>
+<polyline points="400 240 410 240"/>
+<polyline points="400 250 410 250"/>
+<polyline points="400 260 410 260"/>
+<polyline points="400 270 410 270"/>
+<circle cx="410" cy="10" r="1"/>
+<polyline points="410 30 420 30"/>
+<circle cx="410" cy="50" r="1"/>
+<polyline points="410 70 420 70"/>
+<polyline points="410 100 420 100"/>
+<polyline points="410 110 420 110"/>
+<polyline points="410 120 420 120"/>
+<polyline points="410 130 420 140"/>
+<polyline points="410 150 420 150"/>
+<polyline points="410 240 420 240"/>
+<polyline points="410 250 420 250"/>
+<polyline points="410 260 420 260"/>
+<polyline points="410 270 420 270"/>
+<circle cx="410" cy="390" r="1"/>
+<polyline points="420 30 430 30"/>
+<polyline points="420 70 430 70"/>
+<polyline points="420 80 430 80"/>
+<polyline points="420 90 430 90"/>
+<polyline points="420 100 430 100"/>
+<polyline points="420 110 430 110"/>
+<polyline points="420 120 430 130"/>
+<polyline points="420 140 430 140"/>
+<polyline points="420 150 430 150"/>
+<polyline points="420 240 430 240"/>
+<polyline points="420 250 430 250"/>
+<polyline points="420 260 430 260"/>
+<polyline points="420 270 430 270"/>
+<polyline points="430 10 430 20"/>
+<polyline points="430 20 430 30"/>
+<circle cx="430" cy="30" r="1"/>
+<polyline points="430 50 430 60"/>
+<polyline points="430 60 440 70"/>
+<polyline points="430 70 440 70"/>
+<polyline points="430 80 440 80"/>
+<polyline points="430 90 440 90"/>
+<polyline points="430 100 440 100"/>
+<polyline points="430 110 440 120"/>
+<polyline points="430 130 440 130"/>
+<polyline points="430 140 440 140"/>
+<polyline points="430 150 440 150"/>
+<polyline points="430 240 430 250"/>
+<polyline points="430 250 430 260"/>
+<polyline points="430 260 430 270"/>
+<polyline points="430 270 440 280"/>
+<circle cx="430" cy="370" r="1"/>
+<polyline points="440 70 450 70"/>
+<polyline points="440 80 450 80"/>
+<polyline points="440 90 450 90"/>
+<polyline points="440 100 450 110"/>
+<polyline points="440 120 450 120"/>
+<polyline points="440 130 450 130"/>
+<polyline points="440 140 450 140"/>
+<polyline points="440 150 450 150"/>
+<polyline points="440 200 450 200"/>
+<polyline points="440 210 450 210"/>
+<polyline points="440 220 450 220"/>
+<polyline points="440 230 450 230"/>
+<polyline points="440 280 450 280"/>
+<polyline points="440 290 450 290"/>
+<polyline points="440 300 450 300"/>
+<polyline points="440 310 450 310"/>
+<circle cx="450" cy="10" r="1"/>
+<polyline points="450 30 460 30"/>
+<polyline points="450 50 460 50"/>
+<polyline points="450 60 460 70"/>
+<polyline points="450 70 460 70"/>
+<polyline points="450 80 460 80"/>
+<polyline points="450 90 460 100"/>
+<polyline points="450 110 460 110"/>
+<polyline points="450 120 460 120"/>
+<polyline points="450 130 460 130"/>
+<polyline points="450 140 460 140"/>
+<polyline points="450 150 460 150"/>
+<polyline points="450 200 460 200"/>
+<polyline points="450 210 460 210"/>
+<polyline points="450 220 460 220"/>
+<polyline points="450 230 460 230"/>
+<polyline points="450 280 460 280"/>
+<polyline points="450 290 460 290"/>
+<polyline points="450 300 460 300"/>
+<polyline points="450 310 460 310"/>
+<circle cx="450" cy="350" r="1"/>
+<polyline points="460 30 470 30"/>
+<polyline points="460 50 470 50"/>
+<polyline points="460 70 470 70"/>
+<polyline points="460 80 470 90"/>
+<polyline points="460 100 470 100"/>
+<polyline points="460 110 470 110"/>
+<polyline points="460 120 470 120"/>
+<polyline points="460 130 470 130"/>
+<polyline points="460 140 470 140"/>
+<polyline points="460 150 470 150"/>
+<polyline points="460 200 470 200"/>
+<polyline points="460 210 470 210"/>
+<polyline points="460 220 470 220"/>
+<polyline points="460 230 470 230"/>
+<polyline points="460 280 470 280"/>
+<polyline points="460 290 470 290"/>
+<polyline points="460 300 470 300"/>
+<polyline points="460 310 470 310"/>
+<polyline points="470 10 470 20"/>
+<polyline points="470 20 470 30"/>
+<polyline points="470 30 470 40"/>
+<polyline points="470 40 470 50"/>
+<polyline points="470 50 470 60"/>
+<polyline points="470 60 470 70"/>
+<polyline points="470 70 460 80"/>
+<polyline points="470 90 470 100"/>
+<polyline points="470 100 470 110"/>
+<polyline points="470 110 470 120"/>
+<polyline points="470 120 470 130"/>
+<polyline points="470 130 470 140"/>
+<polyline points="470 140 470 150"/>
+<circle cx="470" cy="150" r="1"/>
+<polyline points="470 200 470 210"/>
+<polyline points="470 210 470 220"/>
+<polyline points="470 220 470 230"/>
+<circle cx="470" cy="230" r="1"/>
+<polyline points="470 280 470 290"/>
+<polyline points="470 290 470 300"/>
+<polyline points="470 300 470 310"/>
+<circle cx="470" cy="310" r="1"/>
+<circle cx="470" cy="330" r="1"/>
+</svg>
