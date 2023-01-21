@@ -259,7 +259,7 @@ POLYGON((0 0.25,0 0.75,0.25 1,0.75 1,1 0.75,1 0.25,0.75 0,0.25 0,0 0.25))
 The `bitwise` tool evaluates an expression on `(x, y)`, and visualizes the pattern.
 
 ```shell
-$ cargo run --bin bitwise -- --lines |
+$ cargo run --bin bitwise -- "(x & y) & (x ^ y) % 11" |
     cargo run --bin transform -- --scale 10 10 |
     cargo run --bin wkt2svg -- --padding
 ```

@@ -14,6 +14,11 @@ cargo build --release
 
 PATH="$REPO_ROOT/target/release/:$PATH"
 
+echo "Bitwise..."
+bitwise --x-max 96 --y-max 96 "(x & y) & (x ^ y) % 11" |
+    transform --scale 10 10 |
+    wkt2svg --padding --output "$REPO_ROOT/examples/bitwise.svg"
+
 echo "DLA..."
 dla \
     --seed 461266331856721221 \
@@ -23,8 +28,8 @@ dla \
     --stubbornness 10 \
     --particle-spacing 0.1 |
     geom2graph --graph2geom |
-    ./tools/project.py --kind I --scale 20 |
-    wkt2svg --output ./examples/diffusion-limited-aggregation/organic.svg
+    transform --scale 20 20 |
+    wkt2svg --output "$REPO_ROOT/examples/diffusion-limited-aggregation/organic.svg"
 
 echo "Lindenmayer..."
 "$REPO_ROOT/tools/parse-production-rules.py" --config "$REPO_ROOT/examples/sierpinski-tree.json" |
