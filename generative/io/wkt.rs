@@ -2,7 +2,10 @@ use std::io::{BufRead, BufReader, Lines, Read, Write};
 use std::str::FromStr;
 
 use clap::ValueEnum;
-use geo::Geometry;
+use geo::{
+    CoordNum, Geometry, GeometryCollection, Line, LineString, MultiLineString, MultiPoint,
+    MultiPolygon, Point, Polygon, Rect, Triangle,
+};
 use hex::{decode, encode_upper};
 use log::warn;
 use wkb::{geom_to_wkb, wkb_to_geom, write_geom_to_wkb};
@@ -28,6 +31,126 @@ impl std::fmt::Display for GeometryFormat {
             GeometryFormat::WkbHex => write!(f, "wkb-hex"),
             GeometryFormat::WkbRaw => write!(f, "wkb-raw"),
         }
+    }
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum SvgStyle {
+    PointRadius(f64),
+    Stroke(String),
+    StrokeWidth(f64),
+    StrokeDasharray(String),
+    Fill(String),
+}
+
+fn wkt_inner<'a>(prefix: &'a str, s: &'a str) -> &'a str {
+    if let Some(s) = s.strip_prefix(prefix) {
+        let s = s.trim();
+        let s = s.trim_start_matches('(');
+        let s = s.trim_end_matches(')');
+        s
+    } else {
+        ""
+    }
+}
+
+impl<'a> TryFrom<&'a str> for SvgStyle {
+    type Error = String;
+
+    // This isn't a very good parser (there's lots of edge cases it doesn't handle) but for now it
+    // doesn't have to be!
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        let s = s.to_uppercase();
+
+        if s.starts_with("POINTRADIUS") {
+            let inner = wkt_inner("POINTRADIUS", &s);
+            let radius = match f64::from_str(inner) {
+                Ok(radius) => radius,
+                Err(_) => return Err(format!("Failed to parse point radius from '{}'", inner)),
+            };
+            return Ok(SvgStyle::PointRadius(radius));
+        } else if s.starts_with("STROKEWIDTH") {
+            let inner = wkt_inner("STROKEWIDTH", &s);
+            let width = match f64::from_str(inner) {
+                Ok(width) => width,
+                Err(_) => return Err(format!("Failed to parse stroke width from '{}'", inner)),
+            };
+            return Ok(SvgStyle::StrokeWidth(width));
+        } else if s.starts_with("STROKEDASHARRAY") {
+            let inner = wkt_inner("STROKEDASHARRAY", &s);
+            return Ok(SvgStyle::StrokeDasharray(inner.into()));
+        } else if s.starts_with("STROKE") {
+            let inner = wkt_inner("STROKE", &s);
+            return Ok(SvgStyle::Stroke(inner.to_lowercase()));
+        } else if s.starts_with("FILL") {
+            let inner = wkt_inner("FILL", &s);
+            return Ok(SvgStyle::Fill(inner.to_lowercase()));
+        }
+
+        Err(format!("Failed to parse SVG style from '{}'", s))
+    }
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum GeometryAndStyle<T: CoordNum = f64> {
+    Point(Point<T>),
+    Line(Line<T>),
+    LineString(LineString<T>),
+    Polygon(Polygon<T>),
+    MultiPoint(MultiPoint<T>),
+    MultiLineString(MultiLineString<T>),
+    MultiPolygon(MultiPolygon<T>),
+    GeometryCollection(GeometryCollection<T>),
+    Rect(Rect<T>),
+    Triangle(Triangle<T>),
+
+    Style(SvgStyle),
+}
+
+impl<T: CoordNum> From<Geometry<T>> for GeometryAndStyle<T> {
+    fn from(x: Geometry<T>) -> Self {
+        match x {
+            Geometry::Point(p) => GeometryAndStyle::Point(p),
+            Geometry::Line(l) => GeometryAndStyle::Line(l),
+            Geometry::LineString(l) => GeometryAndStyle::LineString(l),
+            Geometry::Polygon(p) => GeometryAndStyle::Polygon(p),
+            Geometry::MultiPoint(m) => GeometryAndStyle::MultiPoint(m),
+            Geometry::MultiLineString(m) => GeometryAndStyle::MultiLineString(m),
+            Geometry::MultiPolygon(m) => GeometryAndStyle::MultiPolygon(m),
+            Geometry::GeometryCollection(g) => GeometryAndStyle::GeometryCollection(g),
+            Geometry::Rect(r) => GeometryAndStyle::Rect(r),
+            Geometry::Triangle(t) => GeometryAndStyle::Triangle(t),
+        }
+    }
+}
+
+impl<T: CoordNum> From<GeometryAndStyle<T>> for Geometry<T> {
+    fn from(x: GeometryAndStyle<T>) -> Self {
+        match x {
+            GeometryAndStyle::Point(p) => Geometry::Point(p),
+            GeometryAndStyle::Line(l) => Geometry::Line(l),
+            GeometryAndStyle::LineString(l) => Geometry::LineString(l),
+            GeometryAndStyle::Polygon(p) => Geometry::Polygon(p),
+            GeometryAndStyle::MultiPoint(m) => Geometry::MultiPoint(m),
+            GeometryAndStyle::MultiLineString(m) => Geometry::MultiLineString(m),
+            GeometryAndStyle::MultiPolygon(m) => Geometry::MultiPolygon(m),
+            GeometryAndStyle::GeometryCollection(g) => Geometry::GeometryCollection(g),
+            GeometryAndStyle::Rect(r) => Geometry::Rect(r),
+            GeometryAndStyle::Triangle(t) => Geometry::Triangle(t),
+            GeometryAndStyle::Style(_) => panic!("Cannot convert a STYLE into a geometry"),
+        }
+    }
+}
+
+impl<T: CoordNum> TryFrom<Wkt<T>> for GeometryAndStyle<T>
+where
+    GeometryAndStyle<T>: From<Geometry>,
+{
+    type Error = wkt::conversion::Error;
+
+    fn try_from(wkt: Wkt<T>) -> Result<Self, Self::Error> {
+        let geometry = Geometry::try_from(wkt.item)?;
+        Ok(geometry.into())
     }
 }
 
@@ -58,6 +181,13 @@ where
 }
 
 pub struct WktGeometries<R>
+where
+    R: Read,
+{
+    lines: Lines<BufReader<R>>,
+}
+
+pub struct WktGeometriesAndStyles<R>
 where
     R: Read,
 {
@@ -98,6 +228,42 @@ where
                     warn!("Failed to parse '{}' as WKT: {:?}", line, e);
                     None
                 }
+            },
+            Some(Err(e)) => {
+                warn!("Failed to read line: {:?}", e);
+                None
+            }
+            None => None,
+        }
+    }
+}
+
+impl<R> Iterator for WktGeometriesAndStyles<R>
+where
+    R: Read,
+{
+    type Item = GeometryAndStyle<f64>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.lines.next() {
+            Some(Ok(line)) => match Wkt::<f64>::from_str(line.as_str()) {
+                Ok(geometry) => match geometry.try_into() {
+                    Ok(geometry) => Some(geometry),
+                    Err(e) => {
+                        warn!("Failed to convert '{}' to geo geometry: {:?}", line, e);
+                        None
+                    }
+                },
+                Err(e) => match SvgStyle::try_from(line.as_str()) {
+                    Ok(style) => Some(GeometryAndStyle::Style(style)),
+                    Err(ee) => {
+                        warn!(
+                            "Failed to parse '{}' as WKT: {:?} and as SVG STYLE: {:?}",
+                            line, e, ee
+                        );
+                        None
+                    }
+                },
             },
             Some(Err(e)) => {
                 warn!("Failed to read line: {:?}", e);
@@ -248,6 +414,15 @@ where
     }
 }
 
+pub fn read_wkt_geometries_and_styles<R>(reader: R) -> WktGeometriesAndStyles<R>
+where
+    R: Read,
+{
+    WktGeometriesAndStyles {
+        lines: BufReader::new(reader).lines(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use geo::{Geometry, Point};
@@ -375,5 +550,83 @@ mod tests {
         let geometries = read_wkt_geometries(&wkt[..]);
 
         assert_eq!(geometries.count(), 0);
+    }
+
+    #[test]
+    fn test_geometry_and_style_point() {
+        let wkt = b"POINT(1 1)";
+        let mut geometries = read_wkt_geometries_and_styles(&wkt[..]);
+        let point = geometries.next();
+        assert_eq!(point, Some(GeometryAndStyle::Point(Point::new(1.0, 1.0))));
+    }
+
+    #[test]
+    fn test_style_point_radius() {
+        let wkt = b"POINTRADIUS(2.0)";
+        let mut geometries = read_wkt_geometries_and_styles(&wkt[..]);
+        let style = geometries.next();
+        assert_eq!(
+            style,
+            Some(GeometryAndStyle::Style(SvgStyle::PointRadius(2.0)))
+        );
+    }
+
+    #[test]
+    fn test_style_stroke() {
+        let wkt = b"STROKE(blue)";
+        let mut geometries = read_wkt_geometries_and_styles(&wkt[..]);
+        let style = geometries.next();
+        assert_eq!(
+            style,
+            Some(GeometryAndStyle::Style(SvgStyle::Stroke("blue".into())))
+        );
+    }
+
+    #[test]
+    fn test_style_stroke_width() {
+        let wkt = b"STROKEWIDTH(2.0)";
+        let mut geometries = read_wkt_geometries_and_styles(&wkt[..]);
+        let style = geometries.next();
+        assert_eq!(
+            style,
+            Some(GeometryAndStyle::Style(SvgStyle::StrokeWidth(2.0)))
+        );
+    }
+
+    #[test]
+    fn test_style_stroke_dasharray() {
+        let wkt = b"STROKEDASHARRAY(1 4)";
+        let mut geometries = read_wkt_geometries_and_styles(&wkt[..]);
+        let style = geometries.next();
+        assert_eq!(
+            style,
+            Some(GeometryAndStyle::Style(SvgStyle::StrokeDasharray(
+                "1 4".into()
+            )))
+        );
+    }
+
+    #[test]
+    fn test_style_stroke_dasharray_commas() {
+        let wkt = b"STROKEDASHARRAY(1, 4)";
+        let mut geometries = read_wkt_geometries_and_styles(&wkt[..]);
+        let style = geometries.next();
+        assert_eq!(
+            style,
+            Some(GeometryAndStyle::Style(SvgStyle::StrokeDasharray(
+                "1, 4".into()
+            )))
+        );
+    }
+
+    #[test]
+    fn test_style_fill() {
+        let wkt = b"FILL(red)";
+        let mut geometries = read_wkt_geometries_and_styles(&wkt[..]);
+        let style = geometries.next();
+        assert_eq!(
+            style,
+            Some(GeometryAndStyle::Style(SvgStyle::Fill("red".into())))
+        );
     }
 }
