@@ -51,7 +51,21 @@ pub struct CmdlineOptions {
     /// Whether to add a little bit of padding all the way around the viewbox
     #[clap(short, long, default_value_t = false)]
     pub padding: bool,
-    // TODO: Global styling
+
+    #[clap(long, default_value_t = 1)]
+    pub point_radius: u8,
+
+    #[clap(long, default_value = "black")]
+    pub stroke: String,
+
+    #[clap(long, default_value_t = 2)]
+    pub stroke_width: u8,
+
+    #[clap(long)]
+    pub stroke_dasharray: Option<String>,
+
+    #[clap(long, default_value = "none")]
+    pub fill: String,
 }
 
 enum ScaleType {
@@ -77,22 +91,50 @@ impl From<&CmdlineOptions> for ScaleType {
 
 struct SvgOptions {
     scale_type: ScaleType,
-    // TODO: styling
+    point_radius: u8,
+    stroke: String,
+    stroke_width: u8,
+    stroke_dasharray: Option<String>,
+    fill: String,
 }
 
 impl From<&CmdlineOptions> for SvgOptions {
     fn from(options: &CmdlineOptions) -> Self {
         Self {
             scale_type: ScaleType::from(options),
+            point_radius: options.point_radius,
+            stroke: options.stroke.clone(),
+            stroke_width: options.stroke_width,
+            stroke_dasharray: options.stroke_dasharray.clone(),
+            fill: options.fill.clone(),
         }
     }
 }
 
-fn add_point_to_document(point: Point, document: Document, _options: &SvgOptions) -> Document {
+impl SvgOptions {
+    fn get_style(&self) -> element::Style {
+        // let style = element::Style::new("svg { stroke:black; stroke-width:2px; fill:none;}");
+
+        let style = if let Some(dasharray) = &self.stroke_dasharray {
+            format!("stroke-dasharray:{};", dasharray)
+        } else {
+            String::new()
+        };
+
+        let style = format!(
+            "{} stroke:{}; stroke-width:{}; fill:{};",
+            style, self.stroke, self.stroke_width, self.fill
+        );
+
+        element::Style::new(format!("svg {{{}}}", style))
+    }
+}
+
+fn add_point_to_document(point: Point, document: Document, options: &SvgOptions) -> Document {
     let circle = element::Circle::new()
         .set("cx", point.x())
         .set("cy", point.y())
-        .set("r", 1.0);
+        .set("r", options.point_radius);
     document.add(circle)
 }
 
@@ -303,7 +345,7 @@ fn main() {
     );
 
     let mut document = Document::new().set("viewBox", viewbox);
-    let style = element::Style::new("svg { stroke:black; stroke-width:2px; fill:none;}");
+    let style = options.get_style();
     document = document.add(style);
     for geometry in geometries {
         document = to_svg(geometry, &transform, document, &options);
