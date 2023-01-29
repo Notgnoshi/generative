@@ -2,7 +2,9 @@ use std::path::PathBuf;
 
 use clap::{ArgGroup, Parser};
 use generative::flatten::flatten_nested_geometries;
-use generative::io::{get_input_reader, get_output_writer, read_geometries, GeometryFormat};
+use generative::io::{
+    get_input_reader, get_output_writer, read_wkt_geometries_and_styles, GeometryAndStyle, SvgStyle,
+};
 use geo::{
     AffineOps, AffineTransform, BoundingRect, Coord, CoordsIter, Geometry, Line, LineString, Point,
     Polygon, Rect, Triangle,
@@ -28,10 +30,6 @@ pub struct CmdlineOptions {
     #[clap(short, long)]
     pub input: Option<PathBuf>,
 
-    /// Input geometry format.
-    #[clap(short = 'I', long, default_value_t = GeometryFormat::Wkt)]
-    pub input_format: GeometryFormat,
-
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
     pub output: Option<PathBuf>,
@@ -52,14 +50,14 @@ pub struct CmdlineOptions {
     #[clap(short, long, default_value_t = false)]
     pub padding: bool,
 
-    #[clap(long, default_value_t = 1)]
-    pub point_radius: u8,
+    #[clap(long, default_value_t = 1.0)]
+    pub point_radius: f64,
 
     #[clap(long, default_value = "black")]
     pub stroke: String,
 
-    #[clap(long, default_value_t = 2)]
-    pub stroke_width: u8,
+    #[clap(long, default_value_t = 2.0)]
+    pub stroke_width: f64,
 
     #[clap(long)]
     pub stroke_dasharray: Option<String>,
@@ -91,74 +89,131 @@ impl From<&CmdlineOptions> for ScaleType {
 
 struct SvgOptions {
     scale_type: ScaleType,
-    point_radius: u8,
-    stroke: String,
-    stroke_width: u8,
-    stroke_dasharray: Option<String>,
-    fill: String,
+    global_point_radius: f64,
+    overridden_point_radius: Option<f64>,
+    global_stroke: String,
+    overridden_stroke: Option<String>,
+    global_stroke_width: f64,
+    overridden_stroke_width: Option<f64>,
+    // This is the only global setting that may or may not be present
+    global_stroke_dasharray: Option<String>,
+    overridden_stroke_dasharray: Option<String>,
+    global_fill: String,
+    overridden_fill: Option<String>,
 }
 
 impl From<&CmdlineOptions> for SvgOptions {
     fn from(options: &CmdlineOptions) -> Self {
         Self {
             scale_type: ScaleType::from(options),
-            point_radius: options.point_radius,
-            stroke: options.stroke.clone(),
-            stroke_width: options.stroke_width,
-            stroke_dasharray: options.stroke_dasharray.clone(),
-            fill: options.fill.clone(),
+            global_point_radius: options.point_radius,
+            overridden_point_radius: None,
+            global_stroke: options.stroke.clone(),
+            overridden_stroke: None,
+            global_stroke_width: options.stroke_width,
+            overridden_stroke_width: None,
+            global_stroke_dasharray: options.stroke_dasharray.clone(),
+            overridden_stroke_dasharray: None,
+            global_fill: options.fill.clone(),
+            overridden_fill: None,
         }
     }
 }
 
 impl SvgOptions {
-    fn get_style(&self) -> element::Style {
+    fn get_global_style(&self) -> element::Style {
         // let style = element::Style::new("svg { stroke:black; stroke-width:2px; fill:none;}");
 
-        let style = if let Some(dasharray) = &self.stroke_dasharray {
-            format!("stroke-dasharray:{};", dasharray)
+        let style = if let Some(dasharray) = &self.global_stroke_dasharray {
+            format!("stroke-dasharray:{dasharray};")
         } else {
             String::new()
         };
 
         let style = format!(
             "{} stroke:{}; stroke-width:{}; fill:{};",
-            style, self.stroke, self.stroke_width, self.fill
+            style, self.global_stroke, self.global_stroke_width, self.global_fill
         );
 
-        element::Style::new(format!("svg {{{}}}", style))
+        element::Style::new(format!("svg {{{style}}}"))
     }
 }
 
 fn add_point_to_document(point: Point, document: Document, options: &SvgOptions) -> Document {
-    let circle = element::Circle::new()
+    let radius = if let Some(radius) = options.overridden_point_radius {
+        radius
+    } else {
+        options.global_point_radius
+    };
+    let mut node = element::Circle::new()
         .set("cx", point.x())
         .set("cy", point.y())
-        .set("r", options.point_radius);
-    document.add(circle)
+        .set("r", radius);
+
+    // This is an unfortunate bit of copy-pasta, but the `.set()` method doesn't come from a trait,
+    // so it's more difficult to make generic than I wanted.
+    if let Some(stroke) = options.overridden_stroke.as_ref() {
+        node = node.set("stroke", stroke.clone());
+    }
+    if let Some(width) = options.overridden_stroke_width.as_ref() {
+        node = node.set("stroke-width", *width);
+    }
+    if let Some(dasharray) = options.overridden_stroke_dasharray.as_ref() {
+        node = node.set("stroke-dasharray", dasharray.clone());
+    }
+    if let Some(fill) = options.overridden_fill.as_ref() {
+        node = node.set("fill", fill.clone());
+    }
+    document.add(node)
 }
 
-fn add_line_to_document(line: Line, document: Document, _options: &SvgOptions) -> Document {
-    let line = element::Line::new()
+fn add_line_to_document(line: Line, document: Document, options: &SvgOptions) -> Document {
+    let mut node = element::Line::new()
         .set("x1", line.start.x)
         .set("y1", line.start.y)
         .set("x2", line.end.x)
         .set("y2", line.end.y);
-    document.add(line)
+
+    if let Some(stroke) = options.overridden_stroke.as_ref() {
+        node = node.set("stroke", stroke.clone());
+    }
+    if let Some(width) = options.overridden_stroke_width.as_ref() {
+        node = node.set("stroke-width", *width);
+    }
+    if let Some(dasharray) = options.overridden_stroke_dasharray.as_ref() {
+        node = node.set("stroke-dasharray", dasharray.clone());
+    }
+    if let Some(fill) = options.overridden_fill.as_ref() {
+        node = node.set("fill", fill.clone());
+    }
+    document.add(node)
 }
 
 fn add_linestring_to_document(
     linestring: LineString,
     document: Document,
-    _options: &SvgOptions,
+    options: &SvgOptions,
 ) -> Document {
     let points: Vec<(f64, f64)> = linestring
         .into_inner()
         .into_iter()
         .map(|c| c.into())
         .collect();
-    let polyline = element::Polyline::new().set("points", points);
-    document.add(polyline)
+    let mut node = element::Polyline::new().set("points", points);
+
+    if let Some(stroke) = options.overridden_stroke.as_ref() {
+        node = node.set("stroke", stroke.clone());
+    }
+    if let Some(width) = options.overridden_stroke_width.as_ref() {
+        node = node.set("stroke-width", *width);
+    }
+    if let Some(dasharray) = options.overridden_stroke_dasharray.as_ref() {
+        node = node.set("stroke-dasharray", dasharray.clone());
+    }
+    if let Some(fill) = options.overridden_fill.as_ref() {
+        node = node.set("fill", fill.clone());
+    }
+    document.add(node)
 }
 
 fn add_ring_to_path_data(mut data: element::path::Data, ring: &LineString) -> element::path::Data {
@@ -182,62 +237,141 @@ fn add_ring_to_path_data(mut data: element::path::Data, ring: &LineString) -> el
     data.close()
 }
 
-fn add_polygon_to_document(
-    polygon: Polygon,
-    document: Document,
-    _options: &SvgOptions,
-) -> Document {
+fn add_polygon_to_document(polygon: Polygon, document: Document, options: &SvgOptions) -> Document {
     let mut data = element::path::Data::new();
     data = add_ring_to_path_data(data, polygon.exterior());
     for interior in polygon.interiors() {
         data = add_ring_to_path_data(data, interior);
     }
-    let path = element::Path::new()
+    let mut node = element::Path::new()
         .set("fill-rule", "evenodd")
         .set("d", data);
 
-    document.add(path)
+    if let Some(stroke) = options.overridden_stroke.as_ref() {
+        node = node.set("stroke", stroke.clone());
+    }
+    if let Some(width) = options.overridden_stroke_width.as_ref() {
+        node = node.set("stroke-width", *width);
+    }
+    if let Some(dasharray) = options.overridden_stroke_dasharray.as_ref() {
+        node = node.set("stroke-dasharray", dasharray.clone());
+    }
+    if let Some(fill) = options.overridden_fill.as_ref() {
+        node = node.set("fill", fill.clone());
+    }
+    document.add(node)
 }
 
-fn add_rect_to_document(rect: Rect, document: Document, _options: &SvgOptions) -> Document {
-    let rect = element::Rectangle::new()
+fn add_rect_to_document(rect: Rect, document: Document, options: &SvgOptions) -> Document {
+    let mut node = element::Rectangle::new()
         .set("x", rect.min().x)
         .set("y", rect.max().y) // (x, y) is upper left corner
         .set("width", rect.width())
         .set("height", rect.height());
-    document.add(rect)
+
+    if let Some(stroke) = options.overridden_stroke.as_ref() {
+        node = node.set("stroke", stroke.clone());
+    }
+    if let Some(width) = options.overridden_stroke_width.as_ref() {
+        node = node.set("stroke-width", *width);
+    }
+    if let Some(dasharray) = options.overridden_stroke_dasharray.as_ref() {
+        node = node.set("stroke-dasharray", dasharray.clone());
+    }
+    if let Some(fill) = options.overridden_fill.as_ref() {
+        node = node.set("fill", fill.clone());
+    }
+    document.add(node)
 }
 
 fn add_triangle_to_document(
     triangle: Triangle,
     document: Document,
-    _options: &SvgOptions,
+    options: &SvgOptions,
 ) -> Document {
     let points: Vec<(f64, f64)> = triangle.to_array().into_iter().map(|c| c.into()).collect();
-    let polygon = element::Polygon::new().set("points", points);
-    document.add(polygon)
+    let mut node = element::Polygon::new().set("points", points);
+
+    if let Some(stroke) = options.overridden_stroke.as_ref() {
+        node = node.set("stroke", stroke.clone());
+    }
+    if let Some(width) = options.overridden_stroke_width.as_ref() {
+        node = node.set("stroke-width", *width);
+    }
+    if let Some(dasharray) = options.overridden_stroke_dasharray.as_ref() {
+        node = node.set("stroke-dasharray", dasharray.clone());
+    }
+    if let Some(fill) = options.overridden_fill.as_ref() {
+        node = node.set("fill", fill.clone());
+    }
+    document.add(node)
 }
 
 fn to_svg(
-    geometry: Geometry,
+    geometry: GeometryAndStyle,
     transform: &Option<AffineTransform>,
     document: Document,
-    options: &SvgOptions,
+    options: &mut SvgOptions,
 ) -> Document {
-    let transformed_geometry = if let Some(transform) = transform {
-        geometry.affine_transform(transform)
-    } else {
-        geometry
-    };
+    match geometry {
+        GeometryAndStyle::Style(style) => {
+            match style {
+                SvgStyle::PointRadius(r) => {
+                    if r == options.global_point_radius {
+                        options.overridden_point_radius = None;
+                    } else {
+                        options.overridden_point_radius = Some(r);
+                    }
+                }
+                SvgStyle::Stroke(s) => {
+                    if s == options.global_stroke {
+                        options.overridden_stroke = None;
+                    } else {
+                        options.overridden_stroke = Some(s);
+                    }
+                }
+                SvgStyle::StrokeWidth(w) => {
+                    if w == options.global_stroke_width {
+                        options.overridden_stroke_width = None;
+                    } else {
+                        options.overridden_stroke_width = Some(w);
+                    }
+                }
+                SvgStyle::StrokeDasharray(d) => {
+                    if Some(&d) == options.global_stroke_dasharray.as_ref() {
+                        options.overridden_stroke_dasharray = None;
+                    } else {
+                        options.overridden_stroke_dasharray = Some(d);
+                    }
+                }
+                SvgStyle::Fill(f) => {
+                    if f == options.global_fill {
+                        options.overridden_fill = None;
+                    } else {
+                        options.overridden_fill = Some(f);
+                    }
+                }
+            }
+            document
+        }
+        _ => {
+            let geometry: Geometry = geometry.into();
+            let transformed_geometry = if let Some(transform) = transform {
+                geometry.affine_transform(transform)
+            } else {
+                geometry
+            };
 
-    match transformed_geometry {
-        Geometry::Point(p) => add_point_to_document(p, document, options),
-        Geometry::Line(l) => add_line_to_document(l, document, options),
-        Geometry::LineString(l) => add_linestring_to_document(l, document, options),
-        Geometry::Polygon(p) => add_polygon_to_document(p, document, options),
-        Geometry::Rect(r) => add_rect_to_document(r, document, options),
-        Geometry::Triangle(t) => add_triangle_to_document(t, document, options),
-        _ => unreachable!("MULTI-geometries get flattened before conversion to SVG"),
+            match transformed_geometry {
+                Geometry::Point(p) => add_point_to_document(p, document, options),
+                Geometry::Line(l) => add_line_to_document(l, document, options),
+                Geometry::LineString(l) => add_linestring_to_document(l, document, options),
+                Geometry::Polygon(p) => add_polygon_to_document(p, document, options),
+                Geometry::Rect(r) => add_rect_to_document(r, document, options),
+                Geometry::Triangle(t) => add_triangle_to_document(t, document, options),
+                _ => unreachable!("MULTI-geometries get flattened before conversion to SVG"),
+            }
+        }
     }
 }
 
@@ -265,10 +399,22 @@ fn expand_to_fit(bbox1: Option<Rect>, bbox2: Option<Rect>) -> Option<Rect> {
     }
 }
 
-fn bounding_box<'g>(geometries: impl Iterator<Item = &'g Geometry>) -> Option<Rect> {
+fn bounding_box<'g>(geometries: impl Iterator<Item = &'g GeometryAndStyle>) -> Option<Rect> {
     let mut bbox = None;
     for geometry in geometries {
-        let temp = geometry.bounding_rect();
+        let temp = match geometry {
+            GeometryAndStyle::Point(p) => Some(p.bounding_rect()),
+            GeometryAndStyle::Line(l) => Some(l.bounding_rect()),
+            GeometryAndStyle::LineString(l) => l.bounding_rect(),
+            GeometryAndStyle::Polygon(p) => p.bounding_rect(),
+            GeometryAndStyle::MultiPoint(m) => m.bounding_rect(),
+            GeometryAndStyle::MultiLineString(m) => m.bounding_rect(),
+            GeometryAndStyle::MultiPolygon(m) => m.bounding_rect(),
+            GeometryAndStyle::GeometryCollection(g) => g.bounding_rect(),
+            GeometryAndStyle::Rect(r) => Some(r.bounding_rect()),
+            GeometryAndStyle::Triangle(t) => Some(t.bounding_rect()),
+            GeometryAndStyle::Style(_) => None,
+        };
         bbox = expand_to_fit(bbox, temp);
     }
     bbox
@@ -312,8 +458,31 @@ fn main() {
     let reader = get_input_reader(&args.input).unwrap();
     // Can't lazily convert to SVG because we have to know the whole collection's bounding box to
     // know how to scale.
-    let geometries = read_geometries(reader, &args.input_format);
-    let geometries: Vec<_> = flatten_nested_geometries(geometries).collect();
+    let geometries = read_wkt_geometries_and_styles(reader);
+
+    // Flatten any MULTI or GEOMETRYCOLLECTION geometries
+    let geometries: Vec<_> = geometries.collect();
+    // [g, g, g, s, g, s, s, g] => [g, g, g, s], [g, s], [s], [g]
+    let geometries_ending_with_styles =
+        geometries.split_inclusive(|x| matches!(x, GeometryAndStyle::Style(_)));
+    let flattened = geometries_ending_with_styles.map(|slice| {
+        if matches!(slice.last(), Some(GeometryAndStyle::Style(_))) {
+            let (style, geometries) = slice.split_last().unwrap();
+            // Have to convert to geo_types to flatten
+            let flattened = flatten_nested_geometries(geometries.iter().map(|g| g.clone().into()));
+            // But then need to convert back to add the style back in
+            let flattened = flattened.map(|g| g.into());
+            let mut flattened: Vec<GeometryAndStyle> = flattened.collect();
+            flattened.push(style.clone());
+            flattened
+        } else {
+            let flattened = flatten_nested_geometries(slice.iter().map(|g| g.clone().into()));
+            let flattened = flattened.map(|g| g.into());
+            flattened.collect()
+        }
+    });
+    let geometries: Vec<_> = flattened.flatten().collect();
+
     if geometries.is_empty() {
         return;
     }
@@ -323,7 +492,7 @@ fn main() {
         return;
     }
     let bbox = bbox.unwrap();
-    let options = SvgOptions::from(&args);
+    let mut options = SvgOptions::from(&args);
 
     let (transform, mut viewbox) = calculate_transform(&bbox, &options);
     if args.padding {
@@ -345,10 +514,10 @@ fn main() {
     );
 
     let mut document = Document::new().set("viewBox", viewbox);
-    let style = options.get_style();
+    let style = options.get_global_style();
     document = document.add(style);
     for geometry in geometries {
-        document = to_svg(geometry, &transform, document, &options);
+        document = to_svg(geometry, &transform, document, &mut options);
     }
 
     let writer = get_output_writer(&args.output).unwrap();

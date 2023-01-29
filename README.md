@@ -193,6 +193,34 @@ $ xdg-open examples/sierpinski-tree.svg
 **Note:** `wkt2svg` will only accept 2D geometries as input.
 Use the `project.py` tool to project 3D geometries to two dimensions.
 
+The `wkt2svg` tool accepts WKT-like styling commands. The following are the defaults:
+
+* `POINTRADIUS(1.0)` - Not technically an SVG property. Sets the radius of the circle used to draw
+  points.
+
+  **TODO:** Add a setting for whether points should be filled with a color other than `FILL(black)`
+* `STROKE(black)`
+* `STROKEWIDTH(2.0)`
+* `FILL(none)` - what color to fill `POLYGON`s and `POINT`s (if the `POINTRADIUS` is large enough
+  there's an interior to fill).
+
+Additionally, there's `STROKEDASHARRAY(...)` which can be used to draw dashed lines. See [the MDN
+docs](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray) for help.
+
+```shell
+$ cat <<EOF | cargo run --bin wkt2svg -- --padding
+POINT(0 0)
+POINT(100 100)
+STROKEWIDTH(4)
+STROKEDASHARRAY(6 1)
+POINTRADIUS(20)
+FILL(red)
+POINT(50 50)
+EOF
+```
+
+![SVG Styles](examples/styles.svg)
+
 ## project
 
 You can use the `project.py` tool to perform 3D -> 2D projections. There are multiple projections
