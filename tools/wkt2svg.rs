@@ -338,7 +338,10 @@ fn to_svg(
                     }
                 }
                 SvgStyle::StrokeDasharray(d) => {
-                    if Some(&d) == options.global_stroke_dasharray.as_ref() {
+                    if Some(&d) == options.global_stroke_dasharray.as_ref()
+                        || d.is_empty()
+                        || d == "NONE"
+                    {
                         options.overridden_stroke_dasharray = None;
                     } else {
                         options.overridden_stroke_dasharray = Some(d);
