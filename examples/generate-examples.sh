@@ -57,13 +57,22 @@ wkt2svg --input "$REPO_ROOT/examples/fractal-plant-1.wkt" --output "$REPO_ROOT/e
 wkt2svg --input "$REPO_ROOT/examples/fractal-plant-1-pca.wkt" --output "$REPO_ROOT/examples/fractal-plant-1-pca.svg"
 
 echo "Triangulation..."
-point-cloud --seed 9290215150213667180 --points 20 --scale 100 >/tmp/points.wkt
-triangulate </tmp/points.wkt >/tmp/delaunay.wkt
+point-cloud --seed 11878883030565683752 --points 20 --scale 200 >/tmp/points.wkt
+triangulate </tmp/points.wkt | sort >/tmp/delaunay.wkt
 wkt2svg </tmp/delaunay.wkt >examples/delaunay.svg
 
 echo "Urquhart..."
-urquhart </tmp/points.wkt >/tmp/urquhart.wkt
-wkt2svg </tmp/urquhart.wkt >examples/urquhart.svg
+urquhart </tmp/points.wkt | sort >/tmp/urquhart.wkt
+comm -23 /tmp/delaunay.wkt /tmp/urquhart.wkt >/tmp/difference.wkt
+{
+    echo "STROKE(gray)"
+    echo "STROKEDASHARRAY(6)"
+    cat /tmp/difference.wkt
+    echo "STROKE(black)"
+    echo "STROKEDASHARRAY(none)"
+    cat /tmp/urquhart.wkt
+} >/tmp/combined.wkt
+wkt2svg --padding </tmp/combined.wkt >examples/urquhart.svg
 
 echo "Converting the WKT to a graph..."
 geom2graph \

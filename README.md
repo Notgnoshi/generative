@@ -328,7 +328,16 @@ spanning tree.
 
 ```shell
 $ cargo run --bin urquhart </tmp/points.wkt >/tmp/urquhart.wkt
-$ cargo run --bin wkt2svg </tmp/urquhart.wkt >examples/urquhart.svg
+$ comm -23 /tmp/delaunay.wkt /tmp/urquhart.wkt >/tmp/difference.wkt
+$ {
+    echo "STROKE(gray)"
+    echo "STROKEDASHARRAY(6)"
+    cat /tmp/difference.wkt
+    echo "STROKE(black)"
+    echo "STROKEDASHARRAY(none)"
+    cat /tmp/urquhart.wkt
+} >/tmp/combined.wkt
+$ cargo run --bin wkt2svg </tmp/combined.wkt >examples/urquhart.svg
 ```
 
 ![Urquhart graph](examples/urquhart.svg)
