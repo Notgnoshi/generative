@@ -66,14 +66,14 @@ impl<'a> TryFrom<&'a str> for SvgStyle {
             let inner = wkt_inner("POINTRADIUS", &s);
             let radius = match f64::from_str(inner) {
                 Ok(radius) => radius,
-                Err(_) => return Err(format!("Failed to parse point radius from '{}'", inner)),
+                Err(_) => return Err(format!("Failed to parse point radius from '{inner}'")),
             };
             return Ok(SvgStyle::PointRadius(radius));
         } else if s.starts_with("STROKEWIDTH") {
             let inner = wkt_inner("STROKEWIDTH", &s);
             let width = match f64::from_str(inner) {
                 Ok(width) => width,
-                Err(_) => return Err(format!("Failed to parse stroke width from '{}'", inner)),
+                Err(_) => return Err(format!("Failed to parse stroke width from '{inner}'")),
             };
             return Ok(SvgStyle::StrokeWidth(width));
         } else if s.starts_with("STROKEDASHARRAY") {
@@ -87,7 +87,7 @@ impl<'a> TryFrom<&'a str> for SvgStyle {
             return Ok(SvgStyle::Fill(inner.to_lowercase()));
         }
 
-        Err(format!("Failed to parse SVG style from '{}'", s))
+        Err(format!("Failed to parse SVG style from '{s}'"))
     }
 }
 

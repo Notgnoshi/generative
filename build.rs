@@ -18,13 +18,13 @@ fn main() {
     println!("cargo:rerun-if-changed=tools/geom2graph.cpp");
 
     for allow_dir in ["generative", "tests", "tools"] {
-        for cmakelist in glob::glob(format!("{}/**/CMakeLists.txt", allow_dir).as_str()).unwrap() {
+        for cmakelist in glob::glob(format!("{allow_dir}/**/CMakeLists.txt").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cmakelist.unwrap().display());
         }
-        for cpp_source in glob::glob(format!("{}/**/*.cpp", allow_dir).as_str()).unwrap() {
+        for cpp_source in glob::glob(format!("{allow_dir}/**/*.cpp").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cpp_source.unwrap().display());
         }
-        for cpp_header in glob::glob(format!("{}/**/*.h", allow_dir).as_str()).unwrap() {
+        for cpp_header in glob::glob(format!("{allow_dir}/**/*.h").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cpp_header.unwrap().display());
         }
     }
@@ -52,6 +52,6 @@ fn main() {
     std::fs::copy(geom2graph, dest).unwrap();
 
     let database = format!("{}/build/compile_commands.json", install_dir.display());
-    let dest = format!("{}/compile_commands.json", manifest_dir);
+    let dest = format!("{manifest_dir}/compile_commands.json");
     std::fs::copy(database, dest).unwrap();
 }

@@ -86,15 +86,14 @@ fn read_raw_node(line: String) -> Result<(usize, Point), String> {
         id
     } else {
         return Err(format!(
-            "Failed to parse node: '{}' missing raw node id",
-            line
+            "Failed to parse node: '{line}' missing raw node id",
         ));
     };
 
     let id = if let Ok(id) = raw_id.parse::<usize>() {
         id
     } else {
-        return Err(format!("Failed to parse ID from: '{}'", line));
+        return Err(format!("Failed to parse ID from: '{line}'"));
     };
 
     let raw_label = parts.fold(String::new(), |a, b| a + b + "\n");
@@ -102,8 +101,7 @@ fn read_raw_node(line: String) -> Result<(usize, Point), String> {
         label
     } else {
         return Err(format!(
-            "Failed to parse node: {}: label '{}' as WKT POINT",
-            id, raw_label
+            "Failed to parse node: {id}: label '{raw_label}' as WKT POINT",
         ));
     };
 
@@ -117,28 +115,26 @@ fn read_raw_edge(line: String) -> Result<(usize, usize), String> {
     let raw_source = if let Some(source) = parts.next() {
         source
     } else {
-        return Err(format!("Failed to parse raw source ID from '{}'", line));
+        return Err(format!("Failed to parse raw source ID from '{line}'"));
     };
     let raw_target = if let Some(target) = parts.next() {
         target
     } else {
-        return Err(format!("Failed to parse raw target ID from '{}'", line));
+        return Err(format!("Failed to parse raw target ID from '{line}'"));
     };
 
     let source = if let Ok(source) = raw_source.parse::<usize>() {
         source
     } else {
         return Err(format!(
-            "Failed to convert '{}' to source node ID",
-            raw_source
+            "Failed to convert '{raw_source}' to source node ID",
         ));
     };
     let target = if let Ok(target) = raw_target.parse::<usize>() {
         target
     } else {
         return Err(format!(
-            "Failed to convert '{}' to target node ID",
-            raw_target
+            "Failed to convert '{raw_target}' to target node ID",
         ));
     };
 
