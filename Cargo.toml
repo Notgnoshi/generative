@@ -50,6 +50,10 @@ path = "tools/grid.rs"
 name = "bitwise"
 path = "tools/bitwise.rs"
 
+[[bin]]
+name = "bundle"
+path = "tools/bundle.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"
