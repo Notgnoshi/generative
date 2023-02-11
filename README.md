@@ -34,6 +34,7 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [geom2graph](#geom2graph)
   - [format](#format)
   - [bundle](#bundle)
+  - [pack](#pack)
 - [Examples](#examples)
   - [Random L-Systems](#random-l-systems)
 
@@ -451,6 +452,18 @@ $ cargo run --bin bundle <<EOF
 > POINT(3 3)
 > EOF
 GEOMETRYCOLLECTION(POINT(0 0),MULTIPOINT((1 1),(2 2)),POINT(3 3))
+```
+
+## pack
+
+The `pack` tool can be used to generate a rectangular packing of the input geometries' bounding
+boxes.
+
+```shell
+$ echo -e "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))\nPOLYGON((0 0, 0 1, 1 1, 1 0, 0 0))" |
+    cargo run --bin pack
+POLYGON((-0.5 -0.5,-0.5 0.5,0.5 0.5,0.5 -0.5,-0.5 -0.5))
+POLYGON((1.5 -0.5,1.5 0.5,2.5 0.5,2.5 -0.5,1.5 -0.5))
 ```
 
 # Examples
