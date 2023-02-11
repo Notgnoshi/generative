@@ -14,6 +14,9 @@ cargo build --release
 
 PATH="$REPO_ROOT/target/release/:$PATH"
 
+echo "Asemic..."
+"$REPO_ROOT/examples/asemic.sh" | wkt2svg --padding --output "$REPO_ROOT/examples/asemic.svg"
+
 echo "Bitwise..."
 bitwise --x-max 96 --y-max 96 "(x & y) & (x ^ y) % 11" |
     transform --scale 10 10 |
