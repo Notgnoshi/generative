@@ -72,7 +72,6 @@ def flatten_single(geometry: Geometry, recursion_level=0) -> TaggedPointSequence
     elif isinstance(geometry, LineString):
         yield from wrap_bare(geometry.coords, PointTag.LINESTRING_BEGIN)
     elif isinstance(geometry, Polygon):
-
         shell = wrap_bare(geometry.exterior.coords, PointTag.SHELL_BEGIN)
         holes = itertools.chain.from_iterable(
             wrap_bare(h.coords, PointTag.HOLE_BEGIN) for h in geometry.interiors
