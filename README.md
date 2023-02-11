@@ -36,6 +36,7 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [bundle](#bundle)
   - [pack](#pack)
 - [Examples](#examples)
+  - [Asemic Writing](#asemic-writing)
   - [Random L-Systems](#random-l-systems)
 
 # Prerequisites
@@ -467,6 +468,40 @@ POLYGON((1.5 -0.5,1.5 0.5,2.5 0.5,2.5 -0.5,1.5 -0.5))
 ```
 
 # Examples
+
+## Asemic writing
+
+```bash
+# "cargo run --bin $bin --" is too much to type...
+PATH=$PWD/target/debug/:$PATH
+
+glyph() {
+    local size="$1"
+    local width=3
+    local height=4
+
+    grid --output-format graph "$width" "$height" |
+        traverse --traversals 4 --length 5 --remove-after-traverse |
+        transform --scale "$size" "$size" |
+        smooth --iterations 4 |
+        bundle
+}
+
+glyphs() {
+    local number="$1"
+    local size="$2"
+
+    for _ in $(seq "$number"); do
+        glyph "$size"
+    done
+}
+
+glyphs 100 20 |
+    pack --width 800 --height 1000 --padding 20 |
+    wkt2svg --padding
+```
+
+![Asemic writing](examples/asemic.svg)
 
 ## Random L-Systems
 
