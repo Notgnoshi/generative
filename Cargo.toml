@@ -54,6 +54,10 @@ path = "tools/bitwise.rs"
 name = "bundle"
 path = "tools/bundle.rs"
 
+[[bin]]
+name = "pack"
+path = "tools/pack.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"
@@ -65,6 +69,7 @@ log = "0.4"
 petgraph = "0.6"
 rand = "0.8"
 rand_distr = "0.4"
+rectangle-pack = "0.4"
 rhai = {version="1.12", features=["only_i64", "no_float", "no_index", "no_object", "no_time", "no_function", "no_module", "no_custom_syntax"]}
 stderrlog = "0.5"
 svg = "0.13"
