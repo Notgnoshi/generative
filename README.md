@@ -33,6 +33,7 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [traverse](#traverse)
   - [geom2graph](#geom2graph)
   - [format](#format)
+  - [bundle](#bundle)
 - [Examples](#examples)
   - [Random L-Systems](#random-l-systems)
 
@@ -437,6 +438,20 @@ $ tail -n 5 examples/fractal-plant-1.tgf
 
 The `format.py` tool can be used to convert between different equivalent geometry formats (primarily
 WKT and WKB).
+
+## bundle
+
+The `bundle` tool can be used to bundle multiple geometries together into a single
+GEOMETRYCOLLECTION
+
+```shell
+$ cargo run --bin bundle <<EOF
+> POINT(0 0)
+> MULTIPOINT(1 1, 2 2)
+> POINT(3 3)
+> EOF
+GEOMETRYCOLLECTION(POINT(0 0),MULTIPOINT((1 1),(2 2)),POINT(3 3))
+```
 
 # Examples
 
