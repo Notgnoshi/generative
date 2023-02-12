@@ -58,7 +58,12 @@ path = "tools/bundle.rs"
 name = "pack"
 path = "tools/pack.rs"
 
+[[bin]]
+name = "fogleworms"
+path = "tools/fogleworms.rs"
+
 [dependencies]
+bitvec = "1.0"
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"
 hex = "0.4"
