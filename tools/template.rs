@@ -11,7 +11,7 @@ use stderrlog::ColorChoice;
 /// Useful as a starting point for new tools.
 #[derive(Debug, Parser)]
 #[clap(name = "template", verbatim_doc_comment)]
-pub struct CmdlineOptions {
+struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = log::Level::Info)]
     pub log_level: log::Level,
