@@ -58,6 +58,10 @@ path = "tools/bundle.rs"
 name = "pack"
 path = "tools/pack.rs"
 
+[[bin]]
+name = "streamline"
+path = "tools/streamline.rs"
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 delaunator = "1.0"
