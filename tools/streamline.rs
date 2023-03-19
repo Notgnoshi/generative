@@ -4,6 +4,7 @@ use clap::{Parser, ValueEnum};
 use generative::io::{
     get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
 };
+use geo::{Coord, Geometry, Line};
 use ndarray::Array2;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
@@ -178,6 +179,29 @@ impl VectorField {
             *val = func(x, y);
         }
     }
+
+    fn write<W>(&self, writer: &mut W, format: &GeometryFormat)
+    where
+        W: std::io::Write,
+    {
+        let geoms = self.field.indexed_iter().map(|((i, j), val)| {
+            let x1 = (i as f64) * self.stride + self.min_x;
+            let y1 = (j as f64) * self.stride + self.min_y;
+
+            // Vector field visualizations don't look good if the vectors use the same scale as the
+            // uniform grid they're drawn on. So we scale by the delta-h.
+            let dx = val[0] * self.stride;
+            let dy = val[1] * self.stride;
+
+            let x2 = x1 + dx;
+            let y2 = y1 + dy;
+
+            let line = Line::new(Coord { x: x1, y: y1 }, Coord { x: x2, y: y2 });
+            Geometry::Line(line)
+        });
+
+        write_geometries(writer, geoms, format);
+    }
 }
 
 fn main() {
@@ -196,13 +220,19 @@ fn main() {
     log::info!("Evaluating vector field...");
     let mut field = VectorField::new(args.min_x, args.max_x, args.min_y, args.max_y, args.delta_h);
     field.evaluate(default_field);
-    log::debug!("{field:.4?}");
 
     let reader = get_input_reader(&args.input).unwrap();
+    let mut writer = get_output_writer(&args.output).unwrap();
+
+    if args.draw_vector_field {
+        field.write(&mut writer, &args.output_format);
+    } else {
+        log::debug!("{field:.4?}");
+    }
+
     let geometries = read_geometries(reader, &args.input_format);
 
     // Do some kind of transformation to the geometries here.
 
-    let writer = get_output_writer(&args.output).unwrap();
     write_geometries(writer, geometries, &args.output_format);
 }
