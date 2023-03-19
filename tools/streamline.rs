@@ -1,16 +1,21 @@
+use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use generative::io::{
     get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
 };
-use geo::{Coord, Geometry, Line};
+use geo::{
+    AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString, MapCoordsInPlace,
+};
 use ndarray::Array2;
+use rand::distributions::Distribution;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
+use rand_distr::Binomial;
 use stderrlog::ColorChoice;
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum StreamlineKind {
     /// One streamline per vertex
     ///
@@ -56,9 +61,12 @@ pub struct CmdlineOptions {
     #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
     pub output_format: GeometryFormat,
 
-    /// The function f(x, y) -> (x, y) that defines the vector field.
+    /// The function fn f(x: f64, y: f64) -> [f64; 2] that defines the vector field.
     ///
     /// If not given, a Perlin noise field will be used instead.
+    ///
+    /// TODO: Use rhai to evaluate a function
+    /// TODO: Use Perlin noise
     #[clap(short, long)]
     pub function: Option<String>,
 
@@ -110,7 +118,7 @@ pub struct CmdlineOptions {
     #[clap(short = 'k', long, default_value_t = StreamlineKind::PerCentroid)]
     pub streamline_kind: StreamlineKind,
 
-    /// Draw a streamline for each geometry
+    /// Disable drawing streamlines
     #[clap(short = 'n', long)]
     pub no_draw_streamlines: bool,
 
@@ -147,9 +155,9 @@ struct VectorField {
     field: Array2<[f64; 2]>,
 
     min_x: f64,
-    _max_x: f64,
+    max_x: f64,
     min_y: f64,
-    _max_y: f64,
+    max_y: f64,
     stride: f64,
 }
 
@@ -162,9 +170,9 @@ impl VectorField {
         Self {
             field: Array2::from_elem((max_i, max_j), [0.0, 0.0]),
             min_x,
-            _max_x: max_x,
+            max_x,
             min_y,
-            _max_y: max_y,
+            max_y,
             stride,
         }
     }
@@ -204,6 +212,161 @@ impl VectorField {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+fn simulate<'v, G>(
+    geometries: G,
+    vector_field: &'v VectorField,
+    timestep: f64,
+    num_timesteps: usize,
+    random_timesteps: bool,
+    rng: &'v mut StdRng,
+    streamline_kind: StreamlineKind,
+    record_streamlines: bool,
+) -> impl Iterator<Item = (Geometry, Vec<LineString>)> + 'v
+where
+    G: IntoIterator<Item = Geometry>,
+    G: 'v,
+{
+    geometries.into_iter().map(move |g| {
+        let num_timesteps = if random_timesteps {
+            let n = num_timesteps * 2; // changes mean
+            let p = 0.5; // changes skew
+            let dist = Binomial::new(n as u64, p).unwrap();
+            dist.sample(rng) as usize
+        } else {
+            num_timesteps
+        };
+        simulate_geometry(
+            g,
+            vector_field,
+            timestep,
+            num_timesteps,
+            streamline_kind,
+            record_streamlines,
+        )
+    })
+}
+
+fn simulate_geometry(
+    geometry: Geometry,
+    vector_field: &VectorField,
+    timestep: f64,
+    num_timesteps: usize,
+    streamline_kind: StreamlineKind,
+    record_streamlines: bool,
+) -> (Geometry, Vec<LineString>) {
+    match streamline_kind {
+        StreamlineKind::PerVertex => simulate_geom_vertices(
+            geometry,
+            vector_field,
+            timestep,
+            num_timesteps,
+            record_streamlines,
+        ),
+        StreamlineKind::PerCentroid => {
+            let (geom, single_streamline) = simulate_rigid_geometry(
+                geometry,
+                vector_field,
+                timestep,
+                num_timesteps,
+                record_streamlines,
+            );
+            (geom, vec![single_streamline])
+        }
+    }
+}
+
+fn simulate_coordinate(
+    original: Coord,
+    field: &VectorField,
+    timestep: f64,
+    num_timesteps: usize,
+    record_streamlines: bool,
+) -> (AffineTransform, LineString) {
+    let mut streamline = Vec::with_capacity(if record_streamlines { num_timesteps } else { 0 });
+    let mut current = original;
+    if record_streamlines {
+        streamline.push(current);
+    }
+    for _ in 0..num_timesteps {
+        if current.x > field.max_x || current.y > field.max_y {
+            break;
+        }
+        let i = ((current.x - field.min_x) / field.stride) as usize;
+        let j = ((current.y - field.min_y) / field.stride) as usize;
+
+        let current_vector = field.field[[i, j]];
+
+        current.x += timestep * current_vector[0];
+        current.y += timestep * current_vector[1];
+
+        if record_streamlines {
+            streamline.push(current);
+        }
+    }
+
+    // TODO: Keep track of the initial and final coordinate orientations
+    let offset = current - original;
+    let transform = AffineTransform::translate(offset.x, offset.y);
+
+    (transform, LineString::new(streamline))
+}
+
+fn simulate_rigid_geometry(
+    mut geometry: Geometry,
+    vector_field: &VectorField,
+    timestep: f64,
+    num_timesteps: usize,
+    record_streamlines: bool,
+) -> (Geometry, LineString) {
+    match geometry.centroid() {
+        Some(centroid) => {
+            let (transform, streamline) = simulate_coordinate(
+                centroid.into(),
+                vector_field,
+                timestep,
+                num_timesteps,
+                record_streamlines,
+            );
+
+            geometry.affine_transform_mut(&transform);
+
+            (geometry, streamline)
+        }
+        // I'm not actually sure when finding the centroid would fail, unless the geometry is
+        // empty.
+        None => (geometry, LineString::new(vec![])),
+    }
+}
+
+fn simulate_geom_vertices(
+    mut geometry: Geometry,
+    vector_field: &VectorField,
+    timestep: f64,
+    num_timesteps: usize,
+    record_streamlines: bool,
+) -> (Geometry, Vec<LineString>) {
+    let streamlines = vec![];
+    geometry.map_coords_in_place(|coord| {
+        let (transform, _streamline) = simulate_coordinate(
+            coord,
+            vector_field,
+            timestep,
+            num_timesteps,
+            record_streamlines,
+        );
+        // TODO: All of the Geometry iteration traits don't allow for side-effects.
+        // map_coords_in_place requires the Fn be Copy, which precludes sharing the mutable
+        // streamlines reference. try_map_coords_in_place doesn't have Copy, but is still Fn, which
+        // also precludes sharing a mutable reference.
+        //
+        // streamlines.push(streamline);
+        transform.apply(coord)
+    });
+
+    (geometry, streamlines)
+}
+
 fn main() {
     let args = CmdlineOptions::parse();
 
@@ -215,16 +378,23 @@ fn main() {
 
     let seed = generate_random_seed_if_not_specified(args.seed);
     log::info!("Seeding RNG with: {}", seed);
-    let _rng = StdRng::seed_from_u64(seed);
+    let mut rng = StdRng::seed_from_u64(seed);
 
-    log::info!("Evaluating vector field...");
     let mut field = VectorField::new(args.min_x, args.max_x, args.min_y, args.max_y, args.delta_h);
+    // TODO: It shouldn't actually be necessary to pre-evaluate the whole field. I can use a
+    // continuous vector field, and if --draw-vector-field is given, _then_ discretize it.
+    log::info!("Evaluating vector field...");
     field.evaluate(default_field);
 
     let reader = get_input_reader(&args.input).unwrap();
     let mut writer = get_output_writer(&args.output).unwrap();
 
     if args.draw_vector_field {
+        // TODO: This doesn't work if vector_field_style contains multiple space-separated styles.
+        // One possible solution would be to make the wkt2svg STYLE parser a proper parser.
+        if let Some(style) = args.vector_field_style {
+            writeln!(&mut writer, "{style}").unwrap();
+        }
         field.write(&mut writer, &args.output_format);
     } else {
         log::debug!("{field:.4?}");
@@ -232,7 +402,25 @@ fn main() {
 
     let geometries = read_geometries(reader, &args.input_format);
 
-    // Do some kind of transformation to the geometries here.
+    let geoms_and_streamlines = simulate(
+        geometries,
+        &field,
+        args.delta_t,
+        args.time_steps,
+        args.random_timesteps,
+        &mut rng,
+        args.streamline_kind,
+        !args.no_draw_streamlines,
+    );
+    let (geometries, streamlines): (Vec<_>, Vec<_>) = geoms_and_streamlines.unzip();
+    let streamlines = streamlines.into_iter().flatten().map(Geometry::LineString);
 
-    write_geometries(writer, geometries, &args.output_format);
+    if let Some(style) = args.streamline_style {
+        writeln!(&mut writer, "{style}").unwrap();
+    }
+    write_geometries(&mut writer, streamlines, &args.output_format);
+    if let Some(style) = args.geometry_style {
+        writeln!(&mut writer, "{style}").unwrap();
+    }
+    write_geometries(&mut writer, geometries, &args.output_format);
 }
