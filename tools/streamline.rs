@@ -4,6 +4,7 @@ use clap::{Parser, ValueEnum};
 use generative::io::{
     get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
 };
+use ndarray::Array2;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use stderrlog::ColorChoice;
@@ -134,6 +135,51 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     }
 }
 
+// TODO: How to handle poles?
+fn default_field(x: f64, y: f64) -> [f64; 2] {
+    let temp = f64::sqrt(x.powi(2) + y.powi(2) + 4.0);
+    [-x / temp, y / temp]
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct VectorField {
+    field: Array2<[f64; 2]>,
+
+    min_x: f64,
+    _max_x: f64,
+    min_y: f64,
+    _max_y: f64,
+    stride: f64,
+}
+
+impl VectorField {
+    fn new(min_x: f64, max_x: f64, min_y: f64, max_y: f64, stride: f64) -> Self {
+        let max_i = (max_x - min_x) / stride;
+        let max_i = max_i as usize;
+        let max_j = (max_y - min_y) / stride;
+        let max_j = max_j as usize;
+        Self {
+            field: Array2::from_elem((max_i, max_j), [0.0, 0.0]),
+            min_x,
+            _max_x: max_x,
+            min_y,
+            _max_y: max_y,
+            stride,
+        }
+    }
+
+    fn evaluate<F>(&mut self, func: F)
+    where
+        F: Fn(f64, f64) -> [f64; 2],
+    {
+        for ((i, j), val) in self.field.indexed_iter_mut() {
+            let x = (i as f64) * self.stride + self.min_x;
+            let y = (j as f64) * self.stride + self.min_y;
+            *val = func(x, y);
+        }
+    }
+}
+
 fn main() {
     let args = CmdlineOptions::parse();
 
@@ -146,6 +192,11 @@ fn main() {
     let seed = generate_random_seed_if_not_specified(args.seed);
     log::info!("Seeding RNG with: {}", seed);
     let _rng = StdRng::seed_from_u64(seed);
+
+    log::info!("Evaluating vector field...");
+    let mut field = VectorField::new(args.min_x, args.max_x, args.min_y, args.max_y, args.delta_h);
+    field.evaluate(default_field);
+    log::debug!("{field:.4?}");
 
     let reader = get_input_reader(&args.input).unwrap();
     let geometries = read_geometries(reader, &args.input_format);
