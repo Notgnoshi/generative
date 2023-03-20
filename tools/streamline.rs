@@ -108,9 +108,9 @@ pub struct CmdlineOptions {
     #[clap(short = 'v', long)]
     pub draw_vector_field: bool,
 
-    /// WKT-like SVG styles to apply to the vector field
+    /// WKT-like SVG styles to apply to the vector field. May be specified multiple times.
     #[clap(short = 'V', long)]
-    pub vector_field_style: Option<String>,
+    pub vector_field_style: Vec<String>,
 
     /// The kind of streamlines to draw for each geometry
     #[clap(short = 'k', long, default_value_t = StreamlineKind::PerCentroid)]
@@ -120,17 +120,17 @@ pub struct CmdlineOptions {
     #[clap(short = 'n', long)]
     pub no_draw_streamlines: bool,
 
-    /// WKT-like SVG styles to apply to the streamlines
+    /// WKT-like SVG styles to apply to the streamlines. May be specified multiple times.
     #[clap(short = 'S', long)]
-    pub streamline_style: Option<String>,
+    pub streamline_style: Vec<String>,
 
     /// Draw the geometries after simulation
     #[clap(short = 'g', long)]
     pub draw_geometries: bool,
 
-    /// WKT-like SVG styles to apply to the geometries
+    /// WKT-like SVG styles to apply to the geometries. May be specified multiple times.
     #[clap(short = 'G', long)]
-    pub geometry_style: Option<String>,
+    pub geometry_style: Vec<String>,
 }
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
@@ -415,9 +415,7 @@ fn main() {
     let mut writer = get_output_writer(&args.output).unwrap();
 
     if args.draw_vector_field {
-        // TODO: This doesn't work if vector_field_style contains multiple space-separated styles.
-        // One possible solution would be to make the wkt2svg STYLE parser a proper parser.
-        if let Some(style) = args.vector_field_style {
+        for style in args.vector_field_style {
             writeln!(&mut writer, "{style}").unwrap();
         }
         field.write(&mut writer, &args.output_format);
@@ -438,11 +436,11 @@ fn main() {
     let (geometries, streamlines): (Vec<_>, Vec<_>) = geoms_and_streamlines.unzip();
     let streamlines = streamlines.into_iter().flatten().map(Geometry::LineString);
 
-    if let Some(style) = args.streamline_style {
+    for style in args.streamline_style {
         writeln!(&mut writer, "{style}").unwrap();
     }
     write_geometries(&mut writer, streamlines, &args.output_format);
-    if let Some(style) = args.geometry_style {
+    for style in args.geometry_style {
         writeln!(&mut writer, "{style}").unwrap();
     }
     write_geometries(&mut writer, geometries, &args.output_format);
