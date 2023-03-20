@@ -5,9 +5,8 @@ use clap::{Parser, ValueEnum};
 use generative::io::{
     get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
 };
-use geo::{
-    AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString, MapCoordsInPlace,
-};
+use generative::MapCoordsInPlaceMut;
+use geo::{AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString};
 use rand::distributions::Distribution;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
@@ -374,21 +373,16 @@ fn simulate_geom_vertices<F>(
 where
     F: Fn(f64, f64) -> [f64; 2],
 {
-    let streamlines = vec![];
-    geometry.map_coords_in_place(|coord| {
-        let (transform, _streamline) = simulate_coordinate(
+    let mut streamlines = vec![];
+    geometry.map_coords_in_place_mut(|coord| {
+        let (transform, streamline) = simulate_coordinate(
             coord,
             vector_field,
             timestep,
             num_timesteps,
             record_streamlines,
         );
-        // TODO: All of the Geometry iteration traits don't allow for side-effects.
-        // map_coords_in_place requires the Fn be Copy, which precludes sharing the mutable
-        // streamlines reference. try_map_coords_in_place doesn't have Copy, but is still Fn, which
-        // also precludes sharing a mutable reference.
-        //
-        // streamlines.push(streamline);
+        streamlines.push(streamline);
         transform.apply(coord)
     });
 
