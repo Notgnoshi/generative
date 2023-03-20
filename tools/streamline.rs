@@ -8,7 +8,6 @@ use generative::io::{
 use geo::{
     AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString, MapCoordsInPlace,
 };
-use ndarray::Array2;
 use rand::distributions::Distribution;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
@@ -151,8 +150,11 @@ fn default_field(x: f64, y: f64) -> [f64; 2] {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-struct VectorField {
-    field: Array2<[f64; 2]>,
+struct VectorField<F>
+where
+    F: Fn(f64, f64) -> [f64; 2],
+{
+    function: F,
 
     min_x: f64,
     max_x: f64,
@@ -161,14 +163,13 @@ struct VectorField {
     stride: f64,
 }
 
-impl VectorField {
-    fn new(min_x: f64, max_x: f64, min_y: f64, max_y: f64, stride: f64) -> Self {
-        let max_i = (max_x - min_x) / stride;
-        let max_i = max_i as usize;
-        let max_j = (max_y - min_y) / stride;
-        let max_j = max_j as usize;
+impl<F> VectorField<F>
+where
+    F: Fn(f64, f64) -> [f64; 2],
+{
+    fn new(min_x: f64, max_x: f64, min_y: f64, max_y: f64, stride: f64, function: F) -> Self {
         Self {
-            field: Array2::from_elem((max_i, max_j), [0.0, 0.0]),
+            function,
             min_x,
             max_x,
             min_y,
@@ -177,45 +178,61 @@ impl VectorField {
         }
     }
 
-    fn evaluate<F>(&mut self, func: F)
-    where
-        F: Fn(f64, f64) -> [f64; 2],
-    {
-        for ((i, j), val) in self.field.indexed_iter_mut() {
-            let x = (i as f64) * self.stride + self.min_x;
-            let y = (j as f64) * self.stride + self.min_y;
-            *val = func(x, y);
-        }
+    fn i2x(&self, i: usize) -> f64 {
+        (i as f64) * self.stride + self.min_x
+    }
+
+    fn j2y(&self, j: usize) -> f64 {
+        (j as f64) * self.stride + self.min_y
+    }
+
+    fn x2i(&self, x: f64) -> usize {
+        ((x - self.min_x) / self.stride) as usize
+    }
+
+    fn y2j(&self, y: f64) -> usize {
+        ((y - self.min_y) / self.stride) as usize
     }
 
     fn write<W>(&self, writer: &mut W, format: &GeometryFormat)
     where
         W: std::io::Write,
     {
-        let geoms = self.field.indexed_iter().map(|((i, j), val)| {
-            let x1 = (i as f64) * self.stride + self.min_x;
-            let y1 = (j as f64) * self.stride + self.min_y;
+        let min_i = self.x2i(self.min_x);
+        let max_i = self.x2i(self.max_x);
+        let min_j = self.y2j(self.min_y);
+        let max_j = self.y2j(self.max_y);
 
-            // Vector field visualizations don't look good if the vectors use the same scale as the
-            // uniform grid they're drawn on. So we scale by the delta-h.
-            let dx = val[0] * self.stride;
-            let dy = val[1] * self.stride;
+        let is = min_i..max_i;
+        let js = min_j..max_j;
+        let vectors = js.flat_map(|j| {
+            is.clone().map(move |i| {
+                let x1 = self.i2x(i);
+                let y1 = self.j2y(j);
 
-            let x2 = x1 + dx;
-            let y2 = y1 + dy;
+                let vector = (self.function)(x1, y1);
 
-            let line = Line::new(Coord { x: x1, y: y1 }, Coord { x: x2, y: y2 });
-            Geometry::Line(line)
+                // Vector field visualizations don't look good if the vectors use the same scale as the
+                // uniform grid they're drawn on. So we scale by the delta-h.
+                let dx = vector[0] * self.stride;
+                let dy = vector[1] * self.stride;
+
+                let x2 = x1 + dx;
+                let y2 = y1 + dy;
+
+                let line = Line::new(Coord { x: x1, y: y1 }, Coord { x: x2, y: y2 });
+                Geometry::Line(line)
+            })
         });
 
-        write_geometries(writer, geoms, format);
+        write_geometries(writer, vectors, format);
     }
 }
 
 #[allow(clippy::too_many_arguments)]
-fn simulate<'v, G>(
+fn simulate<'v, F, G>(
     geometries: G,
-    vector_field: &'v VectorField,
+    field: &'v VectorField<F>,
     timestep: f64,
     num_timesteps: usize,
     random_timesteps: bool,
@@ -224,6 +241,7 @@ fn simulate<'v, G>(
     record_streamlines: bool,
 ) -> impl Iterator<Item = (Geometry, Vec<LineString>)> + 'v
 where
+    F: Fn(f64, f64) -> [f64; 2],
     G: IntoIterator<Item = Geometry>,
     G: 'v,
 {
@@ -238,7 +256,7 @@ where
         };
         simulate_geometry(
             g,
-            vector_field,
+            field,
             timestep,
             num_timesteps,
             streamline_kind,
@@ -247,26 +265,25 @@ where
     })
 }
 
-fn simulate_geometry(
+fn simulate_geometry<F>(
     geometry: Geometry,
-    vector_field: &VectorField,
+    field: &VectorField<F>,
     timestep: f64,
     num_timesteps: usize,
     streamline_kind: StreamlineKind,
     record_streamlines: bool,
-) -> (Geometry, Vec<LineString>) {
+) -> (Geometry, Vec<LineString>)
+where
+    F: Fn(f64, f64) -> [f64; 2],
+{
     match streamline_kind {
-        StreamlineKind::PerVertex => simulate_geom_vertices(
-            geometry,
-            vector_field,
-            timestep,
-            num_timesteps,
-            record_streamlines,
-        ),
+        StreamlineKind::PerVertex => {
+            simulate_geom_vertices(geometry, field, timestep, num_timesteps, record_streamlines)
+        }
         StreamlineKind::PerCentroid => {
             let (geom, single_streamline) = simulate_rigid_geometry(
                 geometry,
-                vector_field,
+                field,
                 timestep,
                 num_timesteps,
                 record_streamlines,
@@ -276,26 +293,31 @@ fn simulate_geometry(
     }
 }
 
-fn simulate_coordinate(
+fn simulate_coordinate<F>(
     original: Coord,
-    field: &VectorField,
+    field: &VectorField<F>,
     timestep: f64,
     num_timesteps: usize,
     record_streamlines: bool,
-) -> (AffineTransform, LineString) {
+) -> (AffineTransform, LineString)
+where
+    F: Fn(f64, f64) -> [f64; 2],
+{
     let mut streamline = Vec::with_capacity(if record_streamlines { num_timesteps } else { 0 });
     let mut current = original;
     if record_streamlines {
         streamline.push(current);
     }
     for _ in 0..num_timesteps {
-        if current.x > field.max_x || current.y > field.max_y {
+        if current.x > field.max_x
+            || current.x < field.min_x
+            || current.y > field.max_y
+            || current.y < field.min_y
+        {
             break;
         }
-        let i = ((current.x - field.min_x) / field.stride) as usize;
-        let j = ((current.y - field.min_y) / field.stride) as usize;
 
-        let current_vector = field.field[[i, j]];
+        let current_vector = (field.function)(current.x, current.y);
 
         current.x += timestep * current_vector[0];
         current.y += timestep * current_vector[1];
@@ -312,13 +334,16 @@ fn simulate_coordinate(
     (transform, LineString::new(streamline))
 }
 
-fn simulate_rigid_geometry(
+fn simulate_rigid_geometry<F>(
     mut geometry: Geometry,
-    vector_field: &VectorField,
+    vector_field: &VectorField<F>,
     timestep: f64,
     num_timesteps: usize,
     record_streamlines: bool,
-) -> (Geometry, LineString) {
+) -> (Geometry, LineString)
+where
+    F: Fn(f64, f64) -> [f64; 2],
+{
     match geometry.centroid() {
         Some(centroid) => {
             let (transform, streamline) = simulate_coordinate(
@@ -339,13 +364,16 @@ fn simulate_rigid_geometry(
     }
 }
 
-fn simulate_geom_vertices(
+fn simulate_geom_vertices<F>(
     mut geometry: Geometry,
-    vector_field: &VectorField,
+    vector_field: &VectorField<F>,
     timestep: f64,
     num_timesteps: usize,
     record_streamlines: bool,
-) -> (Geometry, Vec<LineString>) {
+) -> (Geometry, Vec<LineString>)
+where
+    F: Fn(f64, f64) -> [f64; 2],
+{
     let streamlines = vec![];
     geometry.map_coords_in_place(|coord| {
         let (transform, _streamline) = simulate_coordinate(
@@ -380,11 +408,14 @@ fn main() {
     log::info!("Seeding RNG with: {}", seed);
     let mut rng = StdRng::seed_from_u64(seed);
 
-    let mut field = VectorField::new(args.min_x, args.max_x, args.min_y, args.max_y, args.delta_h);
-    // TODO: It shouldn't actually be necessary to pre-evaluate the whole field. I can use a
-    // continuous vector field, and if --draw-vector-field is given, _then_ discretize it.
-    log::info!("Evaluating vector field...");
-    field.evaluate(default_field);
+    let field = VectorField::new(
+        args.min_x,
+        args.max_x,
+        args.min_y,
+        args.max_y,
+        args.delta_h,
+        default_field,
+    );
 
     let reader = get_input_reader(&args.input).unwrap();
     let mut writer = get_output_writer(&args.output).unwrap();
@@ -396,8 +427,6 @@ fn main() {
             writeln!(&mut writer, "{style}").unwrap();
         }
         field.write(&mut writer, &args.output_format);
-    } else {
-        log::debug!("{field:.4?}");
     }
 
     let geometries = read_geometries(reader, &args.input_format);
