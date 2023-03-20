@@ -94,7 +94,30 @@ impl<T: CoordNum> MapCoordsInPlaceMut<T> for Geometry<T> {
             Geometry::MultiPolygon(ref mut x) => x.map_coords_in_place_mut(func),
             Geometry::Rect(ref mut x) => x.map_coords_in_place_mut(func),
             Geometry::Triangle(ref mut x) => x.map_coords_in_place_mut(func),
-            Geometry::GeometryCollection(ref mut x) => x.map_coords_in_place_mut(func),
+            Geometry::GeometryCollection(ref mut _x) => {
+                // x.map_coords_in_place_mut(func)
+                unimplemented!("Mapping coordinates for GEOMETRYCOLLECTIONs is unsupported");
+                // Mapping a GeometryCollection requires calling map_coords_in_place_mut on
+                // whatever Geometry the collection contains, which might very well be another
+                // GeometryCollection (however unlikely).
+                //
+                // TODO: Add a unbundler to the tools/bundle.rs tool.
+                //
+                // error: reached the recursion limit while instantiating `<Geometry as MapCoordsInPlaceMut<f64>>::map_coords_in_place_mut::<&mut &mut &mut ...>`
+                //   --> generative/geometry_mut_map.rs:81:13
+                //    |
+                // 81 |             g.map_coords_in_place_mut(&mut func);
+                //    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                //    |
+                // note: `<Geometry<T> as MapCoordsInPlaceMut<T>>::map_coords_in_place_mut` defined here
+                //   --> generative/geometry_mut_map.rs:86:5
+                //    |
+                // 86 |     fn map_coords_in_place_mut(&mut self, func: impl FnMut(Coord<T>) -> Coord<T>) {
+                //    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                //    = note: the full type name has been written to 'target/debug/deps/streamline-a2b6c690ece9d693.long-type.txt'
+                //
+                // <Geometry as MapCoordsInPlaceMut<f64>>::map_coords_in_place_mut::<&mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut &mut [closure@tools/streamline.rs:378:38: 378:45]>
+            }
         }
     }
 }
