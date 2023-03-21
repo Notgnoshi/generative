@@ -7,6 +7,8 @@ use generative::io::{
 };
 use generative::MapCoordsInPlaceMut;
 use geo::{AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString};
+// use noise::Billow;
+use noise::{NoiseFn, Perlin};
 use rand::distributions::Distribution;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
@@ -62,9 +64,6 @@ pub struct CmdlineOptions {
     /// The function fn f(x: f64, y: f64) -> [f64; 2] that defines the vector field.
     ///
     /// If not given, a Perlin noise field will be used instead.
-    ///
-    /// TODO: Use rhai to evaluate a function
-    /// TODO: Use Perlin noise
     #[clap(short, long)]
     pub function: Option<String>,
 
@@ -148,12 +147,8 @@ fn default_field(x: f64, y: f64) -> [f64; 2] {
     [-x / temp, y / temp]
 }
 
-#[derive(Debug, Clone, PartialEq)]
-struct VectorField<F>
-where
-    F: Fn(f64, f64) -> [f64; 2],
-{
-    function: F,
+struct VectorField {
+    function: Box<dyn Fn(f64, f64) -> [f64; 2]>,
 
     min_x: f64,
     max_x: f64,
@@ -162,13 +157,17 @@ where
     stride: f64,
 }
 
-impl<F> VectorField<F>
-where
-    F: Fn(f64, f64) -> [f64; 2],
-{
-    fn new(min_x: f64, max_x: f64, min_y: f64, max_y: f64, stride: f64, function: F) -> Self {
+impl VectorField {
+    fn new(
+        min_x: f64,
+        max_x: f64,
+        min_y: f64,
+        max_y: f64,
+        stride: f64,
+        function: impl Fn(f64, f64) -> [f64; 2] + 'static,
+    ) -> Self {
         Self {
-            function,
+            function: Box::new(function),
             min_x,
             max_x,
             min_y,
@@ -229,9 +228,9 @@ where
 }
 
 #[allow(clippy::too_many_arguments)]
-fn simulate<'v, F, G>(
+fn simulate<'v, G>(
     geometries: G,
-    field: &'v VectorField<F>,
+    field: &'v VectorField,
     timestep: f64,
     num_timesteps: usize,
     random_timesteps: bool,
@@ -240,7 +239,6 @@ fn simulate<'v, F, G>(
     record_streamlines: bool,
 ) -> impl Iterator<Item = (Geometry, Vec<LineString>)> + 'v
 where
-    F: Fn(f64, f64) -> [f64; 2],
     G: IntoIterator<Item = Geometry>,
     G: 'v,
 {
@@ -264,17 +262,14 @@ where
     })
 }
 
-fn simulate_geometry<F>(
+fn simulate_geometry(
     geometry: Geometry,
-    field: &VectorField<F>,
+    field: &VectorField,
     timestep: f64,
     num_timesteps: usize,
     streamline_kind: StreamlineKind,
     record_streamlines: bool,
-) -> (Geometry, Vec<LineString>)
-where
-    F: Fn(f64, f64) -> [f64; 2],
-{
+) -> (Geometry, Vec<LineString>) {
     match streamline_kind {
         StreamlineKind::PerVertex => {
             simulate_geom_vertices(geometry, field, timestep, num_timesteps, record_streamlines)
@@ -292,16 +287,13 @@ where
     }
 }
 
-fn simulate_coordinate<F>(
+fn simulate_coordinate(
     original: Coord,
-    field: &VectorField<F>,
+    field: &VectorField,
     timestep: f64,
     num_timesteps: usize,
     record_streamlines: bool,
-) -> (AffineTransform, LineString)
-where
-    F: Fn(f64, f64) -> [f64; 2],
-{
+) -> (AffineTransform, LineString) {
     let mut streamline = Vec::with_capacity(if record_streamlines { num_timesteps } else { 0 });
     let mut current = original;
     if record_streamlines {
@@ -333,16 +325,13 @@ where
     (transform, LineString::new(streamline))
 }
 
-fn simulate_rigid_geometry<F>(
+fn simulate_rigid_geometry(
     mut geometry: Geometry,
-    vector_field: &VectorField<F>,
+    vector_field: &VectorField,
     timestep: f64,
     num_timesteps: usize,
     record_streamlines: bool,
-) -> (Geometry, LineString)
-where
-    F: Fn(f64, f64) -> [f64; 2],
-{
+) -> (Geometry, LineString) {
     match geometry.centroid() {
         Some(centroid) => {
             let (transform, streamline) = simulate_coordinate(
@@ -363,16 +352,13 @@ where
     }
 }
 
-fn simulate_geom_vertices<F>(
+fn simulate_geom_vertices(
     mut geometry: Geometry,
-    vector_field: &VectorField<F>,
+    vector_field: &VectorField,
     timestep: f64,
     num_timesteps: usize,
     record_streamlines: bool,
-) -> (Geometry, Vec<LineString>)
-where
-    F: Fn(f64, f64) -> [f64; 2],
-{
+) -> (Geometry, Vec<LineString>) {
     let mut streamlines = vec![];
     geometry.map_coords_in_place_mut(|coord| {
         let (transform, streamline) = simulate_coordinate(
@@ -402,13 +388,26 @@ fn main() {
     log::info!("Seeding RNG with: {}", seed);
     let mut rng = StdRng::seed_from_u64(seed);
 
+    // TODO: Add some of the noise generators as CLI options
+    // let perlin = Billow::<Perlin>::new(seed as u32);
+    let perlin = Perlin::new(seed as u32);
+
+    let function: Box<dyn Fn(f64, f64) -> [f64; 2]> = match args.function {
+        // TODO: Use Rhai scripting engine to evaluate function
+        Some(_string) => Box::new(default_field),
+        None => Box::new(move |x, y| {
+            let angle = perlin.get([x, y]);
+            [f64::cos(angle), f64::sin(angle)]
+        }),
+    };
+
     let field = VectorField::new(
         args.min_x,
         args.max_x,
         args.min_y,
         args.max_y,
         args.delta_h,
-        default_field,
+        function,
     );
 
     let reader = get_input_reader(&args.input).unwrap();
@@ -436,12 +435,16 @@ fn main() {
     let (geometries, streamlines): (Vec<_>, Vec<_>) = geoms_and_streamlines.unzip();
     let streamlines = streamlines.into_iter().flatten().map(Geometry::LineString);
 
-    for style in args.streamline_style {
-        writeln!(&mut writer, "{style}").unwrap();
+    if !args.no_draw_streamlines {
+        for style in args.streamline_style {
+            writeln!(&mut writer, "{style}").unwrap();
+        }
+        write_geometries(&mut writer, streamlines, &args.output_format);
     }
-    write_geometries(&mut writer, streamlines, &args.output_format);
-    for style in args.geometry_style {
-        writeln!(&mut writer, "{style}").unwrap();
+    if args.draw_geometries {
+        for style in args.geometry_style {
+            writeln!(&mut writer, "{style}").unwrap();
+        }
+        write_geometries(&mut writer, geometries, &args.output_format);
     }
-    write_geometries(&mut writer, geometries, &args.output_format);
 }
