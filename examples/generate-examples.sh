@@ -19,7 +19,7 @@ echo "Asemic..."
 
 echo "Bitwise..."
 bitwise --x-max 96 --y-max 96 "(x & y) & (x ^ y) % 11" |
-    transform --scale 10 10 |
+    transform --scale 10 |
     wkt2svg --padding --output "$REPO_ROOT/examples/bitwise.svg"
 
 echo "DLA..."
@@ -31,7 +31,7 @@ dla \
     --stubbornness 10 \
     --particle-spacing 0.1 |
     geom2graph --graph2geom |
-    transform --scale 20 20 |
+    transform --scale 20 |
     wkt2svg --output "$REPO_ROOT/examples/diffusion-limited-aggregation/organic.svg"
 
 echo "Lindenmayer..."
