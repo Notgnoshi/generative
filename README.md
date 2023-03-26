@@ -28,6 +28,7 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [smooth](#smooth)
   - [bitwise](#bitwise)
   - [point-cloud](#point-cloud)
+  - [grid](#grid)
   - [triangulate](#triangulate)
   - [urquhart](#urquhart)
   - [traverse](#traverse)
@@ -291,7 +292,7 @@ The `bitwise` tool evaluates an expression on `(x, y)`, and visualizes the patte
 
 ```shell
 $ cargo run --bin bitwise -- "(x & y) & (x ^ y) % 11" |
-    cargo run --bin transform -- --scale 10 10 |
+    cargo run --bin transform -- --scale 10 |
     cargo run --bin wkt2svg -- --padding
 ```
 
@@ -307,6 +308,18 @@ $ cargo run --bin point-cloud -- --points 3 --scale 5
 POINT (-2.630254885041603 -3.710131141349175)
 POINT (-0.14425253510856784 1.3723340850155374)
 POINT (2.137536655881525 0.7953499219109705)0
+```
+
+## grid
+
+The `grid` tool generate regularly spaced points, optionally output as a TGF geometry graph.
+
+```shell
+$ cargo run --bin grid -- --max-x 2 --max-y 2
+POINT(0 0)
+POINT(1 0)
+POINT(0 1)
+POINT(1 1)
 ```
 
 ## triangulate
@@ -480,9 +493,9 @@ glyph() {
     local width=3
     local height=4
 
-    grid --output-format graph "$width" "$height" |
+    grid --output-format graph --max-x="$width" --max-y="$height" |
         traverse --traversals 4 --length 5 --remove-after-traverse |
-        transform --scale "$size" "$size" |
+        transform --scale="$size" |
         smooth --iterations 4 |
         bundle
 }
@@ -497,8 +510,8 @@ glyphs() {
 }
 
 glyphs 100 20 |
-    pack --width 800 --height 1000 --padding 20 |
-    wkt2svg --padding
+    pack --width 1000 --height 1000 --padding 20 |
+    wkt2svg --padding |
 ```
 
 ![Asemic writing](examples/asemic.svg)

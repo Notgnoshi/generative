@@ -63,30 +63,75 @@ pub struct CmdlineOptions {
     #[clap(short, long, default_value_t = 0.0)]
     pub rotation: f64,
 
-    /// The (x, y) multiplicative scale, applied after rotation
-    #[clap(short = 's', long, number_of_values = 2)]
-    pub scale: Option<Vec<f64>>,
+    /// Symmetric multiplicative scale, applied after rotation, applied before any x or y scales
+    #[clap(short, long)]
+    pub scale: Option<f64>,
 
-    /// The (x, y) additive offset, applied after scale
-    #[clap(short = 't', long, number_of_values = 2)]
-    pub offset: Option<Vec<f64>>,
+    /// The x multiplicative scale, applied after rotation
+    #[clap(long)]
+    pub scale_x: Option<f64>,
 
-    /// Degrees (x, y) skew, applied after offset
-    #[clap(short = 'S', long, number_of_values = 2)]
-    pub skew: Option<Vec<f64>>,
+    /// The y multiplicative scale, applied after rotation
+    #[clap(long)]
+    pub scale_y: Option<f64>,
+
+    /// The x additive offset, applied after scale
+    #[clap(long)]
+    pub offset_x: Option<f64>,
+
+    /// The y additive offset, applied after scale
+    #[clap(long)]
+    pub offset_y: Option<f64>,
+
+    /// Degrees x skew, applied after offset
+    #[clap(long)]
+    pub skew_x: Option<f64>,
+
+    /// Degrees y skew, applied after offset
+    #[clap(long)]
+    pub skew_y: Option<f64>,
 }
 fn build_transform(args: &CmdlineOptions, center: Coord) -> AffineTransform {
     let mut transform = AffineTransform::rotate(args.rotation, center);
-    if let Some(scale) = &args.scale {
-        // The clap parser guarantees that the Vec<f64> used for scale, offset, and skew have
-        // exactly 2 values.
-        transform = transform.scaled(scale[0], scale[1], center);
+
+    if let Some(scale) = args.scale {
+        transform = transform.scaled(scale, scale, center);
     }
-    if let Some(offset) = &args.offset {
-        transform = transform.translated(offset[0], offset[1]);
+    match (args.scale_x, args.scale_y) {
+        (Some(x), Some(y)) => {
+            transform = transform.scaled(x, y, center);
+        }
+        (Some(x), None) => {
+            transform = transform.scaled(x, 1.0, center);
+        }
+        (None, Some(y)) => {
+            transform = transform.scaled(1.0, y, center);
+        }
+        (None, None) => {}
     }
-    if let Some(skew) = &args.skew {
-        transform = transform.skewed(skew[0], skew[1], center);
+    match (args.offset_x, args.offset_y) {
+        (Some(x), Some(y)) => {
+            transform = transform.translated(x, y);
+        }
+        (Some(x), None) => {
+            transform = transform.translated(x, 0.0);
+        }
+        (None, Some(y)) => {
+            transform = transform.translated(0.0, y);
+        }
+        (None, None) => {}
+    }
+    match (args.skew_x, args.skew_y) {
+        (Some(x), Some(y)) => {
+            transform = transform.skewed(x, y, center);
+        }
+        (Some(x), None) => {
+            transform = transform.skewed(x, 0.0, center);
+        }
+        (None, Some(y)) => {
+            transform = transform.skewed(0.0, y, center);
+        }
+        (None, None) => {}
     }
 
     transform

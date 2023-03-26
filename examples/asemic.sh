@@ -8,9 +8,9 @@ glyph() {
     local width=3
     local height=4
 
-    grid --output-format graph "$width" "$height" |
+    grid --output-format graph --max-x="$width" --max-y="$height" |
         traverse --traversals 4 --length 5 --remove-after-traverse |
-        transform --scale "$size" "$size" |
+        transform --scale="$size" |
         smooth --iterations 4 |
         bundle
 }
@@ -25,4 +25,4 @@ glyphs() {
 }
 
 glyphs 100 20 |
-    pack --width 800 --height 1000 --padding 20
+    pack --width 1000 --height 1000 --padding 20
