@@ -33,13 +33,19 @@ cargo run --bin point-cloud -- \
     --scale 1 \
     --domain=unit-square |
     cargo run --bin streamline -- \
-        --min-x=0 \
+        --min-x=-1 \
         --max-x=1 \
         --min-y=0 \
         --max-y=1 \
-        --delta-h=0.5 \
+        --delta-h=0.05 \
         --delta-t=0.05 \
         --time-steps=50 \
+        --function "let temp = sqrt(x ** 2.0 + y ** 2.0 + 4.0); x = -sin(x) / temp; y = y / temp;" \
+        --draw-vector-field \
+        --vector-field-style="STROKE(gray)" \
+        --vector-field-style="STROKEDASHARRAY(1)" \
+        --streamline-style="STROKE(black)" \
+        --streamline-style="STROKEDASHARRAY(0)" \
         --draw-geometries \
         --geometry-style="FILL(black)" \
         --geometry-style="POINTRADIUS(2)" |

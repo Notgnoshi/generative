@@ -13,6 +13,7 @@ use rand::distributions::Distribution;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::Binomial;
+use rhai::{Engine, EvalAltResult, Scope};
 use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -61,9 +62,16 @@ pub struct CmdlineOptions {
     #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
     pub output_format: GeometryFormat,
 
-    /// The function fn f(x: f64, y: f64) -> [f64; 2] that defines the vector field.
+    /// A Rhai script that defines the vector field. If not given, a Perlin noise field will be
+    /// used instead.
     ///
-    /// If not given, a Perlin noise field will be used instead.
+    /// Example:
+    ///
+    ///     let temp = sqrt(x ** 2.0 + y ** 2.0 + 4.0);
+    ///     x = -sin(x) / temp;
+    ///     y = y / temp;
+    ///
+    /// I.e., the f64 x and y variables are both input and output.
     #[clap(short, long)]
     pub function: Option<String>,
 
@@ -139,12 +147,6 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     } else {
         seed
     }
-}
-
-// TODO: How to handle poles?
-fn default_field(x: f64, y: f64) -> [f64; 2] {
-    let temp = f64::sqrt(x.powi(2) + y.powi(2) + 4.0);
-    [-x / temp, y / temp]
 }
 
 struct VectorField {
@@ -375,7 +377,7 @@ fn simulate_geom_vertices(
     (geometry, streamlines)
 }
 
-fn main() {
+fn main() -> Result<(), Box<EvalAltResult>> {
     let args = CmdlineOptions::parse();
 
     stderrlog::new()
@@ -393,8 +395,25 @@ fn main() {
     let perlin = Perlin::new(seed as u32);
 
     let function: Box<dyn Fn(f64, f64) -> [f64; 2]> = match args.function {
-        // TODO: Use Rhai scripting engine to evaluate function
-        Some(_string) => Box::new(default_field),
+        Some(string) => {
+            let engine = Engine::new();
+            let ast = engine.compile(string)?;
+
+            let func = move |x: f64, y: f64| -> [f64; 2] {
+                let mut scope = Scope::new();
+                scope.push("x", x);
+                scope.push("y", y);
+
+                engine.eval_ast_with_scope::<()>(&mut scope, &ast).unwrap();
+
+                let new_x = scope.get_value::<f64>("x").unwrap();
+                let new_y = scope.get_value::<f64>("y").unwrap();
+
+                [new_x, new_y]
+            };
+
+            Box::new(func)
+        }
         None => Box::new(move |x, y| {
             let angle = perlin.get([x, y]);
             [f64::cos(angle), f64::sin(angle)]
@@ -447,4 +466,5 @@ fn main() {
         }
         write_geometries(&mut writer, geometries, &args.output_format);
     }
+    Ok(())
 }
