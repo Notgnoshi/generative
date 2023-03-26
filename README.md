@@ -29,6 +29,7 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [bitwise](#bitwise)
   - [point-cloud](#point-cloud)
   - [grid](#grid)
+  - [streamline](#streamline)
   - [triangulate](#triangulate)
   - [urquhart](#urquhart)
   - [traverse](#traverse)
@@ -82,8 +83,6 @@ To run the Rust tests:
 ```shell
 cargo test
 ```
-
-To run the C++ tests: ¯\\_(ツ)\_/¯
 
 # The tools
 
@@ -141,7 +140,7 @@ $ ./tools/random-production-rules.py --seed 4290989563 |
 |v]->^][<>^[[
 ```
 
-In _[The Algorithmic Beauty of Plants](http://algorithmicbotany.org/papers/#abop)_, Lindenmayer and
+In [The Algorithmic Beauty of Plants](http://algorithmicbotany.org/papers/#abop), Lindenmayer and
 Prusinkiewicz outlined several types of grammars that could be interpreted as algorithmic models of
 plants. These grammars are
 
@@ -312,7 +311,7 @@ POINT (2.137536655881525 0.7953499219109705)0
 
 ## grid
 
-The `grid` tool generate regularly spaced points, optionally output as a TGF geometry graph.
+The `grid` tool generates regularly spaced points, optionally output as a TGF geometry graph.
 
 ```shell
 $ cargo run --bin grid -- --max-x 2 --max-y 2
@@ -321,6 +320,66 @@ POINT(1 0)
 POINT(0 1)
 POINT(1 1)
 ```
+
+## streamline
+
+The `streamline` tool can be used to trace geometry streamlines in a vector field.
+
+```shell
+cargo run --bin point-cloud -- \
+    --points 80 \
+    --domain=unit-square |
+    cargo run --bin transform -- \
+        --offset-x=-0.5 \
+        --offset-y=-0.5 |
+    cargo run --bin streamline -- \
+        --min-x=-0.6 \
+        --max-x=0.6 \
+        --min-y=-1 \
+        --max-y=1 \
+        --delta-h=0.1 \
+        --time-steps=20 \
+        --function "let temp = sqrt(x ** 2.0 + y ** 2.0 + 4.0); x = -sin(x) / temp; y = y / temp;" \
+        --draw-vector-field \
+        --vector-field-style="STROKE(gray)" \
+        --vector-field-style="STROKEDASHARRAY(1)" \
+        --streamline-style="STROKE(black)" \
+        --streamline-style="STROKEDASHARRAY(0)" \
+        --draw-geometries \
+        --geometry-style="STROKE(red)" |
+    cargo run --bin wkt2svg -- \
+        --padding \
+        --scale 500
+```
+
+![](examples/streamline-function.svg)
+
+If you don't pass a Rhai script with `--function`, then random Perlin noise will be used instead.
+
+```shell
+cargo run --bin point-cloud -- \
+    --points 30 \
+    --scale 2 \
+    --domain=unit-square |
+    cargo run --bin streamline -- \
+        --max-x=2.0 \
+        --max-y=2.0 \
+        --delta-h=0.1 \
+        --delta-t=0.05 \
+        --time-steps=20 \
+        --draw-vector-field \
+        --vector-field-style="STROKE(gray)" \
+        --vector-field-style="STROKEDASHARRAY(1)" \
+        --streamline-style="STROKE(black)" \
+        --streamline-style="STROKEDASHARRAY(0)" \
+        --draw-geometries \
+        --geometry-style="STROKE(red)" |
+    cargo run --bin wkt2svg -- \
+        --padding \
+        --scale 500
+```
+
+![](examples/streamline-perlin.svg)
 
 ## triangulate
 
