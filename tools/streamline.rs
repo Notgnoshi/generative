@@ -203,8 +203,8 @@ impl VectorField {
         let min_j = self.y2j(self.min_y);
         let max_j = self.y2j(self.max_y);
 
-        let is = min_i..max_i;
-        let js = min_j..max_j;
+        let is = min_i..=max_i;
+        let js = min_j..=max_j;
         let vectors = js.flat_map(|j| {
             is.clone().map(move |i| {
                 let x1 = self.i2x(i);
