@@ -21,6 +21,7 @@ TEST(PolygonizerTests, SimplePolygon)
     const auto graph = generative::noding::GeometryGraph(*noded);
 
     const auto owned_edges = graph.get_edges();
+    ASSERT_THAT(owned_edges, SizeIs(4));
     std::vector<const geos::geom::Geometry*> edges;
     std::transform(
         owned_edges.begin(),
@@ -35,6 +36,16 @@ TEST(PolygonizerTests, SimplePolygon)
 
     const auto polys = polygonizer.getPolygons();
     const auto dangles = polygonizer.getDangles();
+    for (const auto& poly : polys)
+    {
+        generative::io::operator<<(std::cerr, *poly);
+        std::cerr << std::endl;
+    }
+    for (const auto& dangle : dangles)
+    {
+        generative::io::operator<<(std::cerr, *dangle);
+        std::cerr << std::endl;
+    }
 
     EXPECT_THAT(polys, SizeIs(1));
     EXPECT_THAT(dangles, SizeIs(0));
@@ -57,6 +68,7 @@ TEST(PolygonizerTests, SimplePolygonWithDangles)
     const auto graph = generative::noding::GeometryGraph(*noded);
 
     const auto owned_edges = graph.get_edges();
+    ASSERT_THAT(owned_edges, SizeIs(7));
     std::vector<const geos::geom::Geometry*> edges;
     std::transform(
         owned_edges.begin(),
@@ -71,6 +83,17 @@ TEST(PolygonizerTests, SimplePolygonWithDangles)
 
     const auto polys = polygonizer.getPolygons();
     const auto dangles = polygonizer.getDangles();
+
+    for (const auto& poly : polys)
+    {
+        generative::io::operator<<(std::cerr, *poly);
+        std::cerr << std::endl;
+    }
+    for (const auto& dangle : dangles)
+    {
+        generative::io::operator<<(std::cerr, *dangle);
+        std::cerr << std::endl;
+    }
 
     EXPECT_THAT(polys, SizeIs(1));
     EXPECT_THAT(dangles, SizeIs(2));
@@ -127,6 +150,16 @@ TEST(PolygonizerTests, DISABLED_MissingData)
 
     const auto polys = polygonizer.getPolygons();
     const auto dangles = polygonizer.getDangles();
+    for (const auto& poly : polys)
+    {
+        generative::io::operator<<(std::cerr, *poly);
+        std::cerr << std::endl;
+    }
+    for (const auto& dangle : dangles)
+    {
+        generative::io::operator<<(std::cerr, *dangle);
+        std::cerr << std::endl;
+    }
 
     EXPECT_THAT(polys, SizeIs(1));
     EXPECT_THAT(dangles, SizeIs(1));

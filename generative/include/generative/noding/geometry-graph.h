@@ -31,13 +31,13 @@ public:
         {
         }
 
-        const geos::geom::Coordinate* coord() const
+        geos::geom::CoordinateXY coord() const
         {
             if (point)
             {
-                return point->getCoordinate();
+                return *point->getCoordinate();
             }
-            return nullptr;
+            return geos::geom::CoordinateXY::getNull();
         }
     };
 
