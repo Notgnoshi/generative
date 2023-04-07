@@ -4,7 +4,6 @@
 #include "generative/io/wkt.h"
 
 #include <geos/geom/CoordinateSequence.h>
-#include <geos/geom/CoordinateSequenceFactory.h>
 #include <geos/geom/Geometry.h>
 #include <geos/geom/LineString.h>
 #include <log4cplus/logger.h>
@@ -61,14 +60,12 @@ std::vector<std::unique_ptr<geos::geom::LineString>> GeometryGraph::get_edges() 
     const auto pairs = this->get_edge_pairs();
     std::vector<std::unique_ptr<geos::geom::LineString>> edges;
     edges.reserve(pairs.size());
-    const auto* cs_factory = m_factory.getCoordinateSequenceFactory();
 
     for (const auto& pair : pairs)
     {
-        std::unique_ptr<geos::geom::CoordinateSequence> coords = cs_factory->create({
-            *pair.first.point->getCoordinate(),
-            *pair.second.point->getCoordinate(),
-        });
+        auto coords = std::make_unique<geos::geom::CoordinateSequence>(0, false, false, false);
+        coords->add(pair.first.coord());
+        coords->add(pair.second.coord());
         auto edge = m_factory.createLineString(std::move(coords));
         edges.push_back(std::move(edge));
     }

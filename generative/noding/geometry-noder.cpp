@@ -21,12 +21,13 @@ public:
 
     void filter_ro(const geos::geom::Geometry* geometry) override
     {
+        //! @todo How does this work with other Geometry types?
         const auto* ls = dynamic_cast<const geos::geom::LineString*>(geometry);
         if (ls)
         {
             auto coords = ls->getCoordinates();
             geos::noding::SegmentString* ss =
-                new geos::noding::NodedSegmentString(coords.release(), nullptr);
+                new geos::noding::NodedSegmentString(coords.release(), false, false, nullptr);
             m_to.push_back(ss);
         }
     }
