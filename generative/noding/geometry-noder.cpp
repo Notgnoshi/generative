@@ -101,7 +101,7 @@ geos::noding::Noder& GeometryNoder::get_noder()
     if (!m_noder)
     {
         const geos::geom::PrecisionModel* pm = m_geometry.getFactory()->getPrecisionModel();
-        m_noder.reset(new geos::noding::IteratedNoder(pm));
+        m_noder = std::make_unique<geos::noding::IteratedNoder>(pm);
     }
 
     return *m_noder;
