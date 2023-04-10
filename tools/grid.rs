@@ -29,6 +29,27 @@ impl std::fmt::Display for GridFormat {
         }
     }
 }
+
+#[derive(Debug, Clone, ValueEnum)]
+pub enum GridType {
+    Triangle,
+    Quad,
+    /// Quads, slanted to the right with ragged edges
+    Ragged,
+    Hexagon,
+}
+impl std::fmt::Display for GridType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            // important: Should match clap::ValueEnum format
+            GridType::Triangle => write!(f, "triangle"),
+            GridType::Quad => write!(f, "quad"),
+            GridType::Ragged => write!(f, "ragged"),
+            GridType::Hexagon => write!(f, "hexagon"),
+        }
+    }
+}
+
 /// Generate a regular grid graph
 #[derive(Debug, Parser)]
 #[clap(name = "grid", verbatim_doc_comment)]
@@ -45,49 +66,381 @@ pub struct CmdlineOptions {
     #[clap(short = 'O', long, default_value_t = GridFormat::Points)]
     pub output_format: GridFormat,
 
-    /// The minimum x coordinate of the grid
-    #[clap(short = 'x', long, default_value_t = 0.0)]
-    pub min_x: f64,
+    /// The type of grid to generate
+    #[clap(short, long, default_value_t = GridType::Quad)]
+    pub grid_type: GridType,
 
-    /// The maximum x coordinate of the grid
-    #[clap(short = 'X', long, default_value_t = 5.0)]
-    pub max_x: f64,
+    /// The number of cells along the x-axis
+    #[clap(short = 'W', long, default_value_t = 5)]
+    pub width: usize,
 
-    /// The minimum y coordinate of the grid
-    #[clap(short = 'y', long, default_value_t = 0.0)]
-    pub min_y: f64,
+    /// The number of cells along the y-axis
+    #[clap(short = 'H', long, default_value_t = 5)]
+    pub height: usize,
 
-    /// The maximum y coordinate of the grid
-    #[clap(short = 'Y', long, default_value_t = 5.0)]
-    pub max_y: f64,
+    /// The size of each grid cell. Use --size-x or --size-y to specify the size for the different axes
+    #[clap(short = 's', long)]
+    pub size: Option<f64>,
 
-    /// The grid spacing. Use --delta-x or --delta-y to specify spacing for the different axes
-    #[clap(short = 'd', long)]
-    pub delta: Option<f64>,
-
-    /// The x-axis grid spacing.
+    /// The width of each grid cell
     #[clap(long)]
-    pub delta_x: Option<f64>,
+    pub size_x: Option<f64>,
 
-    /// The y-axis grid spacing.
+    /// The height of each grid cell
     #[clap(long)]
-    pub delta_y: Option<f64>,
+    pub size_y: Option<f64>,
 }
 
-fn i2x(i: usize, delta_x: f64, min_x: f64) -> f64 {
+fn grid(
+    width: usize,
+    height: usize,
+    size_x: f64,
+    size_y: f64,
+    grid_type: GridType,
+) -> GeometryGraph<Undirected> {
+    match grid_type {
+        GridType::Triangle => tri_grid(width, height, size_x, size_y),
+        GridType::Quad => quad_grid(width, height, size_x, size_y),
+        GridType::Ragged => ragged_grid(width, height, size_x, size_y),
+        GridType::Hexagon => hex_grid(width, height, size_x, size_y),
+    }
+}
+
+fn tri_i2x(i: usize, size_x: f64, odd: bool) -> f64 {
+    let mut x = (i as f64) * size_x;
+    if odd {
+        x += 0.5 * size_x;
+    }
+    x
+}
+
+fn tri_j2y(j: usize, triangle_height: f64) -> f64 {
+    (j as f64) * triangle_height
+}
+
+fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGraph<Undirected> {
+    let nodes = (width + 1) * (height + 1);
+    let edges = 2 * nodes;
+    let mut graph = GeometryGraph::<Undirected>::with_capacity(nodes, edges);
+
+    let triangle_height = f64::sqrt(size_y.powi(2) - (size_x.powi(2) / 4.0));
+
+    // Add the nodes
+    for j in 0..=height {
+        for i in 0..=width {
+            let node_index = (width + 1) * j + i;
+            let odd_row = j % 2 != 0;
+            let x = tri_i2x(i, size_x, odd_row);
+            let y = tri_j2y(j, triangle_height);
+            let point = Point::new(x, y);
+            let index = graph.add_node(point);
+            log::trace!("id={} node={point:?}", index.index());
+            debug_assert_eq!(index.index(), node_index);
+        }
+    }
+
+    // Add the edges
+    for j in 0..=height {
+        for i in 0..=width {
+            let current_index = (width + 1) * j + i;
+            let odd_row = j % 2 != 0;
+            log::trace!("adding neighbors for id={current_index}");
+
+            // Start to the left of the current node, and work clockwise around its neighbors.
+            //
+            // Around the left and right border, only the odd rows have upper and lower left
+            // neighbors, and only the even rows have upper and lower right neighbors.
+            //
+            // even j=0  0---1---2
+            //            \ / \ / \
+            // odd  j=1    3---4---5
+            //            / \ / \ /
+            // even j=2  6---7---8
+            if i > 0 {
+                let left = current_index - 1;
+                log::trace!("added left id={left}");
+                graph.update_edge(current_index.into(), left.into(), ());
+            }
+            if j > 0 && (i > 0 || odd_row) {
+                let upper_left = if odd_row {
+                    current_index - (width + 1)
+                } else {
+                    current_index - (width + 2)
+                };
+                log::trace!("added upper left id={upper_left}");
+                graph.update_edge(current_index.into(), upper_left.into(), ());
+            }
+            if j > 0 && (!odd_row || i < width) {
+                let upper_right = if odd_row {
+                    current_index - width
+                } else {
+                    current_index - (width + 1)
+                };
+                log::trace!("added upper right id={upper_right}");
+                graph.update_edge(current_index.into(), upper_right.into(), ());
+            }
+            if i < width {
+                let right = current_index + 1;
+                log::trace!("added right id={right}");
+                graph.update_edge(current_index.into(), right.into(), ());
+            }
+            if j < height && (!odd_row || i < width) {
+                let lower_right = if odd_row {
+                    current_index + width + 2
+                } else {
+                    current_index + width + 1
+                };
+                log::trace!("added lower right id={lower_right}");
+                graph.update_edge(current_index.into(), lower_right.into(), ());
+            }
+            if j < height && (i > 0 || odd_row) {
+                let lower_left = if odd_row {
+                    current_index + width + 1
+                } else {
+                    current_index + width
+                };
+                log::trace!("added lower left id={lower_left}");
+                graph.update_edge(current_index.into(), lower_left.into(), ());
+            }
+        }
+    }
+
+    graph
+}
+
+fn quad_i2x(i: usize, delta_x: f64, min_x: f64) -> f64 {
     (i as f64) * delta_x + min_x
 }
 
-fn j2y(j: usize, delta_y: f64, min_y: f64) -> f64 {
+fn quad_j2y(j: usize, delta_y: f64, min_y: f64) -> f64 {
     (j as f64) * delta_y + min_y
 }
 
-fn x2i(x: f64, delta_x: f64, min_x: f64) -> usize {
-    ((x - min_x) / delta_x) as usize
+fn quad_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGraph<Undirected> {
+    let nodes = (width + 1) * (height + 1);
+    let edges = 2 * width * height - width - height;
+    let mut graph = GeometryGraph::<Undirected>::with_capacity(nodes, edges);
+
+    // Add the nodes
+    for j in 0..=height {
+        for i in 0..=width {
+            let x = quad_i2x(i, size_x, 0.0);
+            let y = quad_j2y(j, size_y, 0.0);
+            let point = Point::new(x, y);
+            let index = graph.add_node(point);
+            let node_index = (width + 1) * j + i;
+            log::trace!("id={} node={point:?}", index.index());
+            debug_assert_eq!(index.index(), node_index);
+        }
+    }
+
+    // Add the edges
+    for j in 0..=height {
+        for i in 0..=width {
+            // As an implementation detail, the GeometryGraph gives nodes integer IDs in the order
+            // they were added. This is the index of the current node in the graph.
+            let current_index = (width + 1) * j + i;
+            log::trace!("adding neighbors for id={current_index}");
+
+            // Add the four neighbors, starting at the left and working clockwise
+            //
+            // 0--1--2
+            // |  |  |
+            // 3--4--5
+            // |  |  |
+            // 6--7--8
+            if i > 0 {
+                let left = current_index - 1;
+                log::trace!("added left id={left}");
+                graph.update_edge(current_index.into(), left.into(), ());
+            }
+            if j < height {
+                let upper = current_index + width + 1;
+                log::trace!("added upper id={upper}");
+                graph.update_edge(current_index.into(), upper.into(), ());
+            }
+            if i < width {
+                let right = current_index + 1;
+                log::trace!("added right id={right}");
+                graph.update_edge(current_index.into(), right.into(), ());
+            }
+            if j > 0 {
+                let lower = current_index - width - 1;
+                log::trace!("added lower id={lower}");
+                graph.update_edge(current_index.into(), lower.into(), ());
+            }
+        }
+    }
+    graph
 }
 
-fn y2j(y: f64, delta_y: f64, min_y: f64) -> usize {
-    ((y - min_y) / delta_y) as usize
+fn ragged_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGraph<Undirected> {
+    let nodes = (width + 1) * (height + 1);
+    let edges = 2 * width * height - width - height;
+    let mut graph = GeometryGraph::<Undirected>::with_capacity(nodes, edges);
+
+    // Add the nodes
+    for j in 0..=height {
+        for i in 0..=(width + 1) {
+            let x = quad_i2x(i, size_x, 0.0);
+            let y = quad_j2y(j, size_y, 0.0);
+            let point = Point::new(x, y);
+            let index = graph.add_node(point);
+            let node_index = (width + 2) * j + i;
+            log::trace!("id={} node={point:?}", index.index());
+            debug_assert_eq!(index.index(), node_index);
+        }
+    }
+
+    // Add the edges
+    for j in 0..=height {
+        // Because of the ragged edges, you need one more index to get another column of cells
+        for i in 0..=(width + 1) {
+            let current_index = (width + 2) * j + i;
+            log::trace!("adding neighbors for id={current_index}");
+
+            // Add the four neighbors, starting at the left and working clockwise
+            //
+            // 0-1-2-3
+            //  / / /
+            // 4-5-6-7
+            //  / / /
+            // 8-9-0-1
+            if i > 0 {
+                let left = current_index - 1;
+                log::trace!("added left id={left}");
+                graph.update_edge(current_index.into(), left.into(), ());
+            }
+            if j > 0 {
+                let upper = current_index - (width + 1);
+                log::trace!("added upper id={upper}");
+                graph.update_edge(current_index.into(), upper.into(), ());
+            }
+            if i < (width + 1) {
+                let right = current_index + 1;
+                log::trace!("added right id={right}");
+                graph.update_edge(current_index.into(), right.into(), ());
+            }
+            if j < height {
+                let lower = current_index + width + 1;
+                log::trace!("added lower id={lower}");
+                graph.update_edge(current_index.into(), lower.into(), ());
+            }
+        }
+    }
+    graph
+}
+
+fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryGraph<Undirected> {
+    // Ignore size_y, because this is limited to regular hexagons.
+    let outradius = size_x;
+    let inradius = f64::sqrt(3.0) * outradius / 2.0;
+
+    // Adding the nodes hexagon-by-hexagon results in a bad time (it's difficult to construct an
+    // indexing scheme that makes sense for adding the edges; additionally, accumulating floating
+    // point errors result in "duplicate" nodes being added that aren't bitwise equal).
+    //
+    // So throw out the hexagon geometry alltogether and take a topological approach. That will
+    // give us an indexing scheme that's easier to work with.
+    //
+    // even       0---1   +   2---3   +   4                         0--1  2--3  4
+    //           /     \     /     \                                |  |  |  |
+    // odd      5   +   6---7   +   8---9                           5  6--7  8--9
+    //           \     /     \     /     \                          |  |  |  |  |
+    // even       0---1   +   2---3   +   4                         0--1  2--3  4
+    //           /     \     /     \     /       ===topology===>    |  |  |  |  |
+    // odd      5   +   6---7   +   8---9                           5  6--7  8--9
+    //           \     /     \     /     \                          |  |  |  |  |
+    // even       0---1   +   2---3   +   4                         0--1  2--3  4
+    //                 \     /     \     /                          |  |  |  |
+    // odd      5   +   6---7   +   8---9                           5  6--7  8--9
+    //
+    // Notice that this scheme gives two extra nodes that will need to be removed after adding all
+    // the edges (because removing them will re-adjust all the node indices).
+    let two_extras = 2;
+    let nodes = height * (2 * width + 2) + 2 * width + two_extras;
+    let edges = height * (3 * width + 2) + 2 * width;
+    let mut graph = GeometryGraph::<Undirected>::with_capacity(nodes, edges);
+
+    let rows = 2 * height + 2;
+    let cols = width + 1;
+
+    let wide_offset = 2.0 * outradius;
+    let narrow_offset = outradius;
+
+    for row in 0..rows {
+        let odd_row = row % 2 != 0;
+        let mut base_x = 0.0;
+        if odd_row {
+            base_x -= 0.5 * outradius;
+        }
+        let base_y = (row as f64) * inradius;
+
+        let mut x_offset = 0.0;
+        for col in 0..cols {
+            let even_col = col % 2 == 0;
+            if col == 0 {
+                // no offset on the base
+            } else if (odd_row && even_col) || (!odd_row && !even_col) {
+                x_offset += narrow_offset;
+            } else {
+                x_offset += wide_offset;
+            }
+
+            let x = base_x + x_offset;
+            let point = Point::new(x, base_y);
+            let index = graph.add_node(point);
+            log::trace!("id={} node={point:?}", index.index());
+        }
+    }
+
+    let cols_is_even = width % 2 == 0;
+    let adjacency_offset = width + 1;
+    let mut n = 0;
+    for row in 0..rows {
+        let even_row = row % 2 == 0;
+        for _col in 0..cols {
+            log::trace!("adding neighbors for id={n}");
+            if n > adjacency_offset {
+                let upper = n - adjacency_offset;
+                log::trace!("added upper id={upper}");
+                graph.update_edge(n.into(), upper.into(), ());
+            }
+            if n < (nodes - adjacency_offset) {
+                let lower = n + adjacency_offset;
+                log::trace!("added lower id={lower}");
+                graph.update_edge(n.into(), lower.into(), ());
+            }
+
+            // Holy shit there are so many god damn edge cases. This is ridiculous.
+            let is_furthest_right = (n + 1) % adjacency_offset == 0;
+            let even_index = n % 2 == 0;
+            let has_right_neighbor = if cols_is_even || even_row {
+                even_index && !is_furthest_right
+            } else {
+                !even_index && !is_furthest_right
+            };
+
+            if has_right_neighbor {
+                let right = n + 1;
+                log::trace!("added right id={right}");
+                graph.update_edge(n.into(), right.into(), ());
+            }
+
+            n += 1;
+        }
+    }
+
+    // Remove the two dangling extra nodes that were added to make the indexing math suck
+    // (slightly) less.
+    let nodes_to_remove = if cols_is_even {
+        [width, nodes - cols]
+    } else {
+        [nodes - cols, nodes - 1]
+    };
+    graph.retain_nodes(move |_, idx| !nodes_to_remove.contains(&idx.index()));
+
+    graph
 }
 
 fn main() {
@@ -99,62 +452,19 @@ fn main() {
         .init()
         .expect("Failed to initialize stderrlog");
 
-    let (min_x, min_y) = (args.min_x, args.min_y);
-    let (max_x, max_y) = (args.max_x, args.max_y);
-    let (mut delta_x, mut delta_y) = if let Some(delta) = args.delta {
-        (delta, delta)
+    let (mut size_x, mut size_y) = if let Some(size) = args.size {
+        (size, size)
     } else {
         (1.0, 1.0)
     };
-    if let Some(delta) = args.delta_x {
-        delta_x = delta;
+    if let Some(size) = args.size_x {
+        size_x = size;
     }
-    if let Some(delta) = args.delta_y {
-        delta_y = delta;
-    }
-    let width = x2i(max_x - min_x, delta_x, min_x);
-    let height = y2j(max_y - min_y, delta_y, min_y);
-
-    let nodes = width * height;
-    let edges = 2 * width * height - width - height;
-    let mut graph = GeometryGraph::<Undirected>::with_capacity(nodes, edges);
-
-    let max_i = x2i(max_x, delta_x, min_x);
-    let max_j = y2j(max_y, delta_y, min_y);
-
-    // Add the nodes
-    for j in 0..max_j {
-        for i in 0..max_i {
-            let x = i2x(i, delta_x, min_x);
-            let y = j2y(j, delta_y, min_y);
-            let point = Point::new(x, y);
-            let _index = graph.add_node(point);
-        }
+    if let Some(size) = args.size_y {
+        size_y = size;
     }
 
-    // Add the edges
-    for j in 0..max_j {
-        for i in 0..max_i {
-            let current_index = width * j + i;
-
-            if i < (width - 1) {
-                let east = current_index + 1;
-                graph.update_edge(current_index.into(), east.into(), ());
-            }
-            if j < (height - 1) {
-                let north = current_index + width;
-                graph.update_edge(current_index.into(), north.into(), ());
-            }
-            if i > 0 {
-                let west = current_index - 1;
-                graph.update_edge(current_index.into(), west.into(), ());
-            }
-            if j > 0 {
-                let south = current_index - width;
-                graph.update_edge(current_index.into(), south.into(), ());
-            }
-        }
-    }
+    let graph = grid(args.width, args.height, size_x, size_y, args.grid_type);
 
     let writer = get_output_writer(&args.output).unwrap();
     match args.output_format {
