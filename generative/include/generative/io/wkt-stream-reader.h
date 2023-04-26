@@ -18,9 +18,14 @@ namespace generative::io {
 //! interface to consume the istream, and yield one geometry after another.
 class WKTStreamReader
 {
-    struct GeometryIterator :
-        public std::iterator<std::input_iterator_tag, std::unique_ptr<geos::geom::Geometry>>
+    struct GeometryIterator
     {
+        using iterator_category = std::input_iterator_tag;
+        using value_type = std::unique_ptr<geos::geom::Geometry>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
+
         GeometryIterator(std::istream& input_stream,
                          const geos::geom::GeometryFactory& factory,
                          bool is_done = false);

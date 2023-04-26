@@ -1,6 +1,7 @@
 #pragma once
 #include <geos/geom/Geometry.h>
 
+#include <cstddef>
 #include <iterator>
 
 namespace generative {
@@ -8,10 +9,14 @@ namespace generative {
 //! @brief Recursively flatten geometries.
 class GeometryFlattener
 {
-    struct RecursiveGeometryIterator :
-        //! @todo Use forward_iterator_tag
-        public std::iterator<std::input_iterator_tag, geos::geom::Geometry>
+    struct RecursiveGeometryIterator
     {
+        using iterator_category = std::input_iterator_tag;
+        using value_type = geos::geom::Geometry;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
+
         RecursiveGeometryIterator(const geos::geom::Geometry& geometry, int n);
 
         const value_type& operator*() const;
