@@ -41,11 +41,11 @@ public:
     using iterator = const_iterator;
     GeometryFlattener(const geos::geom::Geometry& geometry);
 
-    [[nodiscard]] const_iterator cbegin() const { return const_iterator(m_geometry, 0); };
-    [[nodiscard]] const_iterator cend() const { return const_iterator(m_geometry, -1); };
+    [[nodiscard]] const_iterator cbegin() const { return {m_geometry, 0}; };
+    [[nodiscard]] const_iterator cend() const { return {m_geometry, -1}; };
 
-    [[nodiscard]] iterator begin() const { return iterator(m_geometry, 0); };
-    [[nodiscard]] iterator end() const { return iterator(m_geometry, -1); };
+    [[nodiscard]] iterator begin() const { return {m_geometry, 0}; };
+    [[nodiscard]] iterator end() const { return {m_geometry, -1}; };
 
 private:
     const geos::geom::Geometry& m_geometry;

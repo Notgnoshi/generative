@@ -20,7 +20,7 @@ generative::noding::GeometryGraph TGFGraphReader::read() noexcept
         this->read(line);
     }
 
-    return generative::noding::GeometryGraph(std::move(m_nodes_vec), m_factory);
+    return {std::move(m_nodes_vec), m_factory};
 }
 
 void TGFGraphReader::read(const std::string& line) noexcept
@@ -39,9 +39,9 @@ void TGFGraphReader::read(const std::string& line) noexcept
 template<typename Derived_t, typename Base_t>
 static std::unique_ptr<Derived_t> dynamic_unique_ptr_cast(std::unique_ptr<Base_t>&& p)
 {
-    if (Derived_t* result = dynamic_cast<Derived_t*>(p.get()))
+    if (auto* result = dynamic_cast<Derived_t*>(p.get()))
     {
-        p.release();
+        (void)p.release();
         return std::unique_ptr<Derived_t>(result);
     }
     return std::unique_ptr<Derived_t>(nullptr);

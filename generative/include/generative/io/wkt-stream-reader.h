@@ -58,8 +58,8 @@ public:
     {
     }
 
-    [[nodiscard]] iterator begin() const { return iterator(m_input, m_factory_ref); }
-    [[nodiscard]] iterator end() const { return iterator(m_input, m_factory_ref, true); }
+    [[nodiscard]] iterator begin() const { return {m_input, m_factory_ref}; }
+    [[nodiscard]] iterator end() const { return {m_input, m_factory_ref, true}; }
 
     //! @brief Consume the input stream, and collapse into a std::vector of geometries.
     [[nodiscard]] std::vector<std::unique_ptr<geos::geom::Geometry>> collapse() const
