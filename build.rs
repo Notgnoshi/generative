@@ -34,6 +34,7 @@ fn main() {
     let install_dir = cmake::Config::new(".")
         .define("CMAKE_EXPORT_COMPILE_COMMANDS", "ON")
         .define("CMAKE_INSTALL_LIBDIR", "lib")
+        .define("CMAKE_GENERATOR", "Ninja")
         .define("GENERATIVE_BUILD_DOCS", enable_doxygen)
         .define("GENERATIVE_ENABLE_PCH", enable_pch)
         .define("GENERATIVE_ENABLE_LTO", enable_lto)
