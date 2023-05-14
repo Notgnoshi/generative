@@ -352,7 +352,7 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
     // odd      5   +   6---7   +   8---9                           5  6--7  8--9
     //           \     /     \     /     \                          |  |  |  |  |
     // even       0---1   +   2---3   +   4                         0--1  2--3  4
-    //                 \     /     \     /                          |  |  |  |
+    //                 \     /     \     /                             |  |  |  |
     // odd      5   +   6---7   +   8---9                           5  6--7  8--9
     //
     // Notice that this scheme gives two extra nodes that will need to be removed after adding all
