@@ -5,10 +5,10 @@ set -o nounset
 
 glyph() {
     local size="$1"
-    local width=3
-    local height=4
+    local width=2
+    local height=3
 
-    grid --output-format graph --max-x="$width" --max-y="$height" |
+    grid --output-format graph --width="$width" --height="$height" |
         traverse --traversals 4 --length 5 --remove-after-traverse |
         transform --scale="$size" |
         smooth --iterations 4 |
