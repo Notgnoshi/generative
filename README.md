@@ -314,12 +314,20 @@ POINT (2.137536655881525 0.7953499219109705)0
 The `grid` tool generates regularly spaced points, optionally output as a TGF geometry graph.
 
 ```shell
-$ cargo run --bin grid -- --max-x 2 --max-y 2
+$ cargo run --bin grid -- --width 2 --height 2
 POINT(0 0)
 POINT(1 0)
 POINT(0 1)
 POINT(1 1)
 ```
+
+Using `--grid-type`, you can pick between
+* `triangle`
+* `quad`
+* `ragged`
+* `hexagon`
+grid types. Switching grid types in the [Asemic Writing](#asemic-writing) script can make compelling
+new glyph styles.
 
 ## streamline
 
@@ -549,10 +557,10 @@ PATH=$PWD/target/debug/:$PATH
 
 glyph() {
     local size="$1"
-    local width=3
-    local height=4
+    local width=2
+    local height=3
 
-    grid --output-format graph --max-x="$width" --max-y="$height" |
+    grid --output-format graph --width="$width" --height="$height" |
         traverse --traversals 4 --length 5 --remove-after-traverse |
         transform --scale="$size" |
         smooth --iterations 4 |
@@ -573,7 +581,21 @@ glyphs 100 20 |
     wkt2svg --padding |
 ```
 
-![Asemic writing](examples/asemic.svg)
+![Asemic writing](examples/asemic-quads.svg)
+
+Tweaking the different parameters can give pretty interesting results.
+
+![Asemic writing](examples/asemic-quads-45.svg)
+
+![Asemic writing](examples/asemic-triangles.svg)
+
+![Asemic writing](examples/asemic-ragged.svg)
+
+![Asemic writing](examples/asemic-ragged-jagged.svg)
+
+![Asemic writing](examples/asemic-hex.svg)
+
+![Asemic writing](examples/asemic-hex-smooth.svg)
 
 ## Random L-Systems
 
