@@ -98,6 +98,10 @@ fn grid(
     size_y: f64,
     grid_type: GridType,
 ) -> GeometryGraph<Undirected> {
+    if width == 0 || height == 0 {
+        return GeometryGraph::<Undirected>::default();
+    }
+
     match grid_type {
         GridType::Triangle => tri_grid(width, height, size_x, size_y),
         GridType::Quad => quad_grid(width, height, size_x, size_y),
