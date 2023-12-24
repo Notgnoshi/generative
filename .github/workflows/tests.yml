@@ -23,7 +23,7 @@ jobs:
             CARGO_TERM_COLOR: always
             NUM_JOBS: 2
             # TODO: Update submodules and perform C++ build
-            GENERATIVE_CARGO_ENABLE_CMAKE_BUILD: ""
+            GENERATIVE_CARGO_ENABLE_CMAKE_BUILD: "NO"
         steps:
             - uses: actions/checkout@v3
             # - run: |
