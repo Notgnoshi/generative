@@ -35,7 +35,11 @@ public:
         {
             if (point)
             {
-                return *point->getCoordinate();
+                const auto* coord = point->getCoordinate();
+                if (coord != nullptr)
+                {
+                    return *coord;
+                }
             }
             return geos::geom::CoordinateXY::getNull();
         }

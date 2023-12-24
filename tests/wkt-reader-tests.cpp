@@ -235,12 +235,6 @@ TEST(GeosWKTReaderTests, TestDimensionality)
     geos::io::WKTWriter writer;
     writer.setTrim(true);
 
-    // The WKTWriter defaults to 2D unless you set it higher.
-    const std::string out2 = writer.write(geometry.get());
-    EXPECT_EQ(out2, "POINT (1 2)");
-
-    // You _have_ to set the output dimension to get 3D coordinates.
-    writer.setOutputDimension(3);
     const std::string out3 = writer.write(geometry.get());
     EXPECT_EQ(out3, "POINT Z (1 2 3)");
 

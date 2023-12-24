@@ -178,7 +178,7 @@ impl Model {
 
     fn attempt_to_join(&mut self, new_coords: &mut [f64; 2], parent_index: NodeIndex) -> bool {
         // Get parent particle from handle on parent.
-        let mut parent = self
+        let parent = self
             .particle_graph
             .node_weight_mut(parent_index)
             .unwrap_or_else(|| {
