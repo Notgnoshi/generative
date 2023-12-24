@@ -10,7 +10,11 @@ fn main() {
         std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_LTO").unwrap_or_else(|_| "OFF".to_string());
     let enable_tests =
         std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_TESTS").unwrap_or_else(|_| "ON".to_string());
-    if enable_cmake_build.is_empty() {
+    if enable_cmake_build.is_empty()
+        || enable_cmake_build == "OFF"
+        || enable_cmake_build == "NO"
+        || enable_cmake_build == "FALSE"
+    {
         return;
     }
 
@@ -38,7 +42,7 @@ fn main() {
         .define("GENERATIVE_BUILD_DOCS", enable_doxygen)
         .define("GENERATIVE_ENABLE_PCH", enable_pch)
         .define("GENERATIVE_ENABLE_LTO", enable_lto)
-        .define("GENERATIVE_ENABLE_TESTING", enable_tests)
+        .define("GENERATIVE_ENABLE_TESTING", &enable_tests)
         .define("GENERATIVE_TOOL_INSTALL_RPATH", "$ORIGIN/lib") // binaries just stashed in /target/debug/
         .build();
 
@@ -52,6 +56,12 @@ fn main() {
     let geom2graph = format!("{}/bin/geom2graph", install_dir.display());
     let dest = format!("{}/../../../geom2graph", &out_dir);
     std::fs::copy(geom2graph, dest).unwrap();
+
+    if enable_tests == "ON" || enable_tests == "YES" || enable_tests == "TRUE" {
+        let tests = format!("{}/build/tests/tests", install_dir.display());
+        let dest = format!("{}/../../../cxx-tests", &out_dir);
+        std::fs::copy(tests, dest).unwrap();
+    }
 
     let database = format!("{}/build/compile_commands.json", install_dir.display());
     let dest = format!("{manifest_dir}/compile_commands.json");
