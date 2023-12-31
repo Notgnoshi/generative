@@ -67,14 +67,14 @@ fn main() {
                 .filter_map(triangulate);
             for triangulation in triangulations {
                 let graph = triangulation.graph();
-                write_graph(&mut writer, graph, &args.output_format);
+                write_graph(&mut writer, &graph, &args.output_format);
             }
         }
         TriangulationStrategy::WholeCollection => {
             let points = flatten_geometries_into_points(geometries);
             if let Some(triangulation) = triangulate(points) {
                 let graph = triangulation.graph();
-                write_graph(writer, graph, &args.output_format);
+                write_graph(writer, &graph, &args.output_format);
             }
         }
     }

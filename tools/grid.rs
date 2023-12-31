@@ -472,8 +472,8 @@ fn main() {
 
     let writer = get_output_writer(&args.output).unwrap();
     match args.output_format {
-        GridFormat::Graph => write_graph(writer, graph, &GraphFormat::Tgf),
-        GridFormat::Lines => write_graph(writer, graph, &GraphFormat::Wkt),
+        GridFormat::Graph => write_graph(writer, &graph, &GraphFormat::Tgf),
+        GridFormat::Lines => write_graph(writer, &graph, &GraphFormat::Wkt),
         GridFormat::Points => write_geometries(
             writer,
             graph.node_weights().map(|p| Geometry::Point(*p)),
