@@ -30,18 +30,21 @@ impl std::fmt::Display for GraphFormat {
     }
 }
 
-pub fn write_graph<Direction, W>(writer: W, graph: GeometryGraph<Direction>, format: &GraphFormat)
-where
+pub fn write_graph<Direction, W>(
+    mut writer: W,
+    graph: &GeometryGraph<Direction>,
+    format: &GraphFormat,
+) where
     W: Write,
     Direction: EdgeType,
 {
     match format {
-        GraphFormat::Tgf => write_tgf_graph(writer, graph),
+        GraphFormat::Tgf => write_tgf_graph(&mut writer, graph),
         GraphFormat::Wkt => write_wkt_graph(writer, graph),
     }
 }
 
-fn write_tgf_graph<Direction, W>(mut writer: W, graph: GeometryGraph<Direction>)
+pub fn write_tgf_graph<Direction, W>(writer: &mut W, graph: &GeometryGraph<Direction>)
 where
     W: Write,
     Direction: EdgeType,
@@ -67,7 +70,7 @@ where
     }
 }
 
-fn write_wkt_graph<Direction, W>(writer: W, graph: GeometryGraph<Direction>)
+pub fn write_wkt_graph<Direction, W>(writer: W, graph: &GeometryGraph<Direction>)
 where
     W: Write,
     Direction: EdgeType,
