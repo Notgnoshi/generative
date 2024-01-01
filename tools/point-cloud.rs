@@ -10,7 +10,7 @@ use rand_distr::Binomial;
 use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, ValueEnum)]
-pub enum RandomDomain {
+enum RandomDomain {
     UnitSquare,
     UnitCircle,
 }
@@ -18,34 +18,34 @@ pub enum RandomDomain {
 /// Generate random point clouds in a unit square or circle
 #[derive(Debug, Parser)]
 #[clap(name = "point-cloud")]
-pub struct CmdlineOptions {
+struct CmdlineOptions {
     /// The log level
     #[clap(long, default_value_t = log::Level::Info)]
-    pub log_level: log::Level,
+    log_level: log::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
-    pub output: Option<PathBuf>,
+    output: Option<PathBuf>,
 
     /// The random seed to use. Use zero to let the tool pick its own random seed.
     #[clap(long, default_value = "0")]
-    pub seed: u64,
+    seed: u64,
 
     /// The number of points to generate.
     #[clap(short, long)]
-    pub points: u64,
+    points: u64,
 
     /// Generate a random number of points with mean '--points'
     #[clap(short, long)]
-    pub random_number: bool,
+    random_number: bool,
 
     /// The random domain to generate points inside.
     #[clap(short, long, default_value = "unit-circle", value_enum)]
-    pub domain: RandomDomain,
+    domain: RandomDomain,
 
     /// Scale the generated points.
     #[clap(short, long, default_value = "1.0")]
-    pub scale: f64,
+    scale: f64,
 }
 
 struct Double2 {

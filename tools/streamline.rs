@@ -17,7 +17,7 @@ use rhai::{Engine, EvalAltResult, Scope};
 use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum StreamlineKind {
+enum StreamlineKind {
     /// One streamline per vertex
     ///
     /// Geometry is non-rigid, and will transform in wonky ways
@@ -41,26 +41,26 @@ impl std::fmt::Display for StreamlineKind {
 /// Generate vector field streamlines for the given geometries
 #[derive(Debug, Parser)]
 #[clap(name = "streamline", verbatim_doc_comment)]
-pub struct CmdlineOptions {
+struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = log::Level::Info)]
-    pub log_level: log::Level,
+    log_level: log::Level,
 
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
-    pub input: Option<PathBuf>,
+    input: Option<PathBuf>,
 
     /// Input geometry format.
     #[clap(short = 'I', long, default_value_t = GeometryFormat::Wkt)]
-    pub input_format: GeometryFormat,
+    input_format: GeometryFormat,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
-    pub output: Option<PathBuf>,
+    output: Option<PathBuf>,
 
     /// Output geometry format.
     #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    pub output_format: GeometryFormat,
+    output_format: GeometryFormat,
 
     /// A Rhai script that defines the vector field. If not given, a Perlin noise field will be
     /// used instead.
@@ -73,71 +73,71 @@ pub struct CmdlineOptions {
     ///
     /// I.e., the f64 x and y variables are both input and output.
     #[clap(short, long)]
-    pub function: Option<String>,
+    function: Option<String>,
 
     /// The random seed to use. Use zero to let the tool pick its own random seed.
     #[clap(long, default_value_t = 0)]
-    pub seed: u64,
+    seed: u64,
 
     /// The minimum x coordinate of the vector field
     #[clap(short = 'x', long, default_value_t = 0.0)]
-    pub min_x: f64,
+    min_x: f64,
 
     /// The maximum x coordinate of the vector field
     #[clap(short = 'X', long, default_value_t = 20.0)]
-    pub max_x: f64,
+    max_x: f64,
 
     /// The minimum y coordinate of the vector field
     #[clap(short = 'y', long, default_value_t = 0.0)]
-    pub min_y: f64,
+    min_y: f64,
 
     /// The maximum y coordinate of the vector field
     #[clap(short = 'Y', long, default_value_t = 20.0)]
-    pub max_y: f64,
+    max_y: f64,
 
     /// The vector field grid spacing
     #[clap(short = 'd', long, default_value_t = 0.5)]
-    pub delta_h: f64,
+    delta_h: f64,
 
     /// The size of each time step
     #[clap(short = 't', long, default_value_t = 0.1)]
-    pub delta_t: f64,
+    delta_t: f64,
 
     /// The number of time steps to make
     #[clap(short = 'T', long, default_value_t = 10)]
-    pub time_steps: usize,
+    time_steps: usize,
 
     /// Whether to make the number of timesteps random (with mean '--time_steps') for each input geometry.
     #[clap(short = 'r', long)]
-    pub random_timesteps: bool,
+    random_timesteps: bool,
 
     /// Draw the vector field
     #[clap(short = 'v', long)]
-    pub draw_vector_field: bool,
+    draw_vector_field: bool,
 
     /// WKT-like SVG styles to apply to the vector field. May be specified multiple times.
     #[clap(short = 'V', long)]
-    pub vector_field_style: Vec<String>,
+    vector_field_style: Vec<String>,
 
     /// The kind of streamlines to draw for each geometry
     #[clap(short = 'k', long, default_value_t = StreamlineKind::PerCentroid)]
-    pub streamline_kind: StreamlineKind,
+    streamline_kind: StreamlineKind,
 
     /// Disable drawing streamlines
     #[clap(short = 'n', long)]
-    pub no_draw_streamlines: bool,
+    no_draw_streamlines: bool,
 
     /// WKT-like SVG styles to apply to the streamlines. May be specified multiple times.
     #[clap(short = 'S', long)]
-    pub streamline_style: Vec<String>,
+    streamline_style: Vec<String>,
 
     /// Draw the geometries after simulation
     #[clap(short = 'g', long)]
-    pub draw_geometries: bool,
+    draw_geometries: bool,
 
     /// WKT-like SVG styles to apply to the geometries. May be specified multiple times.
     #[clap(short = 'G', long)]
-    pub geometry_style: Vec<String>,
+    geometry_style: Vec<String>,
 }
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {

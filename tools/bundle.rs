@@ -9,26 +9,26 @@ use stderrlog::ColorChoice;
 /// Bundle the given geometries into a GEOMETRYCOLLECTION
 #[derive(Debug, Parser)]
 #[clap(name = "bundle", verbatim_doc_comment)]
-pub struct CmdlineOptions {
+struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = log::Level::Info)]
-    pub log_level: log::Level,
+    log_level: log::Level,
 
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
-    pub input: Option<PathBuf>,
+    input: Option<PathBuf>,
 
     /// Input geometry format.
     #[clap(short = 'I', long, default_value_t = GeometryFormat::Wkt)]
-    pub input_format: GeometryFormat,
+    input_format: GeometryFormat,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
-    pub output: Option<PathBuf>,
+    output: Option<PathBuf>,
 
     /// Output geometry format.
     #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    pub output_format: GeometryFormat,
+    output_format: GeometryFormat,
 }
 
 fn main() {

@@ -10,7 +10,7 @@ use petgraph::Undirected;
 use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, ValueEnum)]
-pub enum GridFormat {
+enum GridFormat {
     /// Output the grid as a graph in TGF with WKT POINT node labels
     Graph,
     /// Output the grid lines in WKT
@@ -31,7 +31,7 @@ impl std::fmt::Display for GridFormat {
 }
 
 #[derive(Debug, Clone, ValueEnum)]
-pub enum GridType {
+enum GridType {
     Triangle,
     Quad,
     /// Quads, slanted to the right with ragged edges
@@ -53,42 +53,42 @@ impl std::fmt::Display for GridType {
 /// Generate a regular grid graph
 #[derive(Debug, Parser)]
 #[clap(name = "grid", verbatim_doc_comment)]
-pub struct CmdlineOptions {
+struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = log::Level::Info)]
-    pub log_level: log::Level,
+    log_level: log::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
-    pub output: Option<PathBuf>,
+    output: Option<PathBuf>,
 
     /// Output geometry format.
     #[clap(short = 'O', long, default_value_t = GridFormat::Points)]
-    pub output_format: GridFormat,
+    output_format: GridFormat,
 
     /// The type of grid to generate
     #[clap(short, long, default_value_t = GridType::Quad)]
-    pub grid_type: GridType,
+    grid_type: GridType,
 
     /// The number of cells along the x-axis
     #[clap(short = 'W', long, default_value_t = 5)]
-    pub width: usize,
+    width: usize,
 
     /// The number of cells along the y-axis
     #[clap(short = 'H', long, default_value_t = 5)]
-    pub height: usize,
+    height: usize,
 
     /// The size of each grid cell. Use --size-x or --size-y to specify the size for the different axes
     #[clap(short = 's', long)]
-    pub size: Option<f64>,
+    size: Option<f64>,
 
     /// The width of each grid cell
     #[clap(long)]
-    pub size_x: Option<f64>,
+    size_x: Option<f64>,
 
     /// The height of each grid cell
     #[clap(long)]
-    pub size_y: Option<f64>,
+    size_y: Option<f64>,
 }
 
 fn grid(

@@ -21,49 +21,49 @@ use svg::Document;
 #[derive(Debug, Parser)]
 #[clap(name = "wkt2svg", verbatim_doc_comment)]
 #[clap(group(ArgGroup::new("sizing")))]
-pub struct CmdlineOptions {
+struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = log::Level::Info)]
-    pub log_level: log::Level,
+    log_level: log::Level,
 
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
-    pub input: Option<PathBuf>,
+    input: Option<PathBuf>,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
-    pub output: Option<PathBuf>,
+    output: Option<PathBuf>,
 
     /// Scale the geometries the specified amount, and then scale the viewbox to fit.
     ///
     /// Mutually exclusive with --viewbox
     #[clap(short, long, group = "sizing")]
-    pub scale: Option<f64>,
+    scale: Option<f64>,
 
     /// Scale the geometries to fit the given (x1, y1, x2 y2) viewbox
     ///
     /// Mutually exclusive with --scale
     #[clap(short, long, group = "sizing", number_of_values = 4)]
-    pub viewbox: Option<Vec<f64>>,
+    viewbox: Option<Vec<f64>>,
 
     /// Whether to add a little bit of padding all the way around the viewbox
     #[clap(short, long, default_value_t = false)]
-    pub padding: bool,
+    padding: bool,
 
     #[clap(long, default_value_t = 1.0)]
-    pub point_radius: f64,
+    point_radius: f64,
 
     #[clap(long, default_value = "black")]
-    pub stroke: String,
+    stroke: String,
 
     #[clap(long, default_value_t = 2.0)]
-    pub stroke_width: f64,
+    stroke_width: f64,
 
     #[clap(long)]
-    pub stroke_dasharray: Option<String>,
+    stroke_dasharray: Option<String>,
 
     #[clap(long, default_value = "none")]
-    pub fill: String,
+    fill: String,
 }
 
 enum ScaleType {
