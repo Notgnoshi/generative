@@ -1,0 +1,31 @@
+<svg viewBox="-152.25 -152.25 306 306" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { stroke:black; stroke-width:2; fill:none;}
+</style>
+<polyline points="-149.25 -149.25 -149.25 -49.25 -149.25 50.75 -149.25 150.75" stroke="gray" stroke-dasharray="6"/>
+<polyline points="-49.25 -149.25 -49.25 -49.25 -49.25 50.75 -49.25 150.75" stroke="gray" stroke-dasharray="6"/>
+<polyline points="50.75 -149.25 50.75 -49.25 50.75 50.75 50.75 150.75" stroke="gray" stroke-dasharray="6"/>
+<polyline points="150.75 -149.25 150.75 -49.25 150.75 50.75 150.75 150.75" stroke="gray" stroke-dasharray="6"/>
+<polyline points="-149.25 -149.25 -49.25 -149.25 50.75 -149.25 150.75 -149.25" stroke="gray" stroke-dasharray="6"/>
+<polyline points="-149.25 -49.25 -49.25 -49.25 50.75 -49.25 150.75 -49.25" stroke="gray" stroke-dasharray="6"/>
+<polyline points="-149.25 50.75 -49.25 50.75 50.75 50.75 150.75 50.75" stroke="gray" stroke-dasharray="6"/>
+<polyline points="-149.25 150.75 -49.25 150.75 50.75 150.75 150.75 150.75" stroke="gray" stroke-dasharray="6"/>
+<circle cx="-124.25" cy="-124.25" r="1"/>
+<circle cx="-124.25" cy="0.75" r="1"/>
+<circle cx="-124.25" cy="125.75" r="1"/>
+<circle cx="0.75" cy="-124.25" r="1"/>
+<circle cx="0.75" cy="0.75" r="1"/>
+<circle cx="0.75" cy="125.75" r="1"/>
+<circle cx="125.75" cy="-124.25" r="1"/>
+<circle cx="125.75" cy="0.75" r="1"/>
+<circle cx="125.75" cy="125.75" r="1"/>
+<circle cx="-149.25" cy="-149.25" r="1" stroke="red"/>
+<circle cx="-149.25" cy="50.75" r="1" stroke="red"/>
+<circle cx="-149.25" cy="150.75" r="1" stroke="red"/>
+<circle cx="50.75" cy="-149.25" r="1" stroke="red"/>
+<circle cx="50.75" cy="50.75" r="1" stroke="red"/>
+<circle cx="50.75" cy="150.75" r="1" stroke="red"/>
+<circle cx="150.75" cy="-149.25" r="1" stroke="red"/>
+<circle cx="150.75" cy="50.75" r="1" stroke="red"/>
+<circle cx="150.75" cy="150.75" r="1" stroke="red"/>
+</svg>

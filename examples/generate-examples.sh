@@ -7,12 +7,16 @@ set -o nounset
 
 SOURCE="${BASH_SOURCE[0]}"
 REPO_ROOT="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)/.."
-REPO_ROOT="$(readlink --canonicalize --no-newline "${REPO_ROOT}")"
+export REPO_ROOT="$(readlink --canonicalize --no-newline "${REPO_ROOT}")"
 
 cd "$REPO_ROOT"
 cargo build --release
 
 PATH="$REPO_ROOT/target/release/:$PATH"
+
+echo "Snap..."
+"$REPO_ROOT/examples/snap/generate.sh"
+exit
 
 echo "Asemic..."
 "$REPO_ROOT/examples/asemic.sh" | wkt2svg --padding --output "$REPO_ROOT/examples/asemic.svg"
