@@ -46,6 +46,10 @@ struct CmdlineOptions {
     #[clap(short, long, group = "sizing", number_of_values = 4)]
     viewbox: Option<Vec<f64>>,
 
+    /// Use screen coordinates instead of Cartesian (y increases downwards)
+    #[clap(long)]
+    screen_coordinates: bool,
+
     /// Whether to add a little bit of padding all the way around the viewbox
     #[clap(short, long, default_value_t = false)]
     no_padding: bool,
@@ -517,6 +521,9 @@ fn main() {
     );
 
     let mut document = Document::new().set("viewBox", viewbox);
+    if !args.screen_coordinates {
+        document = document.set("transform", "scale(1,-1)");
+    }
     let style = options.get_global_style();
     document = document.add(style);
     for geometry in geometries {
