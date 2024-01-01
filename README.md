@@ -29,6 +29,7 @@ A polyglot collection of composable generative art tools, with a focus on comput
   - [bitwise](#bitwise)
   - [point-cloud](#point-cloud)
   - [grid](#grid)
+  - [snap](#snap)
   - [streamline](#streamline)
   - [triangulate](#triangulate)
   - [urquhart](#urquhart)
@@ -328,6 +329,43 @@ Using `--grid-type`, you can pick between
 * `hexagon`
 grid types. Switching grid types in the [Asemic Writing](#asemic-writing) script can make compelling
 new glyph styles.
+
+## snap
+
+The `snap` tool snaps together graph/geometry verticies that are closer than some tolerance
+together.
+
+* `snap` can snap both WKT geometries and TGF graphs (controllable with `--input-format`, default is
+  WKT)
+* `snap` can snap to the closest point, or to a regular grid (controllable with `--strategy`)
+* The tolerance is specified with `--tolerance`
+
+See the script in [examples/snap/generate.sh](examples/snap/generate.sh) for more detail on how the
+following examples were generated.
+
+### Snapping points to a grid
+
+The following image shows `snap` snapping the **black** points to the closest point on a regular
+grid. The snapping snaps away from zero (much like rounding, except it's not limited to the nearest
+integer). The **red** points show the result.
+
+![](examples/snap/grid.svg)
+
+NOTE: The SVG uses screen coordinates with a flipped y-axis
+
+### Snapping a graph to its closest points
+
+The following two examples use the following graph as an input
+
+![](examples/snap/graph-before.svg)
+
+If we snap to the closest point, we get
+
+![](examples/snap/graph-closest.svg)
+
+If we snap to the nearest grid, we get
+
+![](examples/snap/graph-grid.svg)
 
 ## streamline
 
