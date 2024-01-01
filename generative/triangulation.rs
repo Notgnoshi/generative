@@ -86,7 +86,7 @@ impl Triangulation {
             // NOTE: It's important that the _node_index is the same as the index into the
             // self.points array!
             let _node_index = graph.add_node(point);
-            // debug_assert_eq!(_node_index.index(), _i);
+            debug_assert_eq!(_node_index.index(), _i);
         }
 
         // Add the hull edges
@@ -137,7 +137,7 @@ impl Triangulation {
         // Add the nodes
         for (_i, node) in digraph.raw_nodes().iter().enumerate() {
             let _node_index = graph.add_node(node.weight);
-            // debug_assert_eq!(_i, _node_index.index());
+            debug_assert_eq!(_i, _node_index.index());
         }
 
         // Add the edges. Use update_edge() to avoid duplicates
