@@ -26,7 +26,6 @@ cargo run --bin point-cloud -- \
         --draw-geometries \
         --geometry-style="STROKE(red)" |
     cargo run --bin wkt2svg -- \
-        --padding \
         --scale 500 |
     display -
 
@@ -48,6 +47,5 @@ cargo run --bin point-cloud -- \
         --draw-geometries \
         --geometry-style="STROKE(red)" |
     cargo run --bin wkt2svg -- \
-        --padding \
         --scale 500 |
     display -

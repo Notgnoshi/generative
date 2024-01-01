@@ -212,7 +212,7 @@ Additionally, there's `STROKEDASHARRAY(...)` which can be used to draw dashed li
 docs](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray) for help.
 
 ```shell
-$ cat <<EOF | cargo run --bin wkt2svg -- --padding
+$ cat <<EOF | cargo run --bin wkt2svg --
 POINT(0 0)
 POINT(100 100)
 STROKEWIDTH(4)
@@ -293,7 +293,7 @@ The `bitwise` tool evaluates an expression on `(x, y)`, and visualizes the patte
 ```shell
 $ cargo run --bin bitwise -- "(x & y) & (x ^ y) % 11" |
     cargo run --bin transform -- --scale 10 |
-    cargo run --bin wkt2svg -- --padding
+    cargo run --bin wkt2svg --
 ```
 
 ![bitwise](examples/bitwise.svg)
@@ -394,7 +394,6 @@ cargo run --bin point-cloud -- \
         --draw-geometries \
         --geometry-style="STROKE(red)" |
     cargo run --bin wkt2svg -- \
-        --padding \
         --scale 500
 ```
 
@@ -421,7 +420,6 @@ cargo run --bin point-cloud -- \
         --draw-geometries \
         --geometry-style="STROKE(red)" |
     cargo run --bin wkt2svg -- \
-        --padding \
         --scale 500
 ```
 
@@ -616,7 +614,7 @@ glyphs() {
 
 glyphs 100 20 |
     pack --width 1000 --height 1000 --padding 20 |
-    wkt2svg --padding |
+    wkt2svg
 ```
 
 ![Asemic writing](examples/asemic-quads.svg)
