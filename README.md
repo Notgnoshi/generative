@@ -250,7 +250,7 @@ $ tools/parse-production-rules.py --config examples/sierpinski-tree.json |
 LINESTRING (-1256.101730552664 934.7205554818272, -1249.030662740799 927.6494876699617)
 ```
 
-Surprisingly, this flips the tree right side up.
+Surprisingly, this flips the tree upside down.
 
 ![Sierpinski tree after PCA](examples/sierpinski-tree-pca.svg)
 
@@ -350,8 +350,6 @@ grid. The snapping snaps away from zero (much like rounding, except it's not lim
 integer). The **red** points show the result.
 
 ![](examples/snap/grid.svg)
-
-NOTE: The SVG uses screen coordinates with a flipped y-axis
 
 ### Snapping a graph to its closest points
 
