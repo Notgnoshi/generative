@@ -617,21 +617,21 @@ glyphs 100 20 |
     wkt2svg
 ```
 
-![Asemic writing](examples/asemic-quads.svg)
+![Asemic writing](examples/asemic/quads.svg)
 
 Tweaking the different parameters can give pretty interesting results.
 
-![Asemic writing](examples/asemic-quads-45.svg)
+![Asemic writing](examples/asemic/quads-45.svg)
 
-![Asemic writing](examples/asemic-triangles.svg)
+![Asemic writing](examples/asemic/triangles.svg)
 
-![Asemic writing](examples/asemic-ragged.svg)
+![Asemic writing](examples/asemic/ragged.svg)
 
-![Asemic writing](examples/asemic-ragged-jagged.svg)
+![Asemic writing](examples/asemic/ragged-jagged.svg)
 
-![Asemic writing](examples/asemic-hex.svg)
+![Asemic writing](examples/asemic/hex.svg)
 
-![Asemic writing](examples/asemic-hex-smooth.svg)
+![Asemic writing](examples/asemic/hex-smooth.svg)
 
 ## Random L-Systems
 
