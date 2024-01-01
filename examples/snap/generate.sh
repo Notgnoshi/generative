@@ -49,7 +49,7 @@ snap_grid_example() {
 }
 
 snap_grid_example |
-    wkt2svg --padding --scale 200 --output "$REPO_ROOT/examples/snap/grid.svg"
+    wkt2svg --scale 200 --output "$REPO_ROOT/examples/snap/grid.svg"
 
 # Four squares with 0.1 of padding between each of them
 graph_before() {
@@ -120,10 +120,10 @@ snap_graph_example() {
 }
 
 graph_before | geom2graph --graph2geom |
-    wkt2svg --padding --scale 200 --output "$REPO_ROOT/examples/snap/graph-before.svg"
+    wkt2svg --scale 200 --output "$REPO_ROOT/examples/snap/graph-before.svg"
 
 snap_graph_example "closest-point" "0.2" |
-    wkt2svg --padding --scale 200 --output "$REPO_ROOT/examples/snap/graph-closest.svg"
+    wkt2svg  --scale 200 --output "$REPO_ROOT/examples/snap/graph-closest.svg"
 
 snap_graph_example "regular-grid" "1.0" |
-    wkt2svg --padding --scale 200 --output "$REPO_ROOT/examples/snap/graph-grid.svg"
+    wkt2svg  --scale 200 --output "$REPO_ROOT/examples/snap/graph-grid.svg"

@@ -16,15 +16,14 @@ PATH="$REPO_ROOT/target/release/:$PATH"
 
 echo "Snap..."
 "$REPO_ROOT/examples/snap/generate.sh"
-exit
 
 echo "Asemic..."
-"$REPO_ROOT/examples/asemic.sh" | wkt2svg --padding --output "$REPO_ROOT/examples/asemic.svg"
+"$REPO_ROOT/examples/asemic.sh" | wkt2svg --output "$REPO_ROOT/examples/asemic.svg"
 
 echo "Bitwise..."
 bitwise --x-max 96 --y-max 96 "(x & y) & (x ^ y) % 11" |
     transform --scale 10 |
-    wkt2svg --padding --output "$REPO_ROOT/examples/bitwise.svg"
+    wkt2svg --output "$REPO_ROOT/examples/bitwise.svg"
 
 echo "DLA..."
 dla \
@@ -79,7 +78,7 @@ comm -23 /tmp/delaunay.wkt /tmp/urquhart.wkt >/tmp/difference.wkt
     echo "STROKEDASHARRAY(none)"
     cat /tmp/urquhart.wkt
 } >/tmp/combined.wkt
-wkt2svg --padding </tmp/combined.wkt >examples/urquhart.svg
+wkt2svg </tmp/combined.wkt >examples/urquhart.svg
 
 echo "Converting the WKT to a graph..."
 geom2graph \

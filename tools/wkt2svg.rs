@@ -48,7 +48,7 @@ struct CmdlineOptions {
 
     /// Whether to add a little bit of padding all the way around the viewbox
     #[clap(short, long, default_value_t = false)]
-    padding: bool,
+    no_padding: bool,
 
     #[clap(long, default_value_t = 1.0)]
     point_radius: f64,
@@ -498,7 +498,7 @@ fn main() {
     let mut options = SvgOptions::from(&args);
 
     let (transform, mut viewbox) = calculate_transform(&bbox, &options);
-    if args.padding {
+    if !args.no_padding {
         const PADDING: Coord = Coord { x: 3.0, y: 3.0 };
         let min = viewbox.min();
         let new_min = min - PADDING;
