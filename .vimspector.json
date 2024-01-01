@@ -1,0 +1,24 @@
+{
+    "configurations": {
+        "app": {
+            "adapter": "CodeLLDB",
+            "filetypes": [
+                "rust"
+            ],
+            "configuration": {
+                "request": "launch",
+                "program": "${workspaceRoot}/target/debug/snap",
+                "args": [],
+                "cwd": "${workspaceRoot}"
+            },
+            "breakpoints": {
+                "exception": {
+                    "caught": "N",
+                    "uncaught": "Y",
+                    "cpp_throw": "N",
+                    "cpp_catch": "N"
+                }
+            }
+        }
+    }
+}
