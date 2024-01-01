@@ -16,35 +16,35 @@ use stderrlog::ColorChoice;
 struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = log::Level::Info)]
-    pub log_level: log::Level,
+    log_level: log::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
-    pub output: Option<PathBuf>,
+    output: Option<PathBuf>,
 
     /// Output geometry format.
     #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    pub output_format: GeometryFormat,
+    output_format: GeometryFormat,
 
     /// Whether to output points or connected lines
     #[clap(long, default_value_t = false)]
-    pub points: bool,
+    points: bool,
 
     /// Maximum x coordinate
     #[clap(short = 'x', long, default_value_t = 0)]
-    pub x_min: i64,
+    x_min: i64,
 
     /// Maximum x coordinate
     #[clap(short = 'X', long, default_value_t = 48)]
-    pub x_max: i64,
+    x_max: i64,
 
     /// Minimum y coordinate
     #[clap(short = 'y', long, default_value_t = 0)]
-    pub y_min: i64,
+    y_min: i64,
 
     /// Maximum y coordinate
     #[clap(short = 'Y', long, default_value_t = 48)]
-    pub y_max: i64,
+    y_max: i64,
 
     /// The order to search adjacent cells for neighbors. Comma separated.
     #[clap(short, long,
@@ -52,11 +52,11 @@ struct CmdlineOptions {
            value_delimiter = ',',
            default_values_t = [Neighbor::East, Neighbor::SouthEast, Neighbor::South, Neighbor::SouthWest]
     )]
-    pub neighbor_search_order: Vec<Neighbor>,
+    neighbor_search_order: Vec<Neighbor>,
 
     /// A valid Rust expression taking 'x' and 'y', and returning an i64
     #[clap(default_value = "(x & y) & (x ^ y) % 13")]
-    pub expression: String,
+    expression: String,
 }
 
 fn expression(engine: &Engine, ast: &AST, x: i64, y: i64) -> Result<i64, Box<EvalAltResult>> {

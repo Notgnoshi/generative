@@ -19,52 +19,52 @@ use stderrlog::ColorChoice;
 /// May not visit every node.
 #[derive(Debug, Parser)]
 #[clap(name = "traverse", verbatim_doc_comment)]
-pub struct CmdlineOptions {
+struct CmdlineOptions {
     /// The log level
     #[clap(long, default_value_t = log::Level::Info)]
-    pub log_level: log::Level,
+    log_level: log::Level,
 
     /// Input file to read input from. Defaults to stdin.
     ///
     /// Input format is expected to be Trivial Graph Format.
     #[clap(short, long)]
-    pub input: Option<PathBuf>,
+    input: Option<PathBuf>,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
-    pub output: Option<PathBuf>,
+    output: Option<PathBuf>,
 
     /// The output geometry format
     #[clap(short='O', long, default_value_t=GeometryFormat::Wkt)]
-    pub output_format: GeometryFormat,
+    output_format: GeometryFormat,
 
     /// The random seed to use. Use zero to let the tool pick its own random seed.
     #[clap(long, default_value_t = 0)]
-    pub seed: u64,
+    seed: u64,
 
     /// The number of random graph traversals to perform
     #[clap(short = 't', long, default_value_t = 1)]
-    pub traversals: u8,
+    traversals: u8,
 
     /// Whether to perform a random number of traverals with mean '--traversals'
     #[clap(short = 'T', long, default_value_t = false)]
-    pub random_traversals: bool,
+    random_traversals: bool,
 
     /// The length of each random traversal
     #[clap(short = 'l', long, default_value_t = 4)]
-    pub length: u8,
+    length: u8,
 
     /// Whether to make the length of each traversal random with mean '--length'
     #[clap(short = 'L', long, default_value_t = false)]
-    pub random_length: bool,
+    random_length: bool,
 
     /// Remove edges after traversing them
     #[clap(short = 'r', long, default_value_t = false)]
-    pub remove_after_traverse: bool,
+    remove_after_traverse: bool,
 
     /// Output untraversed nodes at the end
     #[clap(short = 'u', long, default_value_t = false)]
-    pub untraversed: bool,
+    untraversed: bool,
 }
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
