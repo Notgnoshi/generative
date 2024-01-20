@@ -1,3 +1,5 @@
+#[cfg(feature = "geom2graph-bindings")]
+mod cxxbridge;
 pub mod dla;
 pub mod flatten;
 mod geometry_mut_map;

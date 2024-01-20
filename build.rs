@@ -1,7 +1,10 @@
 fn main() {
     // Options
-    let enable_cmake_build =
-        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_BUILD").unwrap_or_else(|_| "ON".to_string());
+    let enable_cmake_build = if cfg!(feature = "geom2graph-bindings") {
+        String::from("ON")
+    } else {
+        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_BUILD").unwrap_or_else(|_| "ON".to_string())
+    };
     let enable_doxygen = std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_DOXYGEN")
         .unwrap_or_else(|_| "OFF".to_string());
     let enable_pch =
@@ -71,4 +74,14 @@ fn main() {
     let database = format!("{}/build/compile_commands.json", install_dir.display());
     let dest = format!("{manifest_dir}/compile_commands.json");
     std::fs::copy(database, dest).unwrap();
+
+    #[cfg(feature = "geom2graph-bindings")]
+    {
+        println!("cargo-rust-c-link-search=native={}/../../../lib/", &out_dir);
+        println!("cargo:rust-c-link-lib=static=generative");
+        println!("cargo:rust-c-link-lib=geos");
+
+        let cxxbridge_sources = ["generative/cxxbridge/geometry_collection.rs"];
+        cxx_build::bridges(cxxbridge_sources).compile("cxxbridge");
+    }
 }
