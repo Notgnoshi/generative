@@ -19,6 +19,13 @@ pub mod ffi {
         vec: Vec<LineStringShim>,
     }
     impl Vec<PolygonShim> {}
+
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    struct GraphEdge {
+        src: usize,
+        dst: usize,
+    }
+    impl Vec<GraphEdge> {}
 }
 
 impl From<geo::Coord> for ffi::CoordShim {

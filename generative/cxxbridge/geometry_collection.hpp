@@ -24,7 +24,8 @@ get_geos_geoms_from_rust(const GeometryCollectionShim& rust_geoms,
     for (const auto& point : points)
     {
         const auto coord = geos::geom::CoordinateXY{point.x, point.y};
-        factory->createPoint(coord);
+        auto geos_point = factory->createPoint(coord);
+        geos_geoms.push_back(std::move(geos_point));
     }
 
     const auto linestrings = rust_geoms.get_linestrings();

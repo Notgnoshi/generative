@@ -35,6 +35,9 @@ fn main() {
         for cpp_header in glob::glob(format!("{allow_dir}/**/*.h").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cpp_header.unwrap().display());
         }
+        for cpp_header in glob::glob(format!("{allow_dir}/**/*.hpp").as_str()).unwrap() {
+            println!("cargo:rerun-if-changed={}", cpp_header.unwrap().display());
+        }
     }
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
@@ -85,6 +88,7 @@ fn main() {
         let cxxbridge_sources = [
             "generative/cxxbridge/coord_ffi.rs",
             "generative/cxxbridge/geometry_collection_ffi.rs",
+            "generative/cxxbridge/geometry_graph_ffi.rs",
             "generative/cxxbridge/noder_ffi.rs",
         ];
         cxx_build::bridges(cxxbridge_sources)

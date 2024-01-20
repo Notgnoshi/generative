@@ -11,6 +11,36 @@
 
 using generative::io::from_wkt;
 
+TEST(GeometryNoderTests, TwoPoints)
+{
+    const std::unique_ptr<geos::geom::Geometry> geometries = from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION("
+            "POINT(1 1),"
+            "POINT(0 1)"
+        ")"
+        // clang-format on
+    );
+    ASSERT_TRUE(geometries);
+    const std::unique_ptr<geos::geom::Geometry> expected = from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION("
+            "POINT(1 1),"
+            "POINT(0 1)"
+        ")"
+        // clang-format on
+    );
+    ASSERT_TRUE(expected);
+
+    const std::unique_ptr<geos::geom::Geometry> noded =
+        generative::noding::GeometryNoder::node(*geometries);
+    ASSERT_TRUE(noded);
+    std::cerr << noded->toString() << std::endl;
+
+    EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
+    EXPECT_TRUE(noded->equals(expected.get()));
+}
+
 TEST(GeometryNoderTests, DisjointPoint)
 {
     const std::unique_ptr<geos::geom::Geometry> geometries = from_wkt(
