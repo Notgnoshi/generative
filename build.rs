@@ -77,11 +77,26 @@ fn main() {
 
     #[cfg(feature = "geom2graph-bindings")]
     {
-        println!("cargo-rust-c-link-search=native={}/../../../lib/", &out_dir);
-        println!("cargo:rust-c-link-lib=static=generative");
-        println!("cargo:rust-c-link-lib=geos");
+        println!("cargo:rustc-link-search=native={}/../../../lib/", &out_dir);
+        println!("cargo:rustc-link-lib=static=generative");
+        println!("cargo:rustc-link-lib=log4cplus");
+        println!("cargo:rustc-link-lib=geos");
 
-        let cxxbridge_sources = ["generative/cxxbridge/geometry_collection.rs"];
-        cxx_build::bridges(cxxbridge_sources).compile("cxxbridge");
+        let cxxbridge_sources = [
+            "generative/cxxbridge/coord_ffi.rs",
+            "generative/cxxbridge/geometry_collection_ffi.rs",
+            "generative/cxxbridge/noder_ffi.rs",
+        ];
+        cxx_build::bridges(cxxbridge_sources)
+            .include("generative/cxxbridge/")
+            .include("generative/include/")
+            .define("USE_UNSTABLE_GEOS_CPP_API", "") // silence the geos #warning about unstable API
+            .flag("-isystemsubmodules/geos/include/")
+            .std("c++17")
+            .compile("cxxbridge");
+
+        for src in cxxbridge_sources {
+            println!("cargo:rerun-if-changed={src}");
+        }
     }
 }
