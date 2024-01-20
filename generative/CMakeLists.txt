@@ -1,6 +1,6 @@
 file(GLOB_RECURSE lib_sources CONFIGURE_DEPENDS "./*.cpp")
 
-add_library(generative OBJECT ${lib_sources})
+add_library(generative STATIC ${lib_sources})
 target_include_directories(generative PUBLIC include)
 
 if(GENERATIVE_ENABLE_LTO)

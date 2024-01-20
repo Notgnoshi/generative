@@ -20,6 +20,7 @@ fn main() {
 
     // Rebuild if any of the C++ code changes
     println!("cargo:rerun-if-changed=tools/geom2graph.cpp");
+    println!("cargo:rerun-if-changed=CMakeLists.txt");
 
     for allow_dir in ["generative", "tests", "tools"] {
         for cmakelist in glob::glob(format!("{allow_dir}/**/CMakeLists.txt").as_str()).unwrap() {
@@ -56,6 +57,10 @@ fn main() {
     let geom2graph = format!("{}/bin/geom2graph", install_dir.display());
     let dest = format!("{}/../../../geom2graph", &out_dir);
     std::fs::copy(geom2graph, dest).unwrap();
+
+    let libgenerative = format!("{}/build/generative/libgenerative.a", install_dir.display());
+    let dest = format!("{}/../../../lib/libgenerative.a", &out_dir);
+    std::fs::copy(libgenerative, dest).unwrap();
 
     if enable_tests == "ON" || enable_tests == "YES" || enable_tests == "TRUE" {
         let tests = format!("{}/build/tests/tests", install_dir.display());
