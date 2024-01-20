@@ -96,4 +96,6 @@ ctor = "0.1"
 float-cmp = "0.9"
 
 [features]
+# Tests can dump WKT for ease of visualization
+#     cargo test --all-features $test_name -- --nocapture | ./tools/render.py
 test-io = []
