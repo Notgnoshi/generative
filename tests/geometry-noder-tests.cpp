@@ -17,20 +17,35 @@ TEST(GeometryNoderTests, DisjointPoint)
         // clang-format off
         "GEOMETRYCOLLECTION("
             "LINESTRING(0 0, 2 2),"
-            "POINT(1 1)," // midpoint of line
-            "POINT(0 1)"  // not on line
+            "POINT(1 1),"  // midpoint of line
+            "POINT(0 1),"  // not on line
+            "POINT(0 0),"  // a duplicate vertex
+            "LINESTRING(0 1, 3 3),"
+            "MULTIPOINT(5 5, 6 6)"
         ")"
         // clang-format on
     );
     ASSERT_TRUE(geometries);
-    // Noding ignores POINTs, even if they're on an existing edge.
-    const std::unique_ptr<geos::geom::Geometry> expected = from_wkt("MULTILINESTRING((0 0, 2 2))");
+    const std::unique_ptr<geos::geom::Geometry> expected = from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION("
+            "LINESTRING(0 0, 2 2),"
+            "POINT(1 1),"
+            "POINT(0 1)," // Technically incorrect - it should get collapsed into the following
+                          // LINESTRING. BUT, because the next step is to generate a graph, it'll
+                          // still work just fine[citation needed].
+            "LINESTRING(0 1, 3 3),"
+            "POINT(5 5),"
+            "POINT(6 6)"
+        ")"
+        // clang-format on
+    );
     ASSERT_TRUE(expected);
 
     const std::unique_ptr<geos::geom::Geometry> noded =
         generative::noding::GeometryNoder::node(*geometries);
     ASSERT_TRUE(noded);
-    // std::cerr << noded->toString() << std::endl;
+    std::cerr << noded->toString() << std::endl;
 
     EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
     EXPECT_TRUE(noded->equals(expected.get()));
@@ -51,19 +66,19 @@ TEST(GeometryNoderTests, SimpleRectangle)
     ASSERT_TRUE(rectangle);
     const std::unique_ptr<geos::geom::Geometry> expected = from_wkt(
         // clang-format off
-        "MULTILINESTRING ("
-            "(2 0, 2 2),"
-            "(2 2, 2 6),"
-            "(2 6, 2 8),"
-            "(6 0, 6 2),"
-            "(6 2, 6 6),"
-            "(6 6, 6 8),"
-            "(0 2, 2 2),"
-            "(2 2, 6 2),"
-            "(6 2, 8 2),"
-            "(0 6, 2 6),"
-            "(2 6, 6 6),"
-            "(6 6, 8 6)"
+        "GEOMETRYCOLLECTION ("
+            "LINESTRING(2 0, 2 2),"
+            "LINESTRING(2 2, 2 6),"
+            "LINESTRING(2 6, 2 8),"
+            "LINESTRING(6 0, 6 2),"
+            "LINESTRING(6 2, 6 6),"
+            "LINESTRING(6 6, 6 8),"
+            "LINESTRING(0 2, 2 2),"
+            "LINESTRING(2 2, 6 2),"
+            "LINESTRING(6 2, 8 2),"
+            "LINESTRING(0 6, 2 6),"
+            "LINESTRING(2 6, 6 6),"
+            "LINESTRING(6 6, 8 6)"
         ")"
         // clang-format on
     );
@@ -72,7 +87,7 @@ TEST(GeometryNoderTests, SimpleRectangle)
     const std::unique_ptr<geos::geom::Geometry> noded =
         generative::noding::GeometryNoder::node(*rectangle);
     ASSERT_TRUE(noded);
-    // std::cerr << noded->toString() << std::endl;
+    std::cerr << noded->toString() << std::endl;
 
     EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
     EXPECT_TRUE(noded->equals(expected.get()));
@@ -93,19 +108,19 @@ TEST(GeometryNoderTests, ProvideOwnNoder)
     ASSERT_TRUE(rectangle);
     const std::unique_ptr<geos::geom::Geometry> expected = from_wkt(
         // clang-format off
-        "MULTILINESTRING ("
-            "(2 0, 2 2),"
-            "(2 2, 2 6),"
-            "(2 6, 2 8),"
-            "(6 0, 6 2),"
-            "(6 2, 6 6),"
-            "(6 6, 6 8),"
-            "(0 2, 2 2),"
-            "(2 2, 6 2),"
-            "(6 2, 8 2),"
-            "(0 6, 2 6),"
-            "(2 6, 6 6),"
-            "(6 6, 8 6)"
+        "GEOMETRYCOLLECTION ("
+            "LINESTRING(2 0, 2 2),"
+            "LINESTRING(2 2, 2 6),"
+            "LINESTRING(2 6, 2 8),"
+            "LINESTRING(6 0, 6 2),"
+            "LINESTRING(6 2, 6 6),"
+            "LINESTRING(6 6, 6 8),"
+            "LINESTRING(0 2, 2 2),"
+            "LINESTRING(2 2, 6 2),"
+            "LINESTRING(6 2, 8 2),"
+            "LINESTRING(0 6, 2 6),"
+            "LINESTRING(2 6, 6 6),"
+            "LINESTRING(6 6, 8 6)"
         ")"
         // clang-format on
     );
@@ -117,7 +132,7 @@ TEST(GeometryNoderTests, ProvideOwnNoder)
     const std::unique_ptr<geos::geom::Geometry> noded =
         generative::noding::GeometryNoder::node(*rectangle, std::move(noder));
     ASSERT_TRUE(noded);
-    // std::cerr << noded->toString() << std::endl;
+    std::cerr << noded->toString() << std::endl;
 
     EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
     EXPECT_TRUE(noded->equals(expected.get()));
@@ -136,9 +151,9 @@ TEST(GeometryNoderTests, SnappingNoder)
     ASSERT_TRUE(input);
     const std::unique_ptr<geos::geom::Geometry> expected = from_wkt(
         // clang-format off
-            "MULTILINESTRING("
-                "(0 1, 0 2),"
-                "(0 2, 0 3)"  // I think it snaps to whichever node came first?
+            "GEOMETRYCOLLECTION("
+                "LINESTRING(0 1, 0 2),"
+                "LINESTRING(0 2, 0 3)"  // I think it snaps to whichever node came first?
             ")"
         // clang-format on
     );
@@ -149,13 +164,8 @@ TEST(GeometryNoderTests, SnappingNoder)
     const std::unique_ptr<geos::geom::Geometry> noded =
         generative::noding::GeometryNoder::node(*input, std::move(noder));
     ASSERT_TRUE(noded);
-    // std::cerr << noded->toString() << std::endl;
+    std::cerr << noded->toString() << std::endl;
 
     EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
     EXPECT_TRUE(noded->equals(expected.get()));
-}
-
-//! @todo Use google benchmark.
-TEST(GeometryNoderTests, DISABLED_SnappingNoderPerformance)
-{
 }

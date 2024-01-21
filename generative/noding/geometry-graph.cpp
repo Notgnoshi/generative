@@ -102,18 +102,25 @@ void GeometryGraph::build(const geos::geom::Geometry& geometry)
     for (const auto& geom : generative::GeometryFlattener(geometry))
     {
         const auto coords = geom.getCoordinates();
-        for (std::size_t i = 0, j = 1; j < coords->getSize(); i = j++)
+        if (coords->size() == 1)
         {
-            const auto& curr = coords->getAt(i);
-            const auto& next = coords->getAt(j);
+            find_or_insert(inserted_coords, coords->front());
+        } else
+        {
+            for (std::size_t i = 0, j = 1; j < coords->size(); i = j++)
+            {
+                const auto& curr = coords->getAt(i);
+                const auto& next = coords->getAt(j);
 
-            LOG4CPLUS_TRACE(s_logger, "new edge " << curr.toString() << " -> " << next.toString());
+                LOG4CPLUS_TRACE(s_logger,
+                                "new edge " << curr.toString() << " -> " << next.toString());
 
-            // Add, or lookup the nodes in the graph.
-            auto& curr_node = find_or_insert(inserted_coords, curr);
-            auto& next_node = find_or_insert(inserted_coords, next);
+                // Add, or lookup the nodes in the graph.
+                auto& curr_node = find_or_insert(inserted_coords, curr);
+                auto& next_node = find_or_insert(inserted_coords, next);
 
-            add_edge(curr_node.index, next_node.index);
+                add_edge(curr_node.index, next_node.index);
+            }
         }
     }
 }

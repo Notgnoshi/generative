@@ -53,7 +53,7 @@ public:
     //! @brief Create and build the graph from the given geometry.
     //! @note The geometry must be fully noded.
     //! @param multilinestring - A fully noded collection of linestrings to build the graph from.
-    explicit GeometryGraph(const geos::geom::Geometry& multilinestring);
+    explicit GeometryGraph(const geos::geom::Geometry& geometrycollection);
 
     //! @brief Create a graph known a priori using the given factory.
     GeometryGraph(std::vector<Node>&& nodes, const geos::geom::GeometryFactory& factory);
