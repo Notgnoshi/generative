@@ -20,6 +20,10 @@ where
     (&*ffi_graph).into()
 }
 
+pub fn polygonize<Direction: petgraph::EdgeType>(graph: &GeometryGraph<Direction>) {
+    let ffi_graph = cxxbridge::to_ffi_graph(graph);
+}
+
 #[cfg(test)]
 mod tests {
     use geo::Point;

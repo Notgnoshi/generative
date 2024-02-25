@@ -2,6 +2,8 @@
 #include "generative/generative/cxxbridge/coord_ffi.rs.h"
 #include <generative/noding/geometry-graph.h>
 
+#include <geos/geom/Coordinate.h>
+#include <geos/geom/GeometryFactory.h>
 #include <rust/cxx.h>
 
 #include <vector>
@@ -46,3 +48,26 @@ public:
 private:
     generative::noding::GeometryGraph m_inner;
 };
+
+[[nodiscard]] std::unique_ptr<GeometryGraphShim>
+from_nodes_edges(rust::Slice<const CoordShim> nodes, rust::Slice<const GraphEdge> edges) noexcept
+{
+    auto factory = geos::geom::GeometryFactory::create();
+    auto graph = generative::noding::GeometryGraph(*factory);
+
+    for (const auto& node : nodes)
+    {
+        const auto coord = geos::geom::CoordinateXY{node.x, node.y};
+        // Ignore the created node's index, because we're creating them in the order of the nodes
+        // slice, which the edges slice requires in order to be valid.
+        const auto index = graph.add_node(coord);
+        (void)index;
+    }
+
+    for (const auto& edge : edges)
+    {
+        graph.add_edge(edge.src, edge.dst);
+    }
+
+    return std::make_unique<GeometryGraphShim>(std::move(graph));
+}

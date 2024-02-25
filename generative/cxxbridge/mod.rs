@@ -6,5 +6,26 @@ mod noder_ffi;
 
 pub use coord_ffi::ffi::{CoordShim, GraphEdge, LineStringShim, PolygonShim};
 pub use geometry_collection::GeometryCollectionShim;
-pub use geometry_graph_ffi::ffi::GeometryGraphShim;
+pub use geometry_graph_ffi::ffi::{from_nodes_edges, GeometryGraphShim};
 pub use noder_ffi::ffi::node;
+
+pub fn to_ffi_graph<Direction: petgraph::EdgeType>(
+    graph: &crate::graph::GeometryGraph<Direction>,
+) -> cxx::UniquePtr<GeometryGraphShim> {
+    let nodes: Vec<_> = graph
+        .node_weights()
+        .map(|w| CoordShim { x: w.0.x, y: w.0.y })
+        .collect();
+    let mut edges = Vec::with_capacity(graph.edge_count());
+    for i in 0..graph.edge_count() {
+        let edge = graph
+            .edge_endpoints(petgraph::graph::EdgeIndex::new(i))
+            .unwrap();
+        edges.push(GraphEdge {
+            src: edge.0.index(),
+            dst: edge.1.index(),
+        });
+    }
+
+    from_nodes_edges(&nodes, &edges)
+}

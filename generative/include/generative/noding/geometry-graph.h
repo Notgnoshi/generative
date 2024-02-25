@@ -70,6 +70,10 @@ public:
     //! @note The nodes at the indices @p src and @p dst must exist.
     void add_edge(std::size_t src, std::size_t dst);
 
+    //! @brief Add the given node to the graph.
+    //! @returns the index of the created node.
+    [[nodiscard]] std::size_t add_node(geos::geom::CoordinateXY coord) noexcept;
+
     [[nodiscard]] std::vector<std::pair<const Node&, const Node&>> get_edge_pairs() const;
 
     //! @brief Get the graph edges.
