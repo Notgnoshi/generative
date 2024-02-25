@@ -34,6 +34,28 @@ TEST(GeometryGraphTests, SingleLinestring)
     EXPECT_THAT(third.adjacencies, UnorderedElementsAre(1));
 }
 
+TEST(GeometryGraphTests, CrossingLinestring)
+{
+    const auto geometry = generative::io::from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION ("
+            "LINESTRING (0 0, 0.5 0),"
+            "LINESTRING (0.5 0, 1 0),"
+            "LINESTRING (0.5 -1, 0.5 0),"
+            "LINESTRING (0.5 0, 0.5 1)"
+        ")"
+        // clang-format on
+    );
+    ASSERT_TRUE(geometry);
+
+    const auto graph = generative::noding::GeometryGraph(*geometry);
+    const auto& nodes = graph.get_nodes();
+    const auto& edges = graph.get_edge_pairs();
+
+    ASSERT_THAT(nodes, SizeIs(5));
+    ASSERT_THAT(edges, SizeIs(4));
+}
+
 TEST(GeometryGraphTests, Single3DLinestring)
 {
     const auto geometry = generative::io::from_wkt("LINESTRING Z(0 0 0, 1 1 1, 2 2 2)");

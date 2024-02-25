@@ -32,9 +32,9 @@ get_geos_geoms_from_rust(const GeometryCollectionShim& rust_geoms,
     for (const auto& linestring : linestrings)
     {
         auto cs = std::make_unique<geos::geom::CoordinateSequence>(linestring.vec.size(), 2);
-        for (auto coord : linestring.vec)
+        for (size_t i = 0; i < linestring.vec.size(); i++)
         {
-            cs->add(geos::geom::CoordinateXY{coord.x, coord.y});
+            cs->getAt(i) = geos::geom::CoordinateXY{linestring.vec[i].x, linestring.vec[i].y};
         }
 
         auto geos_line = factory->createLineString(std::move(cs));
@@ -49,9 +49,9 @@ get_geos_geoms_from_rust(const GeometryCollectionShim& rust_geoms,
         for (const auto& ring : polygon.vec)
         {
             auto cs = std::make_unique<geos::geom::CoordinateSequence>(ring.vec.size(), 2);
-            for (auto coord : ring.vec)
+            for (size_t i = 0; i < ring.vec.size(); i++)
             {
-                cs->add(geos::geom::CoordinateXY{coord.x, coord.y});
+                cs->getAt(i) = geos::geom::CoordinateXY{ring.vec[i].x, ring.vec[i].y};
             }
             auto geos_ring = factory->createLinearRing(std::move(cs));
             if (shell == nullptr)

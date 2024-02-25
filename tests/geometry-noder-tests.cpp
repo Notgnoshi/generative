@@ -81,6 +81,36 @@ TEST(GeometryNoderTests, DisjointPoint)
     EXPECT_TRUE(noded->equals(expected.get()));
 }
 
+TEST(GeometryNoderTests, CrossingLinestrings)
+{
+    const auto geom = from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION("
+            "LINESTRING(0 0, 1 0),"
+            "LINESTRING(0.5 -1, 0.5 1)"
+        ")"
+        // clang-format on
+    );
+    ASSERT_TRUE(geom);
+
+    const auto expected = from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION ("
+            "LINESTRING (0 0, 0.5 0),"
+            "LINESTRING (0.5 0, 1 0),"
+            "LINESTRING (0.5 -1, 0.5 0),"
+            "LINESTRING (0.5 0, 0.5 1)"
+        ")"
+        // clang-format on
+    );
+
+    const auto noded = generative::noding::GeometryNoder::node(*geom);
+    std::cerr << noded->toString() << std::endl;
+
+    EXPECT_EQ(noded->getGeometryType(), expected->getGeometryType());
+    EXPECT_TRUE(noded->equals(expected.get()));
+}
+
 TEST(GeometryNoderTests, SimpleRectangle)
 {
     const std::unique_ptr<geos::geom::Geometry> rectangle = from_wkt(
