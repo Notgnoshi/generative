@@ -132,7 +132,13 @@ GeometryNoder::node(const geos::geom::Geometry& geometry,
                     std::unique_ptr<geos::noding::Noder> noder)
 {
     GeometryNoder geom_noder(geometry, std::move(noder));
-    return geom_noder.get_noded();
+    try
+    {
+        return geom_noder.get_noded();
+    } catch (const std::exception&)
+    {
+        return nullptr;
+    }
 }
 void GeometryNoder::extract_segment_strings(const geos::geom::Geometry& geometry,
                                             geos::noding::SegmentString::NonConstVect& out)
@@ -146,7 +152,9 @@ geos::noding::Noder& GeometryNoder::get_noder()
     if (!m_noder)
     {
         const geos::geom::PrecisionModel* pm = m_geometry.getFactory()->getPrecisionModel();
-        m_noder = std::make_unique<geos::noding::IteratedNoder>(pm);
+        auto noder = std::make_unique<geos::noding::IteratedNoder>(pm);
+        noder->setMaximumIterations(10);
+        m_noder = std::move(noder);
     }
 
     return *m_noder;

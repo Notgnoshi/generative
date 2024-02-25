@@ -19,6 +19,33 @@ impl GeometryCollectionShim {
     pub fn get_total_geoms(&self) -> usize {
         self.geoms.len()
     }
+    pub fn get_geo_points(&self) -> Vec<geo::Point> {
+        let mut points = Vec::new();
+        let mut num_points = 0;
+        for g in &self.geoms {
+            match g {
+                geo::Geometry::Point(_) => num_points += 1,
+                geo::Geometry::MultiPoint(m) => num_points += m.len(),
+                _ => {}
+            }
+        }
+        points.reserve_exact(num_points);
+
+        for g in self.geoms.iter() {
+            match g {
+                geo::Geometry::Point(p) => {
+                    points.push(*p);
+                }
+                geo::Geometry::MultiPoint(m) => {
+                    for p in m.0.iter() {
+                        points.push(*p);
+                    }
+                }
+                _ => {}
+            }
+        }
+        points
+    }
 
     pub fn get_points(&self) -> Vec<CoordShim> {
         let mut points = Vec::new();

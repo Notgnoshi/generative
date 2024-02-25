@@ -27,6 +27,11 @@ node(const GeometryCollectionShim& rust_geoms, double tolerance) noexcept
         auto noder = std::make_unique<geos::noding::snap::SnappingNoder>(tolerance);
         noded = generative::noding::GeometryNoder::node(*geos_geoms, std::move(noder));
     }
+    if (!noded)
+    {
+        return nullptr;
+    }
+
     auto graph = generative::noding::GeometryGraph(*noded);
 
     auto graph_shim = std::make_unique<GeometryGraphShim>(std::move(graph));

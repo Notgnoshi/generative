@@ -8,7 +8,7 @@ where
     G: IntoIterator<Item = Geometry>,
 {
     let collection = cxxbridge::GeometryCollectionShim::new(geoms);
-    let ffi_graph = unsafe {
+    let mut ffi_graph = unsafe {
         // Setting the tolerance to 0 picks the IteratedNoder instead of the SnappingNoder.
         // They both have pros and cons.
         // * IteratedNoder might throw exceptions if it does not converge on pathological
@@ -17,7 +17,29 @@ where
         let tolerance = 0.0;
         cxxbridge::node(&collection, tolerance)
     };
-    (&*ffi_graph).into()
+
+    // Retry with the SnappingNoder
+    let mut insert_isolated_points = false;
+    if ffi_graph.is_null() {
+        insert_isolated_points = true;
+        let tolerance = 0.000001;
+        log::error!("GEOS IteratedNoder failed. Falling back on SnappingNoder");
+        ffi_graph = unsafe { cxxbridge::node(&collection, tolerance) }
+    }
+
+    let mut graph: GeometryGraph<Direction> = (&*ffi_graph).into();
+
+    // The SnappingNoder throws away isolated points, so add them back in. Unfortunately, this
+    // doesn't calculate any node-segment intersections, and may result in duplicate nodes.
+    if insert_isolated_points {
+        log::warn!("Adding isolated points back in ... may result in duplicate nodes");
+        let points = collection.get_geo_points();
+        for point in points.into_iter() {
+            graph.add_node(point);
+        }
+    }
+
+    graph
 }
 
 pub fn polygonize<Direction: petgraph::EdgeType>(
