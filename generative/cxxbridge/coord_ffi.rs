@@ -26,6 +26,12 @@ pub mod ffi {
         dst: usize,
     }
     impl Vec<GraphEdge> {}
+
+    #[derive(Debug, Clone, PartialEq)]
+    struct PolygonizationResult {
+        polygons: Vec<LineStringShim>,
+        dangles: Vec<LineStringShim>,
+    }
 }
 
 impl From<geo::Coord> for ffi::CoordShim {

@@ -1,4 +1,4 @@
-use geo::Geometry;
+use geo::{Coord, Geometry, LineString, Polygon};
 
 use crate::cxxbridge;
 use crate::graph::GeometryGraph;
@@ -20,8 +20,37 @@ where
     (&*ffi_graph).into()
 }
 
-pub fn polygonize<Direction: petgraph::EdgeType>(graph: &GeometryGraph<Direction>) {
+pub fn polygonize<Direction: petgraph::EdgeType>(
+    graph: &GeometryGraph<Direction>,
+) -> (Vec<Polygon>, Vec<LineString>) {
     let ffi_graph = cxxbridge::to_ffi_graph(graph);
+    let result = cxxbridge::polygonize(&ffi_graph);
+
+    let mut polys = Vec::new();
+    polys.reserve_exact(result.polygons.len());
+    for coordseq in result.polygons {
+        let coords: Vec<_> = coordseq
+            .vec
+            .into_iter()
+            .map(|c| Coord { x: c.x, y: c.y })
+            .collect();
+        let exterior = LineString::new(coords);
+        let interiors = Vec::new();
+        polys.push(Polygon::new(exterior, interiors));
+    }
+
+    let mut dangles = Vec::new();
+    dangles.reserve_exact(result.dangles.len());
+    for coordseq in result.dangles {
+        let coords: Vec<_> = coordseq
+            .vec
+            .into_iter()
+            .map(|c| Coord { x: c.x, y: c.y })
+            .collect();
+        dangles.push(LineString::new(coords));
+    }
+
+    (polys, dangles)
 }
 
 #[cfg(test)]
@@ -29,6 +58,7 @@ mod tests {
     use geo::Point;
     use petgraph::graph::{EdgeIndex, NodeIndex};
     use petgraph::Undirected;
+    use wkt::TryFromWkt;
 
     use super::*;
     use crate::io::read_wkt_geometries;
@@ -173,5 +203,32 @@ mod tests {
             (6, 7),  // top right verticle dangle
         ];
         assert_eq!(edges, expected);
+    }
+
+    #[test]
+    fn test_polygonize() {
+        let wkt = b"GEOMETRYCOLLECTION( LINESTRING(2 0, 2 8), LINESTRING(6 0, 6 8), LINESTRING(0 2, 8 2), LINESTRING(0 6, 8 6))";
+        let geoms = read_wkt_geometries(&wkt[..]);
+        let graph = node::<_, Undirected>(geoms);
+
+        let (polygons, dangles) = polygonize(&graph);
+        assert_eq!(polygons.len(), 1);
+        assert_eq!(dangles.len(), 8);
+
+        let expected: Polygon =
+            Polygon::try_from_wkt_str("POLYGON((2 2, 2 6, 6 6, 6 2, 2 2))").unwrap();
+        assert_eq!(polygons[0], expected);
+
+        let expected = [
+            LineString::try_from_wkt_str("LINESTRING(6 6, 8 6)").unwrap(),
+            LineString::try_from_wkt_str("LINESTRING(6 2, 8 2)").unwrap(),
+            LineString::try_from_wkt_str("LINESTRING(6 6, 6 8)").unwrap(),
+            LineString::try_from_wkt_str("LINESTRING(6 0, 6 2)").unwrap(),
+            LineString::try_from_wkt_str("LINESTRING(2 6, 2 8)").unwrap(),
+            LineString::try_from_wkt_str("LINESTRING(2 0, 2 2)").unwrap(),
+            LineString::try_from_wkt_str("LINESTRING(2 6, 0 6)").unwrap(),
+            LineString::try_from_wkt_str("LINESTRING(2 2, 0 2)").unwrap(),
+        ];
+        assert_eq!(dangles, expected);
     }
 }

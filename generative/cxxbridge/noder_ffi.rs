@@ -5,6 +5,7 @@ pub mod ffi {
 
         type GeometryCollectionShim = crate::cxxbridge::GeometryCollectionShim;
         type GeometryGraphShim = crate::cxxbridge::GeometryGraphShim;
+        type PolygonizationResult = crate::cxxbridge::PolygonizationResult;
 
         /// Node the given collection of geometries
         ///
@@ -19,6 +20,8 @@ pub mod ffi {
             geoms: &GeometryCollectionShim,
             tolerance: f64,
         ) -> UniquePtr<GeometryGraphShim>;
+
+        fn polygonize(graph: &GeometryGraphShim) -> PolygonizationResult;
     }
 }
 

@@ -4,10 +4,10 @@ mod geometry_collection_ffi;
 mod geometry_graph_ffi;
 mod noder_ffi;
 
-pub use coord_ffi::ffi::{CoordShim, GraphEdge, LineStringShim, PolygonShim};
+pub use coord_ffi::ffi::{CoordShim, GraphEdge, LineStringShim, PolygonShim, PolygonizationResult};
 pub use geometry_collection::GeometryCollectionShim;
 pub use geometry_graph_ffi::ffi::{from_nodes_edges, GeometryGraphShim};
-pub use noder_ffi::ffi::node;
+pub use noder_ffi::ffi::{node, polygonize};
 
 pub fn to_ffi_graph<Direction: petgraph::EdgeType>(
     graph: &crate::graph::GeometryGraph<Direction>,

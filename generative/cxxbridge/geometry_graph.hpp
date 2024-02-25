@@ -16,6 +16,12 @@ public:
     {
     }
 
+    [[nodiscard]] const generative::noding::GeometryGraph& inner() const noexcept
+    {
+        return m_inner;
+    }
+    [[nodiscard]] generative::noding::GeometryGraph& inner() noexcept { return m_inner; }
+
     [[nodiscard]] rust::Vec<CoordShim> nodes() const noexcept
     {
         const auto& cxx_nodes = m_inner.get_nodes();
