@@ -46,8 +46,8 @@ fn main() {
     fs_extra::dir::copy(src, dest, &options).unwrap();
 
     // TODO: Remove in favor of geom2graph.rs
-    let geom2graph = format!("{}/bin/geom2graph", install_dir.display());
-    let dest = format!("{}/../../../geom2graph", &out_dir);
+    let geom2graph = format!("{}/bin/geom2graph-cxx", install_dir.display());
+    let dest = format!("{}/../../../geom2graph-cxx", &out_dir);
     std::fs::copy(geom2graph, dest).unwrap();
 
     let libgenerative = format!("{}/build/generative/libgenerative.a", install_dir.display());
