@@ -70,6 +70,7 @@ fn main() {
         println!("cargo:rustc-link-lib=static=generative");
         println!("cargo:rustc-link-lib=log4cplus");
         println!("cargo:rustc-link-lib=geos");
+        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN/lib");
 
         let cxxbridge_sources = [
             "generative/cxxbridge/coord_ffi.rs",
