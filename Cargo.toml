@@ -66,6 +66,11 @@ path = "tools/streamline.rs"
 name = "snap"
 path = "tools/snap.rs"
 
+[[bin]]
+name = "geom2graph"
+path = "tools/geom2graph.rs"
+required-features = ["cxx-bindings"]
+
 [dependencies]
 clap = {version="4.0", features=["derive"]}
 cxx = {version = "1.0", optional=true}
