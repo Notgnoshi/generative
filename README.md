@@ -54,7 +54,7 @@ This is a mixed Python, C++, and Rust project that uses submodules to satisfy th
   ```
 * **C++** - a C++17 compiler and CMake
   ```shell
-  sudo apt install build-essential cmake
+  sudo apt install build-essential cmake, ninja-build
   git submodule update --init --recursive
   ```
 * **Python**
@@ -72,6 +72,11 @@ The Rust build has been configured to also perform the C++ CMake build, so all y
 cargo build
 ```
 
+The C++ CMake build can be disabled by disabling the default `cxx` feature with
+```shell
+cargo build --no-default-features
+```
+
 ## How to test
 
 To run the Python tests:
@@ -84,6 +89,8 @@ To run the Rust tests:
 ```shell
 cargo test
 ```
+
+The C++ tests, if enabled, are copied to `target/debug/cxx-tests`
 
 # The tools
 

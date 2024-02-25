@@ -1,11 +1,11 @@
-#[cfg(feature = "geom2graph-bindings")]
+#[cfg(feature = "cxx-bindings")]
 mod cxxbridge;
 pub mod dla;
 pub mod flatten;
 mod geometry_mut_map;
 pub mod graph;
 pub mod io;
-#[cfg(feature = "geom2graph-bindings")]
+#[cfg(feature = "cxx-bindings")]
 pub mod noding;
 pub mod snap;
 pub mod triangulation;

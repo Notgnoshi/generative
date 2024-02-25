@@ -7,7 +7,7 @@ pub type NodeIndex = usize;
 pub type GeometryGraph<Direction = petgraph::Undirected> =
     petgraph::Graph<NodeData, EdgeWeight, Direction, NodeIndex>;
 
-#[cfg(feature = "geom2graph-bindings")]
+#[cfg(feature = "cxx-bindings")]
 mod wrapper {
     use super::*;
     use crate::cxxbridge::{GeometryGraphShim, GraphEdge};
