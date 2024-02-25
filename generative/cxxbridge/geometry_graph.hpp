@@ -55,8 +55,8 @@ private:
     generative::noding::GeometryGraph m_inner;
 };
 
-[[nodiscard]] std::unique_ptr<GeometryGraphShim>
-from_nodes_edges(rust::Slice<const CoordShim> nodes, rust::Slice<const GraphEdge> edges) noexcept
+[[nodiscard]] std::unique_ptr<GeometryGraphShim> inline from_nodes_edges(
+    rust::Slice<const CoordShim> nodes, rust::Slice<const GraphEdge> edges) noexcept
 {
     auto factory = geos::geom::GeometryFactory::create();
     auto graph = generative::noding::GeometryGraph(*factory);
