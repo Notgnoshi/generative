@@ -53,7 +53,7 @@ public:
     //! @brief Create and build the graph from the given geometry.
     //! @note The geometry must be fully noded.
     //! @param multilinestring - A fully noded collection of linestrings to build the graph from.
-    explicit GeometryGraph(const geos::geom::Geometry& multilinestring);
+    explicit GeometryGraph(const geos::geom::Geometry& geometrycollection);
 
     //! @brief Create a graph known a priori using the given factory.
     GeometryGraph(std::vector<Node>&& nodes, const geos::geom::GeometryFactory& factory);
@@ -69,6 +69,10 @@ public:
     //! @brief Add the given edge to the graph.
     //! @note The nodes at the indices @p src and @p dst must exist.
     void add_edge(std::size_t src, std::size_t dst);
+
+    //! @brief Add the given node to the graph.
+    //! @returns the index of the created node.
+    [[nodiscard]] std::size_t add_node(geos::geom::CoordinateXY coord) noexcept;
 
     [[nodiscard]] std::vector<std::pair<const Node&, const Node&>> get_edge_pairs() const;
 

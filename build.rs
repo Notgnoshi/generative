@@ -1,26 +1,15 @@
+#[cfg(not(feature = "cxx"))]
+fn main() {}
+
+#[cfg(feature = "cxx")]
 fn main() {
-    // Options
-    let enable_cmake_build =
-        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_BUILD").unwrap_or_else(|_| "ON".to_string());
-    let enable_doxygen = std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_DOXYGEN")
-        .unwrap_or_else(|_| "OFF".to_string());
-    let enable_pch =
-        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_PCH").unwrap_or_else(|_| "OFF".to_string());
-    let enable_lto =
-        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_LTO").unwrap_or_else(|_| "OFF".to_string());
-    let enable_tests =
-        std::env::var("GENERATIVE_CARGO_ENABLE_CMAKE_TESTS").unwrap_or_else(|_| "ON".to_string());
-    if enable_cmake_build.is_empty()
-        || enable_cmake_build == "OFF"
-        || enable_cmake_build == "NO"
-        || enable_cmake_build == "FALSE"
-    {
-        return;
-    }
+    #[rustfmt::skip]
+    let enable_tests = if cfg!(feature = "cxx-tests") { "ON" } else { "OFF" };
 
     // Rebuild if any of the C++ code changes
-    println!("cargo:rerun-if-changed=tools/geom2graph.cpp");
+    println!("cargo:rerun-if-changed=CMakeLists.txt");
 
+    // TODO: Remove tools/ when geom2graph.rs is swapped in
     for allow_dir in ["generative", "tests", "tools"] {
         for cmakelist in glob::glob(format!("{allow_dir}/**/CMakeLists.txt").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cmakelist.unwrap().display());
@@ -31,6 +20,9 @@ fn main() {
         for cpp_header in glob::glob(format!("{allow_dir}/**/*.h").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cpp_header.unwrap().display());
         }
+        for cpp_header in glob::glob(format!("{allow_dir}/**/*.hpp").as_str()).unwrap() {
+            println!("cargo:rerun-if-changed={}", cpp_header.unwrap().display());
+        }
     }
 
     let out_dir = std::env::var("OUT_DIR").unwrap();
@@ -39,10 +31,10 @@ fn main() {
         .define("CMAKE_EXPORT_COMPILE_COMMANDS", "ON")
         .define("CMAKE_INSTALL_LIBDIR", "lib")
         .define("CMAKE_GENERATOR", "Ninja")
-        .define("GENERATIVE_BUILD_DOCS", enable_doxygen)
-        .define("GENERATIVE_ENABLE_PCH", enable_pch)
-        .define("GENERATIVE_ENABLE_LTO", enable_lto)
-        .define("GENERATIVE_ENABLE_TESTING", &enable_tests)
+        .define("GENERATIVE_BUILD_DOCS", "OFF")
+        .define("GENERATIVE_ENABLE_PCH", "OFF")
+        .define("GENERATIVE_ENABLE_LTO", "OFF")
+        .define("GENERATIVE_ENABLE_TESTING", enable_tests)
         .define("GENERATIVE_TOOL_INSTALL_RPATH", "$ORIGIN/lib") // binaries just stashed in /target/debug/
         .build();
 
@@ -53,9 +45,14 @@ fn main() {
     options.overwrite = true;
     fs_extra::dir::copy(src, dest, &options).unwrap();
 
-    let geom2graph = format!("{}/bin/geom2graph", install_dir.display());
-    let dest = format!("{}/../../../geom2graph", &out_dir);
+    // TODO: Remove in favor of geom2graph.rs
+    let geom2graph = format!("{}/bin/geom2graph-cxx", install_dir.display());
+    let dest = format!("{}/../../../geom2graph-cxx", &out_dir);
     std::fs::copy(geom2graph, dest).unwrap();
+
+    let libgenerative = format!("{}/build/generative/libgenerative.a", install_dir.display());
+    let dest = format!("{}/../../../lib/libgenerative.a", &out_dir);
+    std::fs::copy(libgenerative, dest).unwrap();
 
     if enable_tests == "ON" || enable_tests == "YES" || enable_tests == "TRUE" {
         let tests = format!("{}/build/tests/tests", install_dir.display());
@@ -66,4 +63,31 @@ fn main() {
     let database = format!("{}/build/compile_commands.json", install_dir.display());
     let dest = format!("{manifest_dir}/compile_commands.json");
     std::fs::copy(database, dest).unwrap();
+
+    #[cfg(feature = "cxx-bindings")]
+    {
+        println!("cargo:rustc-link-search=native={}/../../../lib/", &out_dir);
+        println!("cargo:rustc-link-lib=static=generative");
+        println!("cargo:rustc-link-lib=log4cplus");
+        println!("cargo:rustc-link-lib=geos");
+        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN/lib");
+
+        let cxxbridge_sources = [
+            "generative/cxxbridge/coord_ffi.rs",
+            "generative/cxxbridge/geometry_collection_ffi.rs",
+            "generative/cxxbridge/geometry_graph_ffi.rs",
+            "generative/cxxbridge/noder_ffi.rs",
+        ];
+        cxx_build::bridges(cxxbridge_sources)
+            .include("generative/cxxbridge/")
+            .include("generative/include/")
+            .define("USE_UNSTABLE_GEOS_CPP_API", "") // silence the geos #warning about unstable API
+            .flag("-isystemsubmodules/geos/include/")
+            .std("c++17")
+            .compile("cxxbridge");
+
+        for src in cxxbridge_sources {
+            println!("cargo:rerun-if-changed={src}");
+        }
+    }
 }

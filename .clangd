@@ -1,3 +1,8 @@
 CompileFlags:
     Add:
         - -std=c++17
+        # Unfortunately these need to be absolute paths. See: https://github.com/clangd/clangd/issues/1038
+        - -I/home/nots/src/generative/target/cxxbridge/
+        - -I/home/nots/src/generative/generative/include/
+        - -I/home/nots/src/generative/generative/cxxbridge/
+        - -isystem/home/nots/src/submodules/geos/include/

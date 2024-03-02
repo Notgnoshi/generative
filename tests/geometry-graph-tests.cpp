@@ -34,6 +34,28 @@ TEST(GeometryGraphTests, SingleLinestring)
     EXPECT_THAT(third.adjacencies, UnorderedElementsAre(1));
 }
 
+TEST(GeometryGraphTests, CrossingLinestring)
+{
+    const auto geometry = generative::io::from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION ("
+            "LINESTRING (0 0, 0.5 0),"
+            "LINESTRING (0.5 0, 1 0),"
+            "LINESTRING (0.5 -1, 0.5 0),"
+            "LINESTRING (0.5 0, 0.5 1)"
+        ")"
+        // clang-format on
+    );
+    ASSERT_TRUE(geometry);
+
+    const auto graph = generative::noding::GeometryGraph(*geometry);
+    const auto& nodes = graph.get_nodes();
+    const auto& edges = graph.get_edge_pairs();
+
+    ASSERT_THAT(nodes, SizeIs(5));
+    ASSERT_THAT(edges, SizeIs(4));
+}
+
 TEST(GeometryGraphTests, Single3DLinestring)
 {
     const auto geometry = generative::io::from_wkt("LINESTRING Z(0 0 0, 1 1 1, 2 2 2)");
@@ -190,7 +212,35 @@ TEST(GeometryGraphTests, LonePoint)
     const auto graph = generative::noding::GeometryGraph(*geometry);
     const auto& nodes = graph.get_nodes();
 
-    // Point isn't added to the graph, because we iterate over the coordinates of a geometry
-    // pairwise.
-    ASSERT_THAT(nodes, SizeIs(0));
+    ASSERT_THAT(nodes, SizeIs(1));
+}
+
+TEST(GeometryGraphTests, PointsAndLine)
+{
+    const auto geometry = generative::io::from_wkt(
+        // clang-format off
+        "GEOMETRYCOLLECTION("
+            "LINESTRING(0 0, 1 0),"
+            "POINT(1 0),"  // The noder can produce duplicate points like this, but that's still fine
+            "POINT(1 1)"
+        ")"
+        // clang-format on
+    );
+    ASSERT_TRUE(geometry);
+    const auto coords = geometry->getCoordinates();
+    ASSERT_TRUE(coords);
+    ASSERT_THAT(coords, Pointee(SizeIs(4)));
+
+    const auto graph = generative::noding::GeometryGraph(*geometry);
+    const auto& nodes = graph.get_nodes();
+
+    ASSERT_THAT(nodes, SizeIs(3));
+    EXPECT_EQ(*nodes.at(0).point->getCoordinate(), coords->getAt(0));
+    EXPECT_EQ(*nodes.at(1).point->getCoordinate(), coords->getAt(1));
+    // Coordinate 2 is a duplicate, so the next unique one is 3
+    EXPECT_EQ(*nodes.at(2).point->getCoordinate(), coords->getAt(3));
+
+    EXPECT_THAT(nodes.at(0).adjacencies, UnorderedElementsAre(1));
+    EXPECT_THAT(nodes.at(1).adjacencies, UnorderedElementsAre(0));
+    EXPECT_THAT(nodes.at(2).adjacencies, SizeIs(0));
 }

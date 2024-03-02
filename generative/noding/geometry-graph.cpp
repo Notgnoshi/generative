@@ -3,6 +3,7 @@
 #include "generative/geometry-flattener.h"
 #include "generative/io/wkt.h"
 
+#include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/Geometry.h>
 #include <geos/geom/LineString.h>
@@ -27,6 +28,18 @@ GeometryGraph::GeometryGraph(std::vector<GeometryGraph::Node>&& nodes,
                              const geos::geom::GeometryFactory& factory) :
     m_factory(factory), m_nodes(std::move(nodes))
 {
+}
+
+std::size_t GeometryGraph::add_node(geos::geom::CoordinateXY coord) noexcept
+{
+    const auto new_index = m_nodes.size();
+
+    auto point = m_factory.createPoint(coord);
+    auto node = GeometryGraph::Node(new_index, std::move(point));
+
+    m_nodes.push_back(std::move(node));
+
+    return new_index;
 }
 
 void GeometryGraph::add_edge(std::size_t src, std::size_t dst)
@@ -81,12 +94,11 @@ GeometryGraph::find_or_insert(Nodes_t& inserted_coords, const geos::geom::Coordi
     // This isn't a coordinate we know about.
     if (iter == inserted_coords.end())
     {
-        auto point = std::unique_ptr<geos::geom::Point>(m_factory.createPoint(coord));
-        GeometryGraph::Node new_node(m_nodes.size(), std::move(point));
-        LOG4CPLUS_TRACE(s_logger, "Adding new node " << new_node.index << "\t" << new_node.point);
-        auto result = inserted_coords.emplace(coord, new_node.index);
+        const auto new_index = this->add_node(coord);
+        LOG4CPLUS_TRACE(s_logger,
+                        "Adding new node " << new_index << "\t" << m_nodes[new_index].point);
+        auto result = inserted_coords.emplace(coord, new_index);
         iter = result.first;
-        m_nodes.push_back(std::move(new_node));
     }
 
     return m_nodes.at(iter->second);
@@ -102,18 +114,25 @@ void GeometryGraph::build(const geos::geom::Geometry& geometry)
     for (const auto& geom : generative::GeometryFlattener(geometry))
     {
         const auto coords = geom.getCoordinates();
-        for (std::size_t i = 0, j = 1; j < coords->getSize(); i = j++)
+        if (coords->size() == 1)
         {
-            const auto& curr = coords->getAt(i);
-            const auto& next = coords->getAt(j);
+            find_or_insert(inserted_coords, coords->front());
+        } else
+        {
+            for (std::size_t i = 0, j = 1; j < coords->size(); i = j++)
+            {
+                const auto& curr = coords->getAt(i);
+                const auto& next = coords->getAt(j);
 
-            LOG4CPLUS_TRACE(s_logger, "new edge " << curr.toString() << " -> " << next.toString());
+                LOG4CPLUS_TRACE(s_logger,
+                                "new edge " << curr.toString() << " -> " << next.toString());
 
-            // Add, or lookup the nodes in the graph.
-            auto& curr_node = find_or_insert(inserted_coords, curr);
-            auto& next_node = find_or_insert(inserted_coords, next);
+                // Add, or lookup the nodes in the graph.
+                auto& curr_node = find_or_insert(inserted_coords, curr);
+                auto& next_node = find_or_insert(inserted_coords, next);
 
-            add_edge(curr_node.index, next_node.index);
+                add_edge(curr_node.index, next_node.index);
+            }
         }
     }
 }

@@ -256,8 +256,8 @@ mod tests {
         #[cfg(feature = "test-io")]
         {
             let lines = triangulation.lines().map(geo::Geometry::Line);
-            write_wkt_geometries(std::io::stdout(), geometries);
-            write_wkt_geometries(std::io::stdout(), lines);
+            crate::io::write_wkt_geometries(std::io::stdout(), geometries);
+            crate::io::write_wkt_geometries(std::io::stdout(), lines);
         }
 
         let triangles = [3, 5, 4, 4, 2, 3, 2, 1, 3, 1, 0, 3];
@@ -372,7 +372,7 @@ mod tests {
                 .iter()
                 .map(|(a, b)| geo::Line::new(points[*a], points[*b]))
                 .map(geo::Geometry::Line);
-            write_wkt_geometries(std::io::stdout(), lines);
+            crate::io::write_wkt_geometries(std::io::stdout(), lines);
         }
     }
 }
