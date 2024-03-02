@@ -1,0 +1,96 @@
+# Generative Art
+
+[![GitHub Actions status](https://github.com/Notgnoshi/generative/workflows/Tests/badge.svg)](https://github.com/Notgnoshi/generative/actions)
+[![GitHub Actions status](https://github.com/Notgnoshi/generative/workflows/Pylint/badge.svg)](https://github.com/Notgnoshi/generative/actions)
+[![GitHub Actions status](https://github.com/Notgnoshi/generative/workflows/Black/badge.svg)](https://github.com/Notgnoshi/generative/actions)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+A polyglot collection of composable generative art tools, with a focus on 2D computational geometry.
+
+# Table of contents
+
+# How to build
+This project contains a mix of Rust, C++, and Python. It's primarily Rust.
+
+Install dependencies with
+```sh
+# Python dependencies
+python3 -m venv --prompt generative .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+# C++ dependencies
+sudo apt install build-essential cmake ninja-build
+git submodule update --init --recursive
+```
+
+The Rust build has been configured to also perform the C++ CMake build, so all you need is
+```sh
+cargo build
+```
+
+If you don't want to build the C++ parts, you can do
+```sh
+cargo build --no-default-features
+```
+but note that this will disable building the [`geom2graph`](#geom2graph) tool.
+
+You can run the Python tests with
+```sh
+source .venv/bin/activate
+pytest
+```
+and the Rust tests with
+```sh
+cargo test
+```
+If the C++ tests have been enabled with `--all-features`, or `--features=cxx-tests`, they are copied
+to `target/debug/cxx-tests`.
+
+# Philosophy
+
+There is a [`generative`](./generative/) Rust/C++/Python library, but the user is expected to use
+the [CLI tools](./tools/) instead. I'm enamored with the Unix philosophy, so each tool does its best
+to produce/consume a standard textual interface.
+* Each tool read/writes to/from `stdin`/`stdout`
+* Logging is done to `stderr`
+* Geometries are in [WKT](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry)
+  format, one geometry per line
+* Graphs are in [TGF](https://en.wikipedia.org/wiki/Trivial_Graph_Format) format
+
+# Examples
+## Asemic writing
+## Random L-Systems
+
+# The tools
+
+## Utilities
+### wkt2svg
+### render.py
+### bundle
+### pack
+### format.py
+
+## Lindenmayer Systems
+### random-production-rules.py
+### parse-production-rules.py
+### interpret-lstring.py
+### random-lsystem.sh
+
+## Transformations
+### project.py
+### geom2graph
+### smooth
+### snap
+### transform
+
+## Generation
+### point-cloud
+### grid
+
+## Algorithms
+### bitwise
+### dla
+### streamline
+### traverse
+### triangulate
+### urquhart
