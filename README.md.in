@@ -60,6 +60,12 @@ to produce/consume a standard textual interface.
 # Examples
 ## Asemic writing
 ## Random L-Systems
+[examples/random-lsystems/saved.json](examples/random-lsystems/saved.json) contains parameters for
+randomly (pre)generated Lindenmayer systems.
+```sh
+@RANDOM_LSYSTEMS_SNIPPET@
+```
+@RANDOM_LSYSTEM_IMAGES@
 
 # The tools
 

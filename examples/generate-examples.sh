@@ -79,15 +79,3 @@ comm -23 /tmp/delaunay.wkt /tmp/urquhart.wkt >/tmp/difference.wkt
     cat /tmp/urquhart.wkt
 } >/tmp/combined.wkt
 wkt2svg </tmp/combined.wkt >examples/urquhart.svg
-
-echo "Generating Random L-Systems..."
-mkdir -p "$REPO_ROOT/examples/random-lsystems"
-for i in $(seq 0 13); do
-    # geom2graph --tolerance 1e-3 |  # Use geom2graph round trip to simplify geometries
-    # geom2graph --tolerance 1e-3 --graph2geom |
-    jq ".[$i]" "$REPO_ROOT/examples/random-lsystems/saved.json" |
-        "$REPO_ROOT/tools/parse-production-rules.py" -c - -n "$(jq ".[$i].iterations" "$REPO_ROOT/examples/random-lsystems/saved.json")" |
-        "$REPO_ROOT/tools/interpret-lstring.py" -l ERROR -a "$(jq ".[$i].angle" "$REPO_ROOT/examples/random-lsystems/saved.json")" |
-        "$REPO_ROOT/tools/project.py" --scale "$(jq ".[$i].scale" "$REPO_ROOT/examples/random-lsystems/saved.json")" --kind pca |
-        wkt2svg --output "$REPO_ROOT/examples/random-lsystems/random-$i.svg"
-done

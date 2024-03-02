@@ -60,6 +60,46 @@ to produce/consume a standard textual interface.
 # Examples
 ## Asemic writing
 ## Random L-Systems
+[examples/random-lsystems/saved.json](examples/random-lsystems/saved.json) contains parameters for
+randomly (pre)generated Lindenmayer systems.
+```sh
+for i in $(seq 0 13); do
+    jq ".[$i]" examples/random-lsystems/saved.json |
+        tools/parse-production-rules.py -c - -n "$(jq ".[$i].iterations" examples/random-lsystems/saved.json)" |
+        tools/interpret-lstring.py -l ERROR -a "$(jq ".[$i].angle" examples/random-lsystems/saved.json)" |
+        tools/project.py --scale "$(jq ".[$i].scale" examples/random-lsystems/saved.json)" --kind pca |
+        wkt2svg --output "examples/random-lsystems/random-$i.svg"
+done
+```
+
+
+![examples/random-lsystems/random-0.svg](examples/random-lsystems/random-0.svg)
+
+![examples/random-lsystems/random-10.svg](examples/random-lsystems/random-10.svg)
+
+![examples/random-lsystems/random-11.svg](examples/random-lsystems/random-11.svg)
+
+![examples/random-lsystems/random-12.svg](examples/random-lsystems/random-12.svg)
+
+![examples/random-lsystems/random-13.svg](examples/random-lsystems/random-13.svg)
+
+![examples/random-lsystems/random-1.svg](examples/random-lsystems/random-1.svg)
+
+![examples/random-lsystems/random-2.svg](examples/random-lsystems/random-2.svg)
+
+![examples/random-lsystems/random-3.svg](examples/random-lsystems/random-3.svg)
+
+![examples/random-lsystems/random-4.svg](examples/random-lsystems/random-4.svg)
+
+![examples/random-lsystems/random-5.svg](examples/random-lsystems/random-5.svg)
+
+![examples/random-lsystems/random-6.svg](examples/random-lsystems/random-6.svg)
+
+![examples/random-lsystems/random-7.svg](examples/random-lsystems/random-7.svg)
+
+![examples/random-lsystems/random-8.svg](examples/random-lsystems/random-8.svg)
+
+![examples/random-lsystems/random-9.svg](examples/random-lsystems/random-9.svg)
 
 # The tools
 
