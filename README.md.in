@@ -59,6 +59,54 @@ to produce/consume a standard textual interface.
 
 # Examples
 ## Asemic writing
+The following snippet generates random asemic writing glyphs
+```sh
+@ASEMIC_SETUP_SNIPPET@
+```
+
+To generate random glyphs, we'll:
+1. Take a geometry graph
+2. Perform random traverals of the graph
+3. (optionally) Smooth each traversal into a curve
+```sh
+@ASEMIC_RANDOM_ROUNDED_SNIPPET@
+```
+![](@ASEMIC_RANDOM_ROUNDED@)
+The `--untraversed` points could be replaced with diacritical marks.
+
+We could also use the triangulation of a random point cloud
+```sh
+@ASEMIC_RANDOM_TRIANGULATED_SNIPPET@
+```
+![](@ASEMIC_RANDOM_TRIANGULATED@)
+
+Neither of these approaches give a coherent sense of self-similarity that's necessary for linguistic
+glyphs. If, instead of using a random point cloud, we use a regular grid, that dramatically changes
+the sense of self-similarity.
+```sh
+@ASEMIC_GRID_ROUNDED_SNIPPET@
+```
+![](@ASEMIC_GRID_ROUNDED@)
+
+We can also reduce the number of smoothing iterations to get beveled corners
+```sh
+@ASEMIC_GRID_BEVELED_SNIPPET@
+```
+![](@ASEMIC_GRID_BEVELED@)
+
+We could also regular triangle grid, to get loopier results, with no vertical lines
+```sh
+@ASEMIC_GRID_TRIANGULATED_SNIPPET@
+```
+![](@ASEMIC_GRID_TRIANGULATED@)
+
+Using a slanted grid makes _almost_ compelling cursive, if only the jarring horizontal lines were
+removed.
+```sh
+@ASEMIC_GRID_JAGGED_SNIPPET@
+```
+![](@ASEMIC_GRID_JAGGED@)
+
 ## Random L-Systems
 [examples/random-lsystems/saved.json](examples/random-lsystems/saved.json) contains parameters for
 randomly (pre)generated Lindenmayer systems.

@@ -17,9 +17,6 @@ PATH="$REPO_ROOT/target/release/:$PATH"
 echo "Snap..."
 "$REPO_ROOT/examples/snap/generate.sh"
 
-echo "Asemic..."
-"$REPO_ROOT/examples/asemic/generate.sh" | wkt2svg --output "$REPO_ROOT/examples/asemic/example.svg"
-
 echo "Bitwise..."
 bitwise --x-max 96 --y-max 96 "(x & y) & (x ^ y) % 11" |
     transform --scale 10 |

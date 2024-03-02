@@ -59,47 +59,119 @@ to produce/consume a standard textual interface.
 
 # Examples
 ## Asemic writing
+The following snippet generates random asemic writing glyphs
+```sh
+glyphs() {
+    local glyph_kind="$1"
+    local number="$2"
+    local size="$3"
+
+    {
+        for _ in $(seq "$number"); do
+            $glyph_kind "$size"
+        done
+    } | pack --width 1000 --height 1000 --padding 20
+}
+```
+
+To generate random glyphs, we'll:
+1. Take a geometry graph
+2. Perform random traverals of the graph
+3. (optionally) Smooth each traversal into a curve
+```sh
+random_rounded() {
+    local size="$1"
+    point-cloud --log-level WARN --domain unit-square --points 15 --scale 6 |
+        urquhart --output-format tgf |
+        traverse --log-level WARN --traversals 5 --length 5 --untraversed |
+        transform --scale="$size" |
+        smooth --iterations 4 |
+        bundle
+}
+glyphs random_rounded 90 10 | wkt2svg --output $ASEMIC_RANDOM_ROUNDED
+```
+![](./examples/asemic/random-rounded.svg)
+The `--untraversed` points could be replaced with diacritical marks.
+
+We could also use the triangulation of a random point cloud
+```sh
+random_triangulated() {
+    local size="$1"
+    point-cloud --log-level WARN --domain unit-square --points 10 --scale 6 |
+        triangulate --output-format tgf |
+        traverse --log-level WARN --traversals 3 --length 3 --remove-after-traverse |
+        transform --scale="$size" |
+        smooth --iterations 4 |
+        bundle
+}
+glyphs random_triangulated 100 10 | wkt2svg --output $ASEMIC_RANDOM_TRIANGULATED
+```
+![](./examples/asemic/random-triangulated.svg)
+
+Neither of these approaches give a coherent sense of self-similarity that's necessary for linguistic
+glyphs. If, instead of using a random point cloud, we use a regular grid, that dramatically changes
+the sense of self-similarity.
+```sh
+grid_rounded() {
+    local size="$1"
+    grid --output-format graph --width=2 --height=3 |
+        traverse --log-level WARN --traversals 5 --length 5 --remove-after-traverse |
+        transform --scale="$size" |
+        smooth --iterations 4 |
+        bundle
+}
+glyphs grid_rounded 120 20 | wkt2svg --output $ASEMIC_GRID_ROUNDED
+```
+![](./examples/asemic/grid-rounded.svg)
+
+We can also reduce the number of smoothing iterations to get beveled corners
+```sh
+grid_beveled() {
+    local size="$1"
+    grid --output-format graph --width=2 --height=3 |
+        traverse --log-level WARN --traversals 5 --length 5 --remove-after-traverse |
+        transform --scale="$size" |
+        smooth --iterations 1 |
+        bundle
+}
+glyphs grid_beveled 120 20 | wkt2svg --output $ASEMIC_GRID_BEVELED
+```
+![](./examples/asemic/grid-beveled.svg)
+
+We could also regular triangle grid, to get loopier results, with no vertical lines
+```sh
+grid_triangulated() {
+    local size="$1"
+    grid --grid-type triangle --output-format graph --width=2 --height=3 |
+        traverse --log-level WARN --traversals 4 --length 5 --remove-after-traverse |
+        transform --scale="$size" |
+        smooth --iterations 4 |
+        bundle
+}
+glyphs grid_triangulated 100 20 | wkt2svg --output $ASEMIC_GRID_TRIANGULATED
+```
+![](./examples/asemic/grid-triangulated.svg)
+
+```sh
+grid_jagged() {
+    local size="$1"
+    grid --grid-type ragged --output-format graph --width=2 --height=3 |
+        traverse --log-level WARN --traversals 4 --length 5 --remove-after-traverse |
+        transform --scale="$size" |
+        smooth --iterations 4 |
+        bundle
+}
+glyphs grid_jagged 100 20 | wkt2svg --output $ASEMIC_GRID_JAGGED
+```
+![](./examples/asemic/grid-jagged.svg)
+
 ## Random L-Systems
 [examples/random-lsystems/saved.json](examples/random-lsystems/saved.json) contains parameters for
 randomly (pre)generated Lindenmayer systems.
 ```sh
-for i in $(seq 0 13); do
-    jq ".[$i]" examples/random-lsystems/saved.json |
-        tools/parse-production-rules.py -c - -n "$(jq ".[$i].iterations" examples/random-lsystems/saved.json)" |
-        tools/interpret-lstring.py -l ERROR -a "$(jq ".[$i].angle" examples/random-lsystems/saved.json)" |
-        tools/project.py --scale "$(jq ".[$i].scale" examples/random-lsystems/saved.json)" --kind pca |
-        wkt2svg --output "examples/random-lsystems/random-$i.svg"
-done
+@RANDOM_LSYSTEMS_SNIPPET@
 ```
-
-
-![examples/random-lsystems/random-0.svg](examples/random-lsystems/random-0.svg)
-
-![examples/random-lsystems/random-10.svg](examples/random-lsystems/random-10.svg)
-
-![examples/random-lsystems/random-11.svg](examples/random-lsystems/random-11.svg)
-
-![examples/random-lsystems/random-12.svg](examples/random-lsystems/random-12.svg)
-
-![examples/random-lsystems/random-13.svg](examples/random-lsystems/random-13.svg)
-
-![examples/random-lsystems/random-1.svg](examples/random-lsystems/random-1.svg)
-
-![examples/random-lsystems/random-2.svg](examples/random-lsystems/random-2.svg)
-
-![examples/random-lsystems/random-3.svg](examples/random-lsystems/random-3.svg)
-
-![examples/random-lsystems/random-4.svg](examples/random-lsystems/random-4.svg)
-
-![examples/random-lsystems/random-5.svg](examples/random-lsystems/random-5.svg)
-
-![examples/random-lsystems/random-6.svg](examples/random-lsystems/random-6.svg)
-
-![examples/random-lsystems/random-7.svg](examples/random-lsystems/random-7.svg)
-
-![examples/random-lsystems/random-8.svg](examples/random-lsystems/random-8.svg)
-
-![examples/random-lsystems/random-9.svg](examples/random-lsystems/random-9.svg)
+@RANDOM_LSYSTEM_IMAGES@
 
 # The tools
 
