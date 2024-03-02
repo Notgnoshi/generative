@@ -80,17 +80,6 @@ comm -23 /tmp/delaunay.wkt /tmp/urquhart.wkt >/tmp/difference.wkt
 } >/tmp/combined.wkt
 wkt2svg </tmp/combined.wkt >examples/urquhart.svg
 
-echo "Converting the WKT to a graph..."
-geom2graph \
-    --tolerance=0.001 \
-    --input "$REPO_ROOT/examples/fractal-plant-1.wkt" \
-    --output "$REPO_ROOT/examples/fractal-plant-1.tgf"
-
-geom2graph \
-    --tolerance=0.001 \
-    --input "$REPO_ROOT/examples/maya-tree-2.wkt" \
-    --output "$REPO_ROOT/examples/maya-tree-2.tgf"
-
 echo "Generating Random L-Systems..."
 mkdir -p "$REPO_ROOT/examples/random-lsystems"
 for i in $(seq 0 13); do
