@@ -222,6 +222,21 @@ $ @POINT_CLOUD_SNIPPET@
 ```
 
 ### grid
+The `grid` tool generates different kinds of grids:
+* `triangle`
+* `quad`
+* `ragged`
+* `hexagon`
+and supports outputting the resulting grid in TGF graph format, WKT POINTs, or WKT LINESTRINGs.
+
+```sh
+$ @GRID_GRAPH_SNIPPET@
+@GRID_GRAPH_OUTPUT@
+```
+```sh
+$ @GRID_HEX_SNIPPET@
+```
+![](./examples/grid/hex.svg)
 
 ## Algorithms
 ### bitwise

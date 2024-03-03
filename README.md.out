@@ -217,14 +217,35 @@ The generation-type tools generate input data for other tools to consume.
 ### point-cloud
 `point-cloud` is a tool that generates random points in the unit circle or square.
 ```sh
-$ point-cloud --points 4 --domain unit-circle --scale 100 --seed 15838575381579332872
-POINT (30.224877936836876 -70.83712102787706)
-POINT (-38.04972657419976 -33.95658816921603)
-POINT (-1.7494655022386558 -3.0116273192492646)
-POINT (-4.305088398836983 10.443819974018535)
+$ @POINT_CLOUD_SNIPPET@
+@POINT_CLOUD_OUTPUT@
 ```
 
 ### grid
+The `grid` tool generates different kinds of grids:
+* `triangle`
+* `quad`
+* `ragged`
+* `hexagon`
+and supports outputting the resulting grid in TGF graph format, WKT POINTs, or WKT LINESTRINGs.
+
+```sh
+$ grid --output-format graph --grid-type quad --width 1 --height 1
+0	POINT(0 0)
+1	POINT(1 0)
+2	POINT(0 1)
+3	POINT(1 1)
+#
+0	2
+0	1
+1	3
+2	3
+```
+```sh
+$ grid --output-format lines --grid-type hexagon --size 20 |
+    wkt2svg --output ./examples/grid/hex.svg
+```
+![](./examples/grid/hex.svg)
 
 ## Algorithms
 ### bitwise
