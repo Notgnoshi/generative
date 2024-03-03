@@ -1,0 +1,677 @@
+<svg transform="scale(1,-1)" viewBox="-209 -209 466 466" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { stroke:black; stroke-width:2; fill:none;}
+</style>
+<circle cx="-206" cy="-66" r="1"/>
+<polyline points="-206 -46 -196 -36"/>
+<circle cx="-206" cy="-26" r="1"/>
+<polyline points="-206 -6 -196 4"/>
+<circle cx="-206" cy="14" r="1"/>
+<polyline points="-206 34 -196 44"/>
+<circle cx="-206" cy="194" r="1"/>
+<polyline points="-206 214 -196 214"/>
+<circle cx="-206" cy="234" r="1"/>
+<polyline points="-206 254 -196 254"/>
+<polyline points="-196 -36 -186 -26"/>
+<polyline points="-196 4 -186 14"/>
+<polyline points="-196 44 -186 54"/>
+<polyline points="-196 84 -186 84"/>
+<polyline points="-196 94 -186 94"/>
+<polyline points="-196 124 -186 124"/>
+<polyline points="-196 134 -186 134"/>
+<polyline points="-196 164 -186 164"/>
+<polyline points="-196 174 -186 174"/>
+<polyline points="-196 214 -186 214"/>
+<polyline points="-196 254 -186 254"/>
+<circle cx="-186" cy="-86" r="1"/>
+<polyline points="-186 -46 -196 -36"/>
+<circle cx="-186" cy="-26" r="1"/>
+<polyline points="-186 -6 -176 -6"/>
+<polyline points="-186 14 -176 14"/>
+<circle cx="-186" cy="54" r="1"/>
+<polyline points="-186 84 -186 94"/>
+<circle cx="-186" cy="94" r="1"/>
+<polyline points="-186 124 -186 134"/>
+<polyline points="-186 134 -176 144"/>
+<polyline points="-186 164 -186 174"/>
+<circle cx="-186" cy="174" r="1"/>
+<polyline points="-186 194 -186 204"/>
+<polyline points="-186 204 -186 214"/>
+<circle cx="-186" cy="214" r="1"/>
+<polyline points="-186 234 -186 244"/>
+<polyline points="-186 244 -176 254"/>
+<polyline points="-186 254 -176 254"/>
+<polyline points="-176 -6 -166 -6"/>
+<polyline points="-176 4 -166 4"/>
+<polyline points="-176 14 -166 14"/>
+<polyline points="-176 74 -166 74"/>
+<polyline points="-176 144 -166 144"/>
+<polyline points="-176 154 -166 154"/>
+<polyline points="-176 254 -166 254"/>
+<circle cx="-166" cy="-106" r="1"/>
+<polyline points="-166 -46 -156 -36"/>
+<polyline points="-166 -26 -156 -16"/>
+<polyline points="-166 -16 -156 -16"/>
+<polyline points="-166 -6 -156 -6"/>
+<polyline points="-166 4 -156 4"/>
+<polyline points="-166 14 -156 14"/>
+<polyline points="-166 64 -166 74"/>
+<polyline points="-166 74 -156 84"/>
+<polyline points="-166 144 -166 154"/>
+<polyline points="-166 154 -156 164"/>
+<circle cx="-166" cy="194" r="1"/>
+<polyline points="-166 214 -156 214"/>
+<polyline points="-166 234 -156 234"/>
+<polyline points="-166 244 -156 254"/>
+<polyline points="-166 254 -156 254"/>
+<polyline points="-156 -36 -146 -26"/>
+<polyline points="-156 -16 -146 -16"/>
+<polyline points="-156 -6 -146 -6"/>
+<polyline points="-156 4 -146 4"/>
+<polyline points="-156 14 -146 14"/>
+<polyline points="-156 44 -146 44"/>
+<polyline points="-156 54 -146 54"/>
+<polyline points="-156 84 -146 84"/>
+<polyline points="-156 94 -146 94"/>
+<polyline points="-156 124 -146 124"/>
+<polyline points="-156 134 -146 134"/>
+<polyline points="-156 164 -146 164"/>
+<polyline points="-156 174 -146 174"/>
+<polyline points="-156 214 -146 214"/>
+<polyline points="-156 234 -146 234"/>
+<polyline points="-156 254 -146 254"/>
+<circle cx="-146" cy="-126" r="1"/>
+<polyline points="-146 -46 -156 -36"/>
+<polyline points="-146 -26 -146 -16"/>
+<polyline points="-146 -16 -146 -6"/>
+<polyline points="-146 -6 -146 4"/>
+<polyline points="-146 4 -146 14"/>
+<circle cx="-146" cy="14" r="1"/>
+<polyline points="-146 44 -146 54"/>
+<circle cx="-146" cy="54" r="1"/>
+<polyline points="-146 84 -136 84"/>
+<polyline points="-146 94 -136 94"/>
+<polyline points="-146 124 -146 134"/>
+<circle cx="-146" cy="134" r="1"/>
+<polyline points="-146 164 -146 174"/>
+<circle cx="-146" cy="174" r="1"/>
+<polyline points="-146 194 -136 204"/>
+<polyline points="-146 204 -136 204"/>
+<polyline points="-146 214 -136 214"/>
+<polyline points="-146 224 -136 224"/>
+<polyline points="-146 234 -136 234"/>
+<polyline points="-146 244 -136 244"/>
+<circle cx="-146" cy="254" r="1"/>
+<polyline points="-136 74 -126 74"/>
+<polyline points="-136 84 -126 84"/>
+<polyline points="-136 94 -126 94"/>
+<polyline points="-136 204 -126 204"/>
+<polyline points="-136 214 -126 214"/>
+<polyline points="-136 224 -126 224"/>
+<polyline points="-136 234 -126 234"/>
+<polyline points="-136 244 -126 254"/>
+<circle cx="-126" cy="-146" r="1"/>
+<polyline points="-126 -46 -116 -36"/>
+<polyline points="-126 34 -116 44"/>
+<polyline points="-126 54 -116 64"/>
+<polyline points="-126 64 -116 64"/>
+<polyline points="-126 74 -116 74"/>
+<polyline points="-126 84 -116 84"/>
+<polyline points="-126 94 -116 94"/>
+<circle cx="-126" cy="114" r="1"/>
+<polyline points="-126 134 -116 134"/>
+<circle cx="-126" cy="154" r="1"/>
+<polyline points="-126 174 -116 174"/>
+<polyline points="-126 204 -116 204"/>
+<polyline points="-126 214 -116 214"/>
+<polyline points="-126 224 -116 224"/>
+<polyline points="-126 234 -116 244"/>
+<polyline points="-126 254 -116 254"/>
+<polyline points="-116 -36 -106 -26"/>
+<polyline points="-116 4 -106 4"/>
+<polyline points="-116 14 -106 14"/>
+<polyline points="-116 44 -106 54"/>
+<polyline points="-116 64 -106 64"/>
+<polyline points="-116 74 -106 74"/>
+<polyline points="-116 84 -106 84"/>
+<polyline points="-116 94 -106 94"/>
+<polyline points="-116 134 -106 134"/>
+<polyline points="-116 174 -106 174"/>
+<polyline points="-116 184 -106 184"/>
+<polyline points="-116 194 -106 194"/>
+<polyline points="-116 204 -106 204"/>
+<polyline points="-116 214 -106 214"/>
+<polyline points="-116 224 -106 234"/>
+<polyline points="-116 244 -106 244"/>
+<polyline points="-116 254 -106 254"/>
+<circle cx="-106" cy="-166" r="1"/>
+<circle cx="-106" cy="-26" r="1"/>
+<polyline points="-106 4 -106 14"/>
+<circle cx="-106" cy="14" r="1"/>
+<polyline points="-106 34 -96 34"/>
+<polyline points="-106 54 -96 54"/>
+<polyline points="-106 64 -96 74"/>
+<polyline points="-106 74 -96 74"/>
+<polyline points="-106 84 -96 84"/>
+<polyline points="-106 94 -96 94"/>
+<polyline points="-106 114 -106 124"/>
+<polyline points="-106 124 -106 134"/>
+<circle cx="-106" cy="134" r="1"/>
+<polyline points="-106 154 -106 164"/>
+<polyline points="-106 164 -96 174"/>
+<polyline points="-106 174 -96 174"/>
+<polyline points="-106 184 -96 184"/>
+<polyline points="-106 194 -96 194"/>
+<polyline points="-106 204 -96 204"/>
+<polyline points="-106 214 -96 224"/>
+<polyline points="-106 234 -96 234"/>
+<polyline points="-106 244 -96 244"/>
+<polyline points="-106 254 -96 254"/>
+<polyline points="-96 -6 -86 -6"/>
+<polyline points="-96 34 -86 34"/>
+<polyline points="-96 44 -86 44"/>
+<polyline points="-96 54 -86 54"/>
+<polyline points="-96 74 -86 74"/>
+<polyline points="-96 84 -86 84"/>
+<polyline points="-96 94 -86 94"/>
+<polyline points="-96 174 -86 174"/>
+<polyline points="-96 184 -86 184"/>
+<polyline points="-96 194 -86 194"/>
+<polyline points="-96 204 -86 214"/>
+<polyline points="-96 224 -86 224"/>
+<polyline points="-96 234 -86 234"/>
+<polyline points="-96 244 -86 244"/>
+<polyline points="-96 254 -86 254"/>
+<circle cx="-86" cy="-186" r="1"/>
+<polyline points="-86 -16 -86 -6"/>
+<polyline points="-86 -6 -76 4"/>
+<polyline points="-86 24 -76 24"/>
+<polyline points="-86 34 -76 34"/>
+<polyline points="-86 44 -76 44"/>
+<polyline points="-86 54 -76 54"/>
+<polyline points="-86 64 -76 64"/>
+<polyline points="-86 74 -76 74"/>
+<polyline points="-86 84 -76 84"/>
+<polyline points="-86 94 -76 94"/>
+<circle cx="-86" cy="114" r="1"/>
+<polyline points="-86 134 -76 134"/>
+<polyline points="-86 154 -76 154"/>
+<polyline points="-86 164 -76 174"/>
+<polyline points="-86 174 -76 174"/>
+<polyline points="-86 184 -76 184"/>
+<polyline points="-86 194 -76 204"/>
+<polyline points="-86 214 -76 214"/>
+<polyline points="-86 224 -76 224"/>
+<polyline points="-86 234 -76 234"/>
+<polyline points="-86 244 -76 244"/>
+<polyline points="-86 254 -76 254"/>
+<polyline points="-76 -36 -66 -36"/>
+<polyline points="-76 -26 -66 -26"/>
+<polyline points="-76 4 -66 4"/>
+<polyline points="-76 14 -66 14"/>
+<polyline points="-76 24 -66 24"/>
+<polyline points="-76 34 -66 34"/>
+<polyline points="-76 44 -66 44"/>
+<polyline points="-76 54 -66 54"/>
+<polyline points="-76 64 -66 64"/>
+<polyline points="-76 74 -66 74"/>
+<polyline points="-76 84 -66 84"/>
+<polyline points="-76 94 -66 94"/>
+<polyline points="-76 134 -66 134"/>
+<polyline points="-76 154 -66 154"/>
+<polyline points="-76 174 -66 174"/>
+<polyline points="-76 184 -66 194"/>
+<polyline points="-76 204 -66 204"/>
+<polyline points="-76 214 -66 214"/>
+<polyline points="-76 224 -66 224"/>
+<polyline points="-76 234 -66 234"/>
+<polyline points="-76 244 -66 244"/>
+<polyline points="-76 254 -66 254"/>
+<circle cx="-66" cy="-206" r="1"/>
+<polyline points="-66 -36 -66 -26"/>
+<circle cx="-66" cy="-26" r="1"/>
+<polyline points="-66 4 -66 14"/>
+<polyline points="-66 14 -66 24"/>
+<polyline points="-66 24 -66 34"/>
+<polyline points="-66 34 -66 44"/>
+<polyline points="-66 44 -66 54"/>
+<polyline points="-66 54 -66 64"/>
+<polyline points="-66 64 -66 74"/>
+<polyline points="-66 74 -66 84"/>
+<polyline points="-66 84 -66 94"/>
+<circle cx="-66" cy="94" r="1"/>
+<polyline points="-66 114 -66 124"/>
+<polyline points="-66 124 -66 134"/>
+<polyline points="-66 134 -66 144"/>
+<polyline points="-66 144 -66 154"/>
+<polyline points="-66 154 -66 164"/>
+<polyline points="-66 164 -66 174"/>
+<polyline points="-66 174 -76 184"/>
+<polyline points="-66 194 -66 204"/>
+<polyline points="-66 204 -66 214"/>
+<polyline points="-66 214 -66 224"/>
+<polyline points="-66 224 -66 234"/>
+<polyline points="-66 234 -66 244"/>
+<polyline points="-66 244 -66 254"/>
+<circle cx="-66" cy="254" r="1"/>
+<polyline points="-46 -206 -36 -196"/>
+<circle cx="-46" cy="-186" r="1"/>
+<polyline points="-46 -166 -36 -156"/>
+<circle cx="-46" cy="-146" r="1"/>
+<polyline points="-46 -126 -36 -116"/>
+<circle cx="-46" cy="94" r="1"/>
+<circle cx="-46" cy="114" r="1"/>
+<polyline points="-46 134 -36 134"/>
+<polyline points="-36 -196 -26 -186"/>
+<polyline points="-36 -156 -26 -146"/>
+<polyline points="-36 -116 -26 -106"/>
+<polyline points="-36 -76 -26 -76"/>
+<polyline points="-36 -66 -26 -66"/>
+<polyline points="-36 134 -26 134"/>
+<polyline points="-26 -206 -36 -196"/>
+<circle cx="-26" cy="-186" r="1"/>
+<polyline points="-26 -166 -16 -166"/>
+<polyline points="-26 -146 -16 -146"/>
+<circle cx="-26" cy="-106" r="1"/>
+<polyline points="-26 -76 -26 -66"/>
+<circle cx="-26" cy="-66" r="1"/>
+<circle cx="-26" cy="74" r="1"/>
+<polyline points="-26 114 -26 124"/>
+<polyline points="-26 124 -26 134"/>
+<circle cx="-26" cy="134" r="1"/>
+<polyline points="-16 -166 -6 -166"/>
+<polyline points="-16 -156 -6 -156"/>
+<polyline points="-16 -146 -6 -146"/>
+<polyline points="-16 -86 -6 -86"/>
+<polyline points="-16 174 -6 174"/>
+<polyline points="-16 224 -6 224"/>
+<polyline points="-16 234 -6 234"/>
+<polyline points="-16 244 -6 244"/>
+<polyline points="-16 254 -6 254"/>
+<polyline points="-6 -206 4 -196"/>
+<polyline points="-6 -186 4 -176"/>
+<polyline points="-6 -176 4 -176"/>
+<polyline points="-6 -166 4 -166"/>
+<polyline points="-6 -156 4 -156"/>
+<polyline points="-6 -146 4 -146"/>
+<polyline points="-6 -96 -6 -86"/>
+<polyline points="-6 -86 4 -76"/>
+<circle cx="-6" cy="54" r="1"/>
+<polyline points="-6 154 4 154"/>
+<polyline points="-6 164 4 174"/>
+<polyline points="-6 174 4 174"/>
+<polyline points="-6 224 4 224"/>
+<polyline points="-6 234 4 234"/>
+<polyline points="-6 244 4 244"/>
+<polyline points="-6 254 4 254"/>
+<polyline points="4 -196 14 -186"/>
+<polyline points="4 -176 14 -176"/>
+<polyline points="4 -166 14 -166"/>
+<polyline points="4 -156 14 -156"/>
+<polyline points="4 -146 14 -146"/>
+<polyline points="4 -116 14 -116"/>
+<polyline points="4 -106 14 -106"/>
+<polyline points="4 -76 14 -76"/>
+<polyline points="4 -66 14 -66"/>
+<polyline points="4 154 14 154"/>
+<polyline points="4 174 14 174"/>
+<polyline points="4 224 14 224"/>
+<polyline points="4 234 14 234"/>
+<polyline points="4 244 14 244"/>
+<polyline points="4 254 14 254"/>
+<polyline points="14 -206 4 -196"/>
+<polyline points="14 -186 14 -176"/>
+<polyline points="14 -176 14 -166"/>
+<polyline points="14 -166 14 -156"/>
+<polyline points="14 -156 14 -146"/>
+<circle cx="14" cy="-146" r="1"/>
+<polyline points="14 -116 14 -106"/>
+<circle cx="14" cy="-106" r="1"/>
+<polyline points="14 -76 24 -76"/>
+<polyline points="14 -66 24 -66"/>
+<circle cx="14" cy="34" r="1"/>
+<polyline points="14 144 14 154"/>
+<polyline points="14 154 14 164"/>
+<polyline points="14 164 14 174"/>
+<polyline points="14 174 24 184"/>
+<polyline points="14 224 14 234"/>
+<polyline points="14 234 14 244"/>
+<polyline points="14 244 14 254"/>
+<circle cx="14" cy="254" r="1"/>
+<polyline points="24 -86 34 -86"/>
+<polyline points="24 -76 34 -76"/>
+<polyline points="24 -66 34 -66"/>
+<polyline points="24 184 34 184"/>
+<polyline points="24 194 34 194"/>
+<polyline points="24 204 34 204"/>
+<polyline points="24 214 34 214"/>
+<polyline points="34 -206 44 -196"/>
+<polyline points="34 -126 44 -116"/>
+<polyline points="34 -106 44 -96"/>
+<polyline points="34 -96 44 -96"/>
+<polyline points="34 -86 44 -86"/>
+<polyline points="34 -76 44 -76"/>
+<polyline points="34 -66 44 -66"/>
+<circle cx="34" cy="14" r="1"/>
+<polyline points="34 184 44 184"/>
+<polyline points="34 194 44 194"/>
+<polyline points="34 204 44 204"/>
+<polyline points="34 214 44 214"/>
+<polyline points="44 -196 54 -186"/>
+<polyline points="44 -156 54 -156"/>
+<polyline points="44 -146 54 -146"/>
+<polyline points="44 -116 54 -106"/>
+<polyline points="44 -96 54 -96"/>
+<polyline points="44 -86 54 -86"/>
+<polyline points="44 -76 54 -76"/>
+<polyline points="44 -66 54 -66"/>
+<polyline points="44 184 54 184"/>
+<polyline points="44 194 54 194"/>
+<polyline points="44 204 54 204"/>
+<polyline points="44 214 54 214"/>
+<circle cx="54" cy="-186" r="1"/>
+<polyline points="54 -156 54 -146"/>
+<circle cx="54" cy="-146" r="1"/>
+<polyline points="54 -126 64 -126"/>
+<polyline points="54 -106 64 -106"/>
+<polyline points="54 -96 64 -86"/>
+<polyline points="54 -86 64 -86"/>
+<polyline points="54 -76 64 -76"/>
+<polyline points="54 -66 64 -66"/>
+<circle cx="54" cy="-6" r="1"/>
+<polyline points="54 184 54 194"/>
+<polyline points="54 194 54 204"/>
+<polyline points="54 204 54 214"/>
+<polyline points="54 214 64 224"/>
+<polyline points="64 -166 74 -166"/>
+<polyline points="64 -126 74 -126"/>
+<polyline points="64 -116 74 -116"/>
+<polyline points="64 -106 74 -106"/>
+<polyline points="64 -86 74 -86"/>
+<polyline points="64 -76 74 -76"/>
+<polyline points="64 -66 74 -66"/>
+<polyline points="64 144 74 144"/>
+<polyline points="64 154 74 154"/>
+<polyline points="64 164 74 164"/>
+<polyline points="64 174 74 174"/>
+<polyline points="64 224 74 224"/>
+<polyline points="64 234 74 234"/>
+<polyline points="64 244 74 244"/>
+<polyline points="64 254 74 254"/>
+<polyline points="74 -176 74 -166"/>
+<polyline points="74 -166 84 -156"/>
+<polyline points="74 -136 84 -136"/>
+<polyline points="74 -126 84 -126"/>
+<polyline points="74 -116 84 -116"/>
+<polyline points="74 -106 84 -106"/>
+<polyline points="74 -96 84 -96"/>
+<polyline points="74 -86 84 -86"/>
+<polyline points="74 -76 84 -76"/>
+<polyline points="74 -66 84 -66"/>
+<circle cx="74" cy="-26" r="1"/>
+<polyline points="74 144 84 144"/>
+<polyline points="74 154 84 154"/>
+<polyline points="74 164 84 164"/>
+<polyline points="74 174 84 174"/>
+<polyline points="74 224 84 224"/>
+<polyline points="74 234 84 234"/>
+<polyline points="74 244 84 244"/>
+<polyline points="74 254 84 254"/>
+<polyline points="84 -196 94 -196"/>
+<polyline points="84 -186 94 -186"/>
+<polyline points="84 -156 94 -156"/>
+<polyline points="84 -146 94 -146"/>
+<polyline points="84 -136 94 -136"/>
+<polyline points="84 -126 94 -126"/>
+<polyline points="84 -116 94 -116"/>
+<polyline points="84 -106 94 -106"/>
+<polyline points="84 -96 94 -96"/>
+<polyline points="84 -86 94 -86"/>
+<polyline points="84 -76 94 -76"/>
+<polyline points="84 -66 94 -66"/>
+<polyline points="84 144 94 144"/>
+<polyline points="84 154 94 154"/>
+<polyline points="84 164 94 164"/>
+<polyline points="84 174 94 174"/>
+<polyline points="84 224 94 224"/>
+<polyline points="84 234 94 234"/>
+<polyline points="84 244 94 244"/>
+<polyline points="84 254 94 254"/>
+<polyline points="94 -196 94 -186"/>
+<circle cx="94" cy="-186" r="1"/>
+<polyline points="94 -156 94 -146"/>
+<polyline points="94 -146 94 -136"/>
+<polyline points="94 -136 94 -126"/>
+<polyline points="94 -126 94 -116"/>
+<polyline points="94 -116 94 -106"/>
+<polyline points="94 -106 94 -96"/>
+<polyline points="94 -96 94 -86"/>
+<polyline points="94 -86 94 -76"/>
+<polyline points="94 -76 94 -66"/>
+<circle cx="94" cy="-66" r="1"/>
+<circle cx="94" cy="-46" r="1"/>
+<polyline points="94 144 94 154"/>
+<polyline points="94 154 94 164"/>
+<polyline points="94 164 94 174"/>
+<circle cx="94" cy="174" r="1"/>
+<polyline points="94 224 94 234"/>
+<polyline points="94 234 94 244"/>
+<polyline points="94 244 94 254"/>
+<circle cx="94" cy="254" r="1"/>
+<circle cx="114" cy="-126" r="1"/>
+<polyline points="114 -106 124 -106"/>
+<circle cx="114" cy="-86" r="1"/>
+<polyline points="114 -66 124 -66"/>
+<circle cx="114" cy="-46" r="1"/>
+<polyline points="114 -26 124 -26"/>
+<circle cx="114" cy="254" r="1"/>
+<polyline points="124 -196 134 -196"/>
+<polyline points="124 -186 134 -186"/>
+<polyline points="124 -156 134 -156"/>
+<polyline points="124 -146 134 -146"/>
+<polyline points="124 -106 134 -106"/>
+<polyline points="124 -66 134 -66"/>
+<polyline points="124 -26 134 -26"/>
+<polyline points="134 -196 134 -186"/>
+<polyline points="134 -186 144 -176"/>
+<polyline points="134 -156 134 -146"/>
+<circle cx="134" cy="-146" r="1"/>
+<polyline points="134 -126 134 -116"/>
+<polyline points="134 -116 134 -106"/>
+<circle cx="134" cy="-106" r="1"/>
+<polyline points="134 -86 134 -76"/>
+<polyline points="134 -76 144 -66"/>
+<polyline points="134 -66 144 -66"/>
+<polyline points="134 -46 134 -36"/>
+<polyline points="134 -36 134 -26"/>
+<circle cx="134" cy="-26" r="1"/>
+<circle cx="134" cy="234" r="1"/>
+<polyline points="144 -176 154 -176"/>
+<polyline points="144 -166 154 -166"/>
+<polyline points="144 -66 154 -66"/>
+<polyline points="144 14 154 14"/>
+<polyline points="144 64 154 64"/>
+<polyline points="144 74 154 74"/>
+<polyline points="144 84 154 84"/>
+<polyline points="144 94 154 94"/>
+<polyline points="154 -176 154 -166"/>
+<polyline points="154 -166 164 -156"/>
+<circle cx="154" cy="-126" r="1"/>
+<polyline points="154 -106 164 -106"/>
+<polyline points="154 -86 164 -86"/>
+<polyline points="154 -76 164 -66"/>
+<polyline points="154 -66 164 -66"/>
+<polyline points="154 -6 164 -6"/>
+<polyline points="154 4 164 14"/>
+<polyline points="154 14 164 14"/>
+<polyline points="154 64 164 64"/>
+<polyline points="154 74 164 74"/>
+<polyline points="154 84 164 84"/>
+<polyline points="154 94 164 94"/>
+<circle cx="154" cy="214" r="1"/>
+<polyline points="164 -196 174 -196"/>
+<polyline points="164 -186 174 -186"/>
+<polyline points="164 -156 174 -156"/>
+<polyline points="164 -146 174 -146"/>
+<polyline points="164 -106 174 -106"/>
+<polyline points="164 -86 174 -86"/>
+<polyline points="164 -66 174 -66"/>
+<polyline points="164 -6 174 -6"/>
+<polyline points="164 14 174 14"/>
+<polyline points="164 64 174 64"/>
+<polyline points="164 74 174 74"/>
+<polyline points="164 84 174 84"/>
+<polyline points="164 94 174 94"/>
+<polyline points="174 -196 174 -186"/>
+<circle cx="174" cy="-186" r="1"/>
+<polyline points="174 -156 174 -146"/>
+<circle cx="174" cy="-146" r="1"/>
+<polyline points="174 -126 184 -116"/>
+<polyline points="174 -116 184 -116"/>
+<polyline points="174 -106 184 -106"/>
+<polyline points="174 -96 184 -96"/>
+<polyline points="174 -86 184 -86"/>
+<polyline points="174 -76 184 -76"/>
+<circle cx="174" cy="-66" r="1"/>
+<polyline points="174 -16 174 -6"/>
+<polyline points="174 -6 174 4"/>
+<polyline points="174 4 174 14"/>
+<polyline points="174 14 184 24"/>
+<polyline points="174 64 174 74"/>
+<polyline points="174 74 174 84"/>
+<polyline points="174 84 174 94"/>
+<circle cx="174" cy="94" r="1"/>
+<circle cx="174" cy="194" r="1"/>
+<polyline points="184 -116 194 -116"/>
+<polyline points="184 -106 194 -106"/>
+<polyline points="184 -96 194 -96"/>
+<polyline points="184 -86 194 -86"/>
+<polyline points="184 -76 194 -66"/>
+<polyline points="184 24 194 24"/>
+<polyline points="184 34 194 34"/>
+<polyline points="184 44 194 44"/>
+<polyline points="184 54 194 54"/>
+<circle cx="194" cy="-206" r="1"/>
+<polyline points="194 -186 204 -186"/>
+<circle cx="194" cy="-166" r="1"/>
+<polyline points="194 -146 204 -146"/>
+<polyline points="194 -116 204 -116"/>
+<polyline points="194 -106 204 -106"/>
+<polyline points="194 -96 204 -96"/>
+<polyline points="194 -86 204 -76"/>
+<polyline points="194 -66 204 -66"/>
+<polyline points="194 24 204 24"/>
+<polyline points="194 34 204 34"/>
+<polyline points="194 44 204 44"/>
+<polyline points="194 54 204 54"/>
+<circle cx="194" cy="174" r="1"/>
+<polyline points="204 -186 214 -186"/>
+<polyline points="204 -146 214 -146"/>
+<polyline points="204 -136 214 -136"/>
+<polyline points="204 -126 214 -126"/>
+<polyline points="204 -116 214 -116"/>
+<polyline points="204 -106 214 -106"/>
+<polyline points="204 -96 214 -86"/>
+<polyline points="204 -76 214 -76"/>
+<polyline points="204 -66 214 -66"/>
+<polyline points="204 24 214 24"/>
+<polyline points="204 34 214 34"/>
+<polyline points="204 44 214 44"/>
+<polyline points="204 54 214 54"/>
+<polyline points="214 -206 214 -196"/>
+<polyline points="214 -196 214 -186"/>
+<circle cx="214" cy="-186" r="1"/>
+<polyline points="214 -166 214 -156"/>
+<polyline points="214 -156 224 -146"/>
+<polyline points="214 -146 224 -146"/>
+<polyline points="214 -136 224 -136"/>
+<polyline points="214 -126 224 -126"/>
+<polyline points="214 -116 224 -116"/>
+<polyline points="214 -106 224 -96"/>
+<polyline points="214 -86 224 -86"/>
+<polyline points="214 -76 224 -76"/>
+<polyline points="214 -66 224 -66"/>
+<polyline points="214 24 214 34"/>
+<polyline points="214 34 214 44"/>
+<polyline points="214 44 214 54"/>
+<polyline points="214 54 224 64"/>
+<circle cx="214" cy="154" r="1"/>
+<polyline points="224 -146 234 -146"/>
+<polyline points="224 -136 234 -136"/>
+<polyline points="224 -126 234 -126"/>
+<polyline points="224 -116 234 -106"/>
+<polyline points="224 -96 234 -96"/>
+<polyline points="224 -86 234 -86"/>
+<polyline points="224 -76 234 -76"/>
+<polyline points="224 -66 234 -66"/>
+<polyline points="224 -16 234 -16"/>
+<polyline points="224 -6 234 -6"/>
+<polyline points="224 4 234 4"/>
+<polyline points="224 14 234 14"/>
+<polyline points="224 64 234 64"/>
+<polyline points="224 74 234 74"/>
+<polyline points="224 84 234 84"/>
+<polyline points="224 94 234 94"/>
+<circle cx="234" cy="-206" r="1"/>
+<polyline points="234 -186 244 -186"/>
+<polyline points="234 -166 244 -166"/>
+<polyline points="234 -156 244 -146"/>
+<polyline points="234 -146 244 -146"/>
+<polyline points="234 -136 244 -136"/>
+<polyline points="234 -126 244 -116"/>
+<polyline points="234 -106 244 -106"/>
+<polyline points="234 -96 244 -96"/>
+<polyline points="234 -86 244 -86"/>
+<polyline points="234 -76 244 -76"/>
+<polyline points="234 -66 244 -66"/>
+<polyline points="234 -16 244 -16"/>
+<polyline points="234 -6 244 -6"/>
+<polyline points="234 4 244 4"/>
+<polyline points="234 14 244 14"/>
+<polyline points="234 64 244 64"/>
+<polyline points="234 74 244 74"/>
+<polyline points="234 84 244 84"/>
+<polyline points="234 94 244 94"/>
+<circle cx="234" cy="134" r="1"/>
+<polyline points="244 -186 254 -186"/>
+<polyline points="244 -166 254 -166"/>
+<polyline points="244 -146 254 -146"/>
+<polyline points="244 -136 254 -126"/>
+<polyline points="244 -116 254 -116"/>
+<polyline points="244 -106 254 -106"/>
+<polyline points="244 -96 254 -96"/>
+<polyline points="244 -86 254 -86"/>
+<polyline points="244 -76 254 -76"/>
+<polyline points="244 -66 254 -66"/>
+<polyline points="244 -16 254 -16"/>
+<polyline points="244 -6 254 -6"/>
+<polyline points="244 4 254 4"/>
+<polyline points="244 14 254 14"/>
+<polyline points="244 64 254 64"/>
+<polyline points="244 74 254 74"/>
+<polyline points="244 84 254 84"/>
+<polyline points="244 94 254 94"/>
+<polyline points="254 -206 254 -196"/>
+<polyline points="254 -196 254 -186"/>
+<polyline points="254 -186 254 -176"/>
+<polyline points="254 -176 254 -166"/>
+<polyline points="254 -166 254 -156"/>
+<polyline points="254 -156 254 -146"/>
+<polyline points="254 -146 244 -136"/>
+<polyline points="254 -126 254 -116"/>
+<polyline points="254 -116 254 -106"/>
+<polyline points="254 -106 254 -96"/>
+<polyline points="254 -96 254 -86"/>
+<polyline points="254 -86 254 -76"/>
+<polyline points="254 -76 254 -66"/>
+<circle cx="254" cy="-66" r="1"/>
+<polyline points="254 -16 254 -6"/>
+<polyline points="254 -6 254 4"/>
+<polyline points="254 4 254 14"/>
+<circle cx="254" cy="14" r="1"/>
+<polyline points="254 64 254 74"/>
+<polyline points="254 74 254 84"/>
+<polyline points="254 84 254 94"/>
+<circle cx="254" cy="94" r="1"/>
+<circle cx="254" cy="114" r="1"/>
+</svg>
