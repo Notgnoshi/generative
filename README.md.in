@@ -9,6 +9,39 @@ A polyglot collection of composable generative art tools, with a focus on 2D com
 
 # Table of contents
 
+* [How to build](#how-to-build)
+* [Philosophy](#philosophy)
+* [Examples](#examples)
+  * [Asemic writing](#asemic-writing)
+  * [Random L-Systems](#random-l-systems)
+* [The tools](#the-tools)
+  * [Lindenmayer systems](#lindenmayer-systems)
+    * [parse-production-rules.py](#parse-production-rulespy)
+    * [random-production-rules.py](#random-production-rulespy)
+    * [interpret-lstring.py](#interpret-lstringpy)
+    * [random-lsystem.sh](#random-lsystemsh)
+  * [Generation](#generation)
+    * [point-cloud](#point-cloud)
+    * [grid](#grid)
+  * [Algorithms](#algorithms)
+    * [bitwise](#bitwise)
+    * [dla](#dla)
+    * [streamline](#streamline)
+    * [traverse](#traverse)
+    * [urquhart](#urquhart)
+  * [Transformations](#transformations)
+    * [project.py](#projectpy)
+    * [geom2graph](#geom2graph)
+    * [smooth](#smooth)
+    * [snap](#snap)
+    * [transform](#transform)
+  * [Utilities](#utilities)
+    * [wkt2svg](#wkt2svg)
+    * [render.py](#renderpy)
+    * [bundle](#bundle)
+    * [pack](#pack)
+    * [format.py](#formatpy)
+
 # How to build
 This project contains a mix of Rust, C++, and Python. It's primarily Rust.
 
@@ -117,25 +150,60 @@ randomly (pre)generated Lindenmayer systems.
 
 # The tools
 
-## Utilities
-### wkt2svg
-### render.py
-### bundle
-### pack
-### format.py
-
 ## Lindenmayer Systems
-### random-production-rules.py
 ### parse-production-rules.py
-### interpret-lstring.py
-### random-lsystem.sh
+The `parse-production-rules.py` tool takes a set of production rules, and a starting axiom, and
+interprets the rules on the axiom for some specified number of iterations
+```sh
+$ @PARSE_LSYSTEM_SNIPPET@
+@PARSE_LSYSTEM_OUTPUT@
+```
 
-## Transformations
-### project.py
-### geom2graph
-### smooth
-### snap
-### transform
+This tool supports context-free, stochastic, and context-sensitive grammars, with rules of the form
+```
+[left_context<] lhs [>right_context] [:probability] -> rhs
+#ignore: tok1,tok2,tok3
+```
+The `[]` square brackets denote optional parts of the production rule.
+
+### random-production-rules.py
+The `random-production-rules.py` tool generates a random set of production rules in JSON form that
+`parse-production-rules.py --config` knows how to read.
+```sh
+$ @RANDOM_LSYSTEM_RULES_SNIPPET@
+@RANDOM_LSYSTEM_RULES_OUTPUT@
+```
+
+### interpret-lstring.py
+These L-strings can then be interpreted with a 3D turtle. Each symbol controls the turtle's motion
+through space.
+```sh
+$ @SIERPINKSI_TREE_SNIPPET@
+@SIERPINKSI_TREE_OUTPUT@
+```
+Notice that the geometries are in 3D WKT. They can be rendered in an interactive 3D OpenGL viewer
+([render.py](#renderpy)) or projected to 2D ([project.py](#projectpy) before being converted to SVG
+with [wkt2svg](#wkt2svg).
+
+```sh
+@SIERPINSKI_TREE_SVG@
+```
+![](./examples/lsystems/sierpinski-tree.svg)
+
+### random-lsystem.sh
+`random-production-rules.py` generates a great many duds (See
+[#83](https://github.com/Notgnoshi/generative/issues/83)), so `random-lsystem.sh` is an easy way of
+generating and visualizing random L-Systems quickly.
+```
+$ ./tools/random-lsystem.sh
+2024-03-03 08:57:05,580 - tools/random-production-rules.py - INFO - Using random seed 1063093925
+{"seed": 1063093925, "rules": ["G -> [>[v[[|v-|<F>GG[v", "G -> v]<|", "F -> <^v"], "axiom": "G"}
+2024-03-03 08:57:05,926 - tools/render.py - INFO - Loaded 64 segments and 0 points.
+```
+
+<!-- GitHub doesn't support inline .webm :( -->
+<!-- ffmpeg -i examples/lsystems/random-lsystem.webm -pix_fmt rgb8 examples/lsystems/random-lsystem.gif -->
+![random-lsystem.gif](./examples/lsystems/random-lsystem.gif)
 
 ## Generation
 ### point-cloud
@@ -148,3 +216,17 @@ randomly (pre)generated Lindenmayer systems.
 ### traverse
 ### triangulate
 ### urquhart
+
+## Transformations
+### project.py
+### geom2graph
+### smooth
+### snap
+### transform
+
+## Utilities
+### wkt2svg
+### render.py
+### bundle
+### pack
+### format.py
