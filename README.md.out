@@ -243,30 +243,46 @@ $ @GRID_HEX_SNIPPET@
 The bitwise tool was inspired by <https://www.reddit.com/r/generative/comments/10hk4jg/big_renfest_crest_energy_bitwise_operations_svg>.
 It takes an arbitrary expression on `(x, y)`, and visualizes the pattern resulting from connecting
 adjacent non-zero cells with a line. The particulars of the pattern are highly influenced by
-* Using modular (and prime numbers) in the expression
+* Using modular arithmetic (and prime numbers) in the expression
 * The order in width adjacent cells are searched (only the first hit is connected via a line)
 
 A better number-theorist than me could probably extract some meaning from the resulting patterns.
 
 ```sh
-$ bitwise "(x @BITWISE_EXPR1@ y) @BITWISE_EXPR1@ (x ^ y) % 13" |
-    wkt2svg --scale 10 --output ./examples/bitwise/expr1.svg
+$ @BITWISE_EXPR1@
 ```
 ![](./examples/bitwise/expr1.svg)
 
 ```sh
-$ bitwise "(x @BITWISE_EXPR2@ y) @BITWISE_EXPR2@ (x ^ y) % 11" |
-    wkt2svg --scale 10 --output ./examples/bitwise/expr2.svg
+$ @BITWISE_EXPR2@
 ```
 ![](./examples/bitwise/expr2.svg)
 
+Changing the search order doesn't change which cells are non-zero, just which cells are connected
+via a line.
 ```sh
-$ bitwise "(x @BITWISE_EXPR3@ y) @BITWISE_EXPR3@ (x ^ y) % 11" --neighbor-search-order south-west,south-east,south,east |
-    wkt2svg --scale 10 --output ./examples/bitwise/expr3.svg
+$ @BITWISE_EXPR3@
 ```
 ![](./examples/bitwise/expr3.svg)
 
 ### dla
+The `dla` tool uses [Diffusion Limited
+Aggregation](https://en.wikipedia.org/wiki/Diffusion-limited_aggregation) to generate fractal
+growths like snowflakes, lightning, and river networks (in mountainous terrain anyways)
+
+```sh
+$ dla \
+    --seed 461266331856721221 \
+    --seeds 2 \
+    --attraction-distance 10 \
+    --min-move-distance 1 \
+    --stubbornness 10 \
+    --particle-spacing 0.1 |
+    geom2graph --graph2geom --tolerance=0.001 |
+    wkt2svg --scale 30 --output ./examples/dla/organic.svg
+```
+![](examples/dla/organic.svg)
+
 ### streamline
 ### traverse
 ### triangulate
