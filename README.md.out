@@ -296,18 +296,42 @@ $ @STREAMLINE_SNIPPET2@
 ### traverse
 The `traverse` tool performs random walks on the given graph.
 ```sh
-$ grid --grid-type hexagon --output-format graph |
-    traverse \
-        --seed=10268415722561053759 \
-        --traversals 2 \
-        --length 20 \
-        --untraversed |
-    wkt2svg --scale 100 --output ./examples/traverse/hex-walk.svg
+$ @TRAVERSE_SNIPPET@
 ```
 ![](examples/traverse/hex-walk.svg)
 
 ### triangulate
+The `triangulate` tool finds the Delaunay triangulation of the given geometries. It can triangulate
+individual geometries, or relax all geometries into a point cloud, and triangulate the point cloud.
+
+```sh
+$ # Save the points for later
+point-cloud --seed 11878883030565683752 --points 20 --scale 200 |
+    triangulate | sort | tee /tmp/triangulation.wkt |
+    wkt2svg --output ./examples/urquhart/triangulation.svg
+```
+![](examples/urquhart/triangulation.svg)
+
 ### urquhart
+The [Urquhart Graph](https://en.wikipedia.org/wiki/Urquhart_graph) is a computationally easy(ish)
+approximation to the [Relative Neighborhood
+Graph](https://en.wikipedia.org/wiki/Relative_neighborhood_graph). It's formed from the Delaunay
+triangulation.
+
+```sh
+point-cloud --seed 11878883030565683752 --points 20 --scale 200 |
+    urquhart | sort >/tmp/urquhart.wkt
+{
+    echo "STROKE(gray)"
+    echo "STROKEDASHARRAY(6)"
+    # the triangulation minus the urquhart graph
+    comm -23 /tmp/triangulation.wkt /tmp/urquhart.wkt
+    echo "STROKE(black)"
+    echo "STROKEDASHARRAY(none)"
+    cat /tmp/urquhart.wkt
+} | wkt2svg --output ./examples/urquhart/urquhart.svg
+```
+![](examples/urquhart/urquhart.svg)
 
 ## Transformations
 ### project.py
