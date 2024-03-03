@@ -294,6 +294,12 @@ $ @STREAMLINE_SNIPPET2@
 ![](examples/streamline/field2.svg)
 
 ### traverse
+The `traverse` tool performs random walks on the given graph.
+```sh
+$ @TRAVERSE_SNIPPET@
+```
+![](examples/traverse/hex-walk.svg)
+
 ### triangulate
 ### urquhart
 
