@@ -79,6 +79,12 @@ cargo test
 If the C++ tests have been enabled with `--all-features`, or `--features=cxx-tests`, they are copied
 to `target/debug/cxx-tests`.
 
+Throughout this entire document, it is assumed that each of the tool binaries has been added to your
+PATH with
+```sh
+export PATH=$PWD/target/debug/:$PATH
+```
+
 # Philosophy
 
 There is a [`generative`](./generative/) Rust/C++/Python library, but the user is expected to use
@@ -206,7 +212,15 @@ $ ./tools/random-lsystem.sh
 ![random-lsystem.gif](./examples/lsystems/random-lsystem.gif)
 
 ## Generation
+The generation-type tools generate input data for other tools to consume.
+
 ### point-cloud
+`point-cloud` is a tool that generates random points in the unit circle or square.
+```sh
+$ @POINT_CLOUD_SNIPPET@
+@POINT_CLOUD_OUTPUT@
+```
+
 ### grid
 
 ## Algorithms

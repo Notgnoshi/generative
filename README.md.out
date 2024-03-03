@@ -79,6 +79,12 @@ cargo test
 If the C++ tests have been enabled with `--all-features`, or `--features=cxx-tests`, they are copied
 to `target/debug/cxx-tests`.
 
+Throughout this entire document, it is assumed that each of the tool binaries has been added to your
+PATH with
+```sh
+export PATH=$PWD/target/debug/:$PATH
+```
+
 # Philosophy
 
 There is a [`generative`](./generative/) Rust/C++/Python library, but the user is expected to use
@@ -155,8 +161,8 @@ randomly (pre)generated Lindenmayer systems.
 The `parse-production-rules.py` tool takes a set of production rules, and a starting axiom, and
 interprets the rules on the axiom for some specified number of iterations
 ```sh
-$ ./tools/parse-production-rules.py --rule 'a -> ab' --rule 'b -> a' --axiom a --iterations 3
-abaab
+$ @PARSE_LSYSTEM_SNIPPET@
+@PARSE_LSYSTEM_OUTPUT@
 ```
 
 This tool supports context-free, stochastic, and context-sensitive grammars, with rules of the form
@@ -170,32 +176,23 @@ The `[]` square brackets denote optional parts of the production rule.
 The `random-production-rules.py` tool generates a random set of production rules in JSON form that
 `parse-production-rules.py --config` knows how to read.
 ```sh
-$ ./tools/random-production-rules.py --seed 4290989563 |
-    ./tools/parse-production-rules.py --config - --iterations 3
-|v]->^][<>^[[
+$ @RANDOM_LSYSTEM_RULES_SNIPPET@
+@RANDOM_LSYSTEM_RULES_OUTPUT@
 ```
 
 ### interpret-lstring.py
 These L-strings can then be interpreted with a 3D turtle. Each symbol controls the turtle's motion
 through space.
 ```sh
-$ ./tools/parse-production-rules.py --config ./examples/lsystems/sierpinski-tree.json |
-    ./tools/interpret-lstring.py |
-    tail -n 4
-LINESTRING Z (0 -126.48885271170681 224.54772721475285, 0 -125.48885271170681 224.54772721475285)
-LINESTRING Z (0 -128.61017305526647 226.6690475583125, 0 -125.61017305526647 226.6690475583125, 0 -124.90306627407992 225.96194077712596)
-LINESTRING Z (0 -125.61017305526647 226.6690475583125, 0 -124.61017305526647 226.6690475583125)
-LINESTRING Z (0 -125.61017305526647 226.6690475583125, 0 -124.90306627407992 227.37615433949907)
+$ @SIERPINKSI_TREE_SNIPPET@
+@SIERPINKSI_TREE_OUTPUT@
 ```
 Notice that the geometries are in 3D WKT. They can be rendered in an interactive 3D OpenGL viewer
 ([render.py](#renderpy)) or projected to 2D ([project.py](#projectpy) before being converted to SVG
 with [wkt2svg](#wkt2svg).
 
 ```sh
-./tools/parse-production-rules.py --config ./examples/lsystems/sierpinski-tree.json |
-    ./tools/interpret-lstring.py |
-    ./tools/project.py --kind=yz |
-    wkt2svg --output ./examples/lsystems/sierpinski-tree.svg
+@SIERPINSKI_TREE_SVG@
 ```
 ![](./examples/lsystems/sierpinski-tree.svg)
 
@@ -215,7 +212,18 @@ $ ./tools/random-lsystem.sh
 ![random-lsystem.gif](./examples/lsystems/random-lsystem.gif)
 
 ## Generation
+The generation-type tools generate input data for other tools to consume.
+
 ### point-cloud
+`point-cloud` is a tool that generates random points in the unit circle or square.
+```sh
+$ point-cloud --points 4 --domain unit-circle --scale 100 --seed 15838575381579332872
+POINT (30.224877936836876 -70.83712102787706)
+POINT (-38.04972657419976 -33.95658816921603)
+POINT (-1.7494655022386558 -3.0116273192492646)
+POINT (-4.305088398836983 10.443819974018535)
+```
+
 ### grid
 
 ## Algorithms
