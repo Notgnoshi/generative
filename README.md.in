@@ -279,6 +279,20 @@ There are a huge number of tunable parameters to play with, and it's quite hard 
 sense for the impact of each.
 
 ### streamline
+The `streamline` tool can be used to trace geometry streamlines in a vector field.
+You can define your own vector field as a function of `(x, y)`, or a random Perlin noise field will
+be used.
+
+```sh
+$ @STREAMLINE_SNIPPET1@
+```
+![](examples/streamline/field1.svg)
+
+```sh
+$ @STREAMLINE_SNIPPET2@
+```
+![](examples/streamline/field2.svg)
+
 ### traverse
 ### triangulate
 ### urquhart

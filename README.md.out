@@ -271,19 +271,71 @@ Aggregation](https://en.wikipedia.org/wiki/Diffusion-limited_aggregation) to gen
 growths like snowflakes, lightning, and river networks (in mountainous terrain anyways)
 
 ```sh
-$ dla \
-    --seed 461266331856721221 \
-    --seeds 2 \
-    --attraction-distance 10 \
-    --min-move-distance 1 \
-    --stubbornness 10 \
-    --particle-spacing 0.1 |
-    geom2graph --graph2geom --tolerance=0.001 |
-    wkt2svg --scale 30 --output ./examples/dla/organic.svg
+$ @DLA_ORGANIC_SNIPPET@
 ```
 ![](examples/dla/organic.svg)
 
+There are a huge number of tunable parameters to play with, and it's quite hard to get an intuitive
+sense for the impact of each.
+
 ### streamline
+The `streamline` tool can be used to trace geometry streamlines in a vector field.
+You can define your own vector field as a function of `(x, y)`, or a random Perlin noise field will
+be used.
+
+```sh
+$ point-cloud \
+    --points 80 \
+    --seed=4628778017671551752 \
+    --domain=unit-square |
+    transform \
+        --offset-x=-0.5 \
+        --offset-y=-0.5 |
+    streamline \
+        --min-x=-0.6 \
+        --max-x=0.7 \
+        --min-y=-1 \
+        --max-y=1 \
+        --delta-h=0.1 \
+        --time-steps=20 \
+        --function "let temp = sqrt(x ** 2.0 + y ** 2.0 + 4.0); x = -sin(x) / temp; y = y / temp;" \
+        --draw-vector-field \
+        --vector-field-style="STROKE(gray)" \
+        --vector-field-style="STROKEDASHARRAY(1)" \
+        --streamline-style="STROKE(black)" \
+        --streamline-style="STROKEDASHARRAY(0)" \
+        --draw-geometries \
+        --geometry-style="STROKE(red)" |
+    wkt2svg \
+        --scale 500 --output ./examples/streamline/field1.svg
+```
+![](examples/streamline/field1.svg)
+
+```sh
+$ point-cloud \
+    --seed=5882435996591106192 \
+    --points 30 \
+    --scale 2 \
+    --domain=unit-square |
+    streamline \
+        --seed=192545950949821414 \
+        --max-x=2.0 \
+        --max-y=2.0 \
+        --delta-h=0.1 \
+        --delta-t=0.05 \
+        --time-steps=20 \
+        --draw-vector-field \
+        --vector-field-style="STROKE(gray)" \
+        --vector-field-style="STROKEDASHARRAY(1)" \
+        --streamline-style="STROKE(black)" \
+        --streamline-style="STROKEDASHARRAY(0)" \
+        --draw-geometries \
+        --geometry-style="STROKE(red)" |
+    wkt2svg \
+        --scale 500 --output ./examples/streamline/field2.svg
+```
+![](examples/streamline/field2.svg)
+
 ### traverse
 ### triangulate
 ### urquhart
