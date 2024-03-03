@@ -230,25 +230,42 @@ The `grid` tool generates different kinds of grids:
 and supports outputting the resulting grid in TGF graph format, WKT POINTs, or WKT LINESTRINGs.
 
 ```sh
-$ grid --output-format graph --grid-type quad --width 1 --height 1
-0	POINT(0 0)
-1	POINT(1 0)
-2	POINT(0 1)
-3	POINT(1 1)
-#
-0	2
-0	1
-1	3
-2	3
+$ @GRID_GRAPH_SNIPPET@
+@GRID_GRAPH_OUTPUT@
 ```
 ```sh
-$ grid --output-format lines --grid-type hexagon --size 20 |
-    wkt2svg --output ./examples/grid/hex.svg
+$ @GRID_HEX_SNIPPET@
 ```
 ![](./examples/grid/hex.svg)
 
 ## Algorithms
 ### bitwise
+The bitwise tool was inspired by <https://www.reddit.com/r/generative/comments/10hk4jg/big_renfest_crest_energy_bitwise_operations_svg>.
+It takes an arbitrary expression on `(x, y)`, and visualizes the pattern resulting from connecting
+adjacent non-zero cells with a line. The particulars of the pattern are highly influenced by
+* Using modular (and prime numbers) in the expression
+* The order in width adjacent cells are searched (only the first hit is connected via a line)
+
+A better number-theorist than me could probably extract some meaning from the resulting patterns.
+
+```sh
+$ bitwise "(x @BITWISE_EXPR1@ y) @BITWISE_EXPR1@ (x ^ y) % 13" |
+    wkt2svg --scale 10 --output ./examples/bitwise/expr1.svg
+```
+![](./examples/bitwise/expr1.svg)
+
+```sh
+$ bitwise "(x @BITWISE_EXPR2@ y) @BITWISE_EXPR2@ (x ^ y) % 11" |
+    wkt2svg --scale 10 --output ./examples/bitwise/expr2.svg
+```
+![](./examples/bitwise/expr2.svg)
+
+```sh
+$ bitwise "(x @BITWISE_EXPR3@ y) @BITWISE_EXPR3@ (x ^ y) % 11" --neighbor-search-order south-west,south-east,south,east |
+    wkt2svg --scale 10 --output ./examples/bitwise/expr3.svg
+```
+![](./examples/bitwise/expr3.svg)
+
 ### dla
 ### streamline
 ### traverse

@@ -240,6 +240,31 @@ $ @GRID_HEX_SNIPPET@
 
 ## Algorithms
 ### bitwise
+The bitwise tool was inspired by <https://www.reddit.com/r/generative/comments/10hk4jg/big_renfest_crest_energy_bitwise_operations_svg>.
+It takes an arbitrary expression on `(x, y)`, and visualizes the pattern resulting from connecting
+adjacent non-zero cells with a line. The particulars of the pattern are highly influenced by
+* Using modular arithmetic (and prime numbers) in the expression
+* The order in width adjacent cells are searched (only the first hit is connected via a line)
+
+A better number-theorist than me could probably extract some meaning from the resulting patterns.
+
+```sh
+$ @BITWISE_EXPR1@
+```
+![](./examples/bitwise/expr1.svg)
+
+```sh
+$ @BITWISE_EXPR2@
+```
+![](./examples/bitwise/expr2.svg)
+
+Changing the search order doesn't change which cells are non-zero, just which cells are connected
+via a line.
+```sh
+$ @BITWISE_EXPR3@
+```
+![](./examples/bitwise/expr3.svg)
+
 ### dla
 ### streamline
 ### traverse
