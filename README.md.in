@@ -416,6 +416,22 @@ The `bundle` tool is a simple tool that bundles multiple geometries together int
 ```
 
 ### pack
+The `pack` tool is a rectangle packing tool. For each input geometry (a `GEOMETRYCOLLECTION` is
+considered a single geometry), the tool will determine the axis-aligned bounding box, and attempt to
+pack each geometry into a rectangular region of a fixed size.
+
+
+```sh
+@PACK_SNIPPET@
+```
+![](examples/pack/squares.svg)
+
+> **Note:** The rectangular region should be big enough that each of the geometries fits, but small
+> enough that it generates an appealing packing.
+
+> **Note:** The packing algorithm uses integer coordinates, so you may need to scale up your
+> geometries to enable more control.
+
 ### render.py
 ### wkt2svg
 ### format.py
