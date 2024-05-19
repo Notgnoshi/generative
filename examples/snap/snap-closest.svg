@@ -1,0 +1,9 @@
+<svg transform="scale(1,-1)" viewBox="-211.95 -211.95 426 426" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { stroke:black; stroke-width:2; fill:none;}
+</style>
+<path d="M-208.95,-208.95 L-208.95,-8.95 L11.05,-8.95 L11.05,-208.95 z" fill-rule="evenodd"/>
+<path d="M11.05,-8.95 L-208.95,-8.95 L-208.95,211.05 L11.05,211.05 z" fill-rule="evenodd"/>
+<path d="M211.05,-8.95 L211.05,-208.95 L11.05,-208.95 L11.05,-8.95 z" fill-rule="evenodd"/>
+<path d="M211.05,211.05 L211.05,-8.95 L11.05,-8.95 L11.05,211.05 z" fill-rule="evenodd"/>
+</svg>

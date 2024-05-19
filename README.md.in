@@ -376,6 +376,33 @@ The `smooth` tool smooths geometries.
 ![](examples/smooth/rounded.svg)
 
 ### snap
+The `snap` tool snaps geometry vertices together with some tolerance; either to a regular grid, or
+to the closest vertex of a nearby geometry.
+
+To demonstrate, start with a couple of squares offset from each other by `0.1`
+```sh
+@SNAP_CREATE_GRID@
+```
+![](examples/snap/grid.svg)
+
+You can snap the vertices of the geometries to the closest nearby points
+```sh
+@SNAP_CLOSEST@
+```
+![](examples/snap/snap-closest.svg)
+
+Or you can snap the vertices of the geometries to a regular grid centered at `(0, 0)` with spacing
+given by the `--tolerance` flag.
+```sh
+@SNAP_GRID@
+```
+![](examples/snap/snap-grid.svg)
+
+The `snap` tool can snap both geometries and geometry graphs. It is cheaper to snap graphs, because
+the first stage of snapping geometries is to build the graph representation.
+
+> **Note:** The `snap` tool is sensitive to the ordering of geometries, and to the ordering of the
+> vertices in each geometry.
 
 ## Utilities
 ### bundle

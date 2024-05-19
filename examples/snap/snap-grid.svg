@@ -1,0 +1,9 @@
+<svg transform="scale(1,-1)" viewBox="-202 -202 406 406" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { stroke:black; stroke-width:2; fill:none;}
+</style>
+<path d="M-199,1 L-199,201 L1,201 L1,1 z" fill-rule="evenodd"/>
+<path d="M1,201 L201,201 L201,1 L1,1 z" fill-rule="evenodd"/>
+<path d="M1,1 L201,1 L201,-199 L1,-199 z" fill-rule="evenodd"/>
+<polyline points="1 -199 -199 -199"/>
+</svg>
