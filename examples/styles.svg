@@ -1,8 +1,0 @@
-<svg viewBox="-3 -3 106 106" xmlns="http://www.w3.org/2000/svg">
-<style>
-svg { stroke:black; stroke-width:2; fill:none;}
-</style>
-<circle cx="0" cy="0" r="1"/>
-<circle cx="100" cy="100" r="1"/>
-<circle cx="50" cy="50" fill="red" r="20" stroke-dasharray="6 1" stroke-width="4"/>
-</svg>

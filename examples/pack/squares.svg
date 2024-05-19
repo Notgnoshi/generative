@@ -1,0 +1,9 @@
+<svg transform="scale(1,-1)" viewBox="-103 -103 426 426" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { stroke:black; stroke-width:2; fill:none;}
+</style>
+<path d="M-100,-100 L-100,100 L100,100 L100,-100 z" fill-rule="evenodd"/>
+<path d="M120,-100 L120,100 L320,100 L320,-100 z" fill-rule="evenodd"/>
+<path d="M-100,120 L-100,320 L100,320 L100,120 z" fill-rule="evenodd"/>
+<path d="M120,120 L120,320 L320,320 L320,120 z" fill-rule="evenodd"/>
+</svg>

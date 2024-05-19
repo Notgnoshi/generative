@@ -1,0 +1,18 @@
+<svg transform="scale(1,-1)" viewBox="-152.25 -152.25 306 306" xmlns="http://www.w3.org/2000/svg">
+<style>
+svg { stroke:black; stroke-width:2; fill:none;}
+</style>
+<path d="M-149.25,-149.25 L-149.25,50.75 L-49.25,50.75 L-49.25,-49.25 L50.75,-49.25 L50.75,-149.25 z" fill-rule="evenodd"/>
+<path d="M-49.25,50.75 L50.75,50.75 L50.75,-49.25 L-49.25,-49.25 z" fill-rule="evenodd"/>
+<path d="M50.75,50.75 L-49.25,50.75 L-49.25,150.75 L150.75,150.75 L150.75,-49.25 L50.75,-49.25 z" fill-rule="evenodd"/>
+<circle cx="-149.25" cy="-149.25" r="1" stroke="red"/>
+<circle cx="-149.25" cy="50.75" r="1" stroke="red"/>
+<circle cx="-49.25" cy="50.75" r="1" stroke="red"/>
+<circle cx="50.75" cy="50.75" r="1" stroke="red"/>
+<circle cx="50.75" cy="-49.25" r="1" stroke="red"/>
+<circle cx="50.75" cy="-149.25" r="1" stroke="red"/>
+<circle cx="-49.25" cy="-49.25" r="1" stroke="red"/>
+<circle cx="-49.25" cy="150.75" r="1" stroke="red"/>
+<circle cx="150.75" cy="150.75" r="1" stroke="red"/>
+<circle cx="150.75" cy="-49.25" r="1" stroke="red"/>
+</svg>

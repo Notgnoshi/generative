@@ -99,17 +99,7 @@ to produce/consume a standard textual interface.
 ## Asemic writing
 The following snippet generates random asemic writing glyphs
 ```sh
-glyphs() {
-    local glyph_kind="$1"
-    local number="$2"
-    local size="$3"
-
-    {
-        for _ in $(seq "$number"); do
-            $glyph_kind "$size"
-        done
-    } | pack --width 1000 --height 1000 --padding 20
-}
+@ASEMIC_SETUP_SNIPPET@
 ```
 
 To generate random glyphs, we'll:
@@ -117,135 +107,51 @@ To generate random glyphs, we'll:
 2. Perform random traverals of the graph
 3. (optionally) Smooth each traversal into a curve
 ```sh
-random_rounded() {
-    local size="$1"
-    point-cloud --log-level WARN --domain unit-square --points 15 --scale 6 |
-        urquhart --output-format tgf |
-        traverse --log-level WARN --traversals 5 --length 5 --untraversed |
-        transform --scale="$size" |
-        smooth --iterations 4 |
-        bundle
-}
-glyphs random_rounded 90 10 | wkt2svg --output $ASEMIC_RANDOM_ROUNDED
+@ASEMIC_RANDOM_ROUNDED_SNIPPET@
 ```
-![](./examples/asemic/random-rounded.svg)
+![](@ASEMIC_RANDOM_ROUNDED@)
 The `--untraversed` points could be replaced with diacritical marks.
 
 We could also use the triangulation of a random point cloud
 ```sh
-random_triangulated() {
-    local size="$1"
-    point-cloud --log-level WARN --domain unit-square --points 10 --scale 6 |
-        triangulate --output-format tgf |
-        traverse --log-level WARN --traversals 3 --length 3 --remove-after-traverse |
-        transform --scale="$size" |
-        smooth --iterations 4 |
-        bundle
-}
-glyphs random_triangulated 100 10 | wkt2svg --output $ASEMIC_RANDOM_TRIANGULATED
+@ASEMIC_RANDOM_TRIANGULATED_SNIPPET@
 ```
-![](./examples/asemic/random-triangulated.svg)
+![](@ASEMIC_RANDOM_TRIANGULATED@)
 
 Neither of these approaches give a coherent sense of self-similarity that's necessary for linguistic
 glyphs. If, instead of using a random point cloud, we use a regular grid, that dramatically changes
 the sense of self-similarity.
 ```sh
-grid_rounded() {
-    local size="$1"
-    grid --output-format graph --width=2 --height=3 |
-        traverse --log-level WARN --traversals 5 --length 5 --remove-after-traverse |
-        transform --scale="$size" |
-        smooth --iterations 4 |
-        bundle
-}
-glyphs grid_rounded 120 20 | wkt2svg --output $ASEMIC_GRID_ROUNDED
+@ASEMIC_GRID_ROUNDED_SNIPPET@
 ```
-![](./examples/asemic/grid-rounded.svg)
+![](@ASEMIC_GRID_ROUNDED@)
 
 We can also reduce the number of smoothing iterations to get beveled corners
 ```sh
-grid_beveled() {
-    local size="$1"
-    grid --output-format graph --width=2 --height=3 |
-        traverse --log-level WARN --traversals 5 --length 5 --remove-after-traverse |
-        transform --scale="$size" |
-        smooth --iterations 1 |
-        bundle
-}
-glyphs grid_beveled 120 20 | wkt2svg --output $ASEMIC_GRID_BEVELED
+@ASEMIC_GRID_BEVELED_SNIPPET@
 ```
-![](./examples/asemic/grid-beveled.svg)
+![](@ASEMIC_GRID_BEVELED@)
 
 We could also regular triangle grid, to get loopier results, with no vertical lines
 ```sh
-grid_triangulated() {
-    local size="$1"
-    grid --grid-type triangle --output-format graph --width=2 --height=3 |
-        traverse --log-level WARN --traversals 4 --length 5 --remove-after-traverse |
-        transform --scale="$size" |
-        smooth --iterations 4 |
-        bundle
-}
-glyphs grid_triangulated 100 20 | wkt2svg --output $ASEMIC_GRID_TRIANGULATED
+@ASEMIC_GRID_TRIANGULATED_SNIPPET@
 ```
-![](./examples/asemic/grid-triangulated.svg)
+![](@ASEMIC_GRID_TRIANGULATED@)
 
 Using a slanted grid makes _almost_ compelling cursive, if only the jarring horizontal lines were
 removed.
 ```sh
-grid_jagged() {
-    local size="$1"
-    grid --grid-type ragged --output-format graph --width=2 --height=3 |
-        traverse --log-level WARN --traversals 4 --length 5 --remove-after-traverse |
-        transform --scale="$size" |
-        smooth --iterations 4 |
-        bundle
-}
-glyphs grid_jagged 100 20 | wkt2svg --output $ASEMIC_GRID_JAGGED
+@ASEMIC_GRID_JAGGED_SNIPPET@
 ```
-![](./examples/asemic/grid-jagged.svg)
+![](@ASEMIC_GRID_JAGGED@)
 
 ## Random L-Systems
 [examples/random-lsystems/saved.json](examples/random-lsystems/saved.json) contains parameters for
 randomly (pre)generated Lindenmayer systems.
 ```sh
-for i in $(seq 0 13); do
-    jq ".[$i]" examples/random-lsystems/saved.json |
-        tools/parse-production-rules.py -c - -n "$(jq ".[$i].iterations" examples/random-lsystems/saved.json)" |
-        tools/interpret-lstring.py -l ERROR -a "$(jq ".[$i].angle" examples/random-lsystems/saved.json)" |
-        tools/project.py --scale "$(jq ".[$i].scale" examples/random-lsystems/saved.json)" --kind pca |
-        wkt2svg --output "examples/random-lsystems/random-$i.svg"
-done
+@RANDOM_LSYSTEMS_SNIPPET@
 ```
-
-
-![examples/random-lsystems/random-0.svg](examples/random-lsystems/random-0.svg)
-
-![examples/random-lsystems/random-10.svg](examples/random-lsystems/random-10.svg)
-
-![examples/random-lsystems/random-11.svg](examples/random-lsystems/random-11.svg)
-
-![examples/random-lsystems/random-12.svg](examples/random-lsystems/random-12.svg)
-
-![examples/random-lsystems/random-13.svg](examples/random-lsystems/random-13.svg)
-
-![examples/random-lsystems/random-1.svg](examples/random-lsystems/random-1.svg)
-
-![examples/random-lsystems/random-2.svg](examples/random-lsystems/random-2.svg)
-
-![examples/random-lsystems/random-3.svg](examples/random-lsystems/random-3.svg)
-
-![examples/random-lsystems/random-4.svg](examples/random-lsystems/random-4.svg)
-
-![examples/random-lsystems/random-5.svg](examples/random-lsystems/random-5.svg)
-
-![examples/random-lsystems/random-6.svg](examples/random-lsystems/random-6.svg)
-
-![examples/random-lsystems/random-7.svg](examples/random-lsystems/random-7.svg)
-
-![examples/random-lsystems/random-8.svg](examples/random-lsystems/random-8.svg)
-
-![examples/random-lsystems/random-9.svg](examples/random-lsystems/random-9.svg)
+@RANDOM_LSYSTEM_IMAGES@
 
 # The tools
 
@@ -254,8 +160,8 @@ done
 The `parse-production-rules.py` tool takes a set of production rules, and a starting axiom, and
 interprets the rules on the axiom for some specified number of iterations
 ```sh
-$ ./tools/parse-production-rules.py --rule 'a -> ab' --rule 'b -> a' --axiom a --iterations 3
-abaab
+$ @PARSE_LSYSTEM_SNIPPET@
+@PARSE_LSYSTEM_OUTPUT@
 ```
 
 This tool supports context-free, stochastic, and context-sensitive grammars, with rules of the form
@@ -269,32 +175,23 @@ The `[]` square brackets denote optional parts of the production rule.
 The `random-production-rules.py` tool generates a random set of production rules in JSON form that
 `parse-production-rules.py --config` knows how to read.
 ```sh
-$ ./tools/random-production-rules.py --seed 4290989563 |
-    ./tools/parse-production-rules.py --config - --iterations 3
-|v]->^][<>^[[
+$ @RANDOM_LSYSTEM_RULES_SNIPPET@
+@RANDOM_LSYSTEM_RULES_OUTPUT@
 ```
 
 ### interpret-lstring.py
 These L-strings can then be interpreted with a 3D turtle. Each symbol controls the turtle's motion
 through space.
 ```sh
-$ ./tools/parse-production-rules.py --config ./examples/lsystems/sierpinski-tree.json |
-    ./tools/interpret-lstring.py |
-    tail -n 4
-LINESTRING Z (0 -126.48885271170681 224.54772721475285, 0 -125.48885271170681 224.54772721475285)
-LINESTRING Z (0 -128.61017305526647 226.6690475583125, 0 -125.61017305526647 226.6690475583125, 0 -124.90306627407992 225.96194077712596)
-LINESTRING Z (0 -125.61017305526647 226.6690475583125, 0 -124.61017305526647 226.6690475583125)
-LINESTRING Z (0 -125.61017305526647 226.6690475583125, 0 -124.90306627407992 227.37615433949907)
+$ @SIERPINKSI_TREE_SNIPPET@
+@SIERPINKSI_TREE_OUTPUT@
 ```
 Notice that the geometries are in 3D WKT. They can be rendered in an interactive 3D OpenGL viewer
 ([render.py](#renderpy)) or projected to 2D ([project.py](#projectpy) before being converted to SVG
 with [wkt2svg](#wkt2svg).
 
 ```sh
-./tools/parse-production-rules.py --config ./examples/lsystems/sierpinski-tree.json |
-    ./tools/interpret-lstring.py |
-    ./tools/project.py --kind=yz |
-    wkt2svg --output ./examples/lsystems/sierpinski-tree.svg
+@SIERPINSKI_TREE_SVG@
 ```
 ![](./examples/lsystems/sierpinski-tree.svg)
 
@@ -319,11 +216,8 @@ The generation-type tools generate input data for other tools to consume.
 ### point-cloud
 `point-cloud` is a tool that generates random points in the unit circle or square.
 ```sh
-$ point-cloud --points 4 --domain unit-circle --scale 100 --seed 15838575381579332872
-POINT (30.224877936836876 -70.83712102787706)
-POINT (-38.04972657419976 -33.95658816921603)
-POINT (-1.7494655022386558 -3.0116273192492646)
-POINT (-4.305088398836983 10.443819974018535)
+$ @POINT_CLOUD_SNIPPET@
+@POINT_CLOUD_OUTPUT@
 ```
 
 ### grid
@@ -335,20 +229,11 @@ The `grid` tool generates different kinds of grids:
 and supports outputting the resulting grid in TGF graph format, WKT POINTs, or WKT LINESTRINGs.
 
 ```sh
-$ grid --output-format graph --grid-type quad --width 1 --height 1
-0	POINT(0 0)
-1	POINT(1 0)
-2	POINT(0 1)
-3	POINT(1 1)
-#
-0	2
-0	1
-1	3
-2	3
+$ @GRID_GRAPH_SNIPPET@
+@GRID_GRAPH_OUTPUT@
 ```
 ```sh
-$ grid --output-format lines --grid-type hexagon --size 20 |
-    wkt2svg --output ./examples/grid/hex.svg
+$ @GRID_HEX_SNIPPET@
 ```
 ![](./examples/grid/hex.svg)
 
@@ -363,22 +248,19 @@ adjacent non-zero cells with a line. The particulars of the pattern are highly i
 A better number-theorist than me could probably extract some meaning from the resulting patterns.
 
 ```sh
-$ bitwise "(x @BITWISE_EXPR1@ y) @BITWISE_EXPR1@ (x ^ y) % 13" |
-    wkt2svg --scale 10 --output ./examples/bitwise/expr1.svg
+$ @BITWISE_EXPR1@
 ```
 ![](./examples/bitwise/expr1.svg)
 
 ```sh
-$ bitwise "(x @BITWISE_EXPR2@ y) @BITWISE_EXPR2@ (x ^ y) % 11" |
-    wkt2svg --scale 10 --output ./examples/bitwise/expr2.svg
+$ @BITWISE_EXPR2@
 ```
 ![](./examples/bitwise/expr2.svg)
 
 Changing the search order doesn't change which cells are non-zero, just which cells are connected
 via a line.
 ```sh
-$ bitwise "(x @BITWISE_EXPR3@ y) @BITWISE_EXPR3@ (x ^ y) % 11" --neighbor-search-order south-west,south-east,south,east |
-    wkt2svg --scale 10 --output ./examples/bitwise/expr3.svg
+$ @BITWISE_EXPR3@
 ```
 ![](./examples/bitwise/expr3.svg)
 
@@ -388,15 +270,7 @@ Aggregation](https://en.wikipedia.org/wiki/Diffusion-limited_aggregation) to gen
 growths like snowflakes, lightning, and river networks (in mountainous terrain anyways)
 
 ```sh
-$ dla \
-    --seed 461266331856721221 \
-    --seeds 2 \
-    --attraction-distance 10 \
-    --min-move-distance 1 \
-    --stubbornness 10 \
-    --particle-spacing 0.1 |
-    geom2graph --graph2geom --tolerance=0.001 |
-    wkt2svg --scale 30 --output ./examples/dla/organic.svg
+$ @DLA_ORGANIC_SNIPPET@
 ```
 ![](examples/dla/organic.svg)
 
@@ -409,68 +283,19 @@ You can define your own vector field as a function of `(x, y)`, or a random Perl
 be used.
 
 ```sh
-$ point-cloud \
-    --points 80 \
-    --seed=4628778017671551752 \
-    --domain=unit-square |
-    transform \
-        --offset-x=-0.5 \
-        --offset-y=-0.5 |
-    streamline \
-        --min-x=-0.6 \
-        --max-x=0.7 \
-        --min-y=-1 \
-        --max-y=1 \
-        --delta-h=0.1 \
-        --time-steps=20 \
-        --function "let temp = sqrt(x ** 2.0 + y ** 2.0 + 4.0); x = -sin(x) / temp; y = y / temp;" \
-        --draw-vector-field \
-        --vector-field-style="STROKE(gray)" \
-        --vector-field-style="STROKEDASHARRAY(1)" \
-        --streamline-style="STROKE(black)" \
-        --streamline-style="STROKEDASHARRAY(0)" \
-        --draw-geometries \
-        --geometry-style="STROKE(red)" |
-    wkt2svg \
-        --scale 500 --output ./examples/streamline/field1.svg
+$ @STREAMLINE_SNIPPET1@
 ```
 ![](examples/streamline/field1.svg)
 
 ```sh
-$ point-cloud \
-    --seed=5882435996591106192 \
-    --points 30 \
-    --scale 2 \
-    --domain=unit-square |
-    streamline \
-        --seed=192545950949821414 \
-        --max-x=2.0 \
-        --max-y=2.0 \
-        --delta-h=0.1 \
-        --delta-t=0.05 \
-        --time-steps=20 \
-        --draw-vector-field \
-        --vector-field-style="STROKE(gray)" \
-        --vector-field-style="STROKEDASHARRAY(1)" \
-        --streamline-style="STROKE(black)" \
-        --streamline-style="STROKEDASHARRAY(0)" \
-        --draw-geometries \
-        --geometry-style="STROKE(red)" |
-    wkt2svg \
-        --scale 500 --output ./examples/streamline/field2.svg
+$ @STREAMLINE_SNIPPET2@
 ```
 ![](examples/streamline/field2.svg)
 
 ### traverse
 The `traverse` tool performs random walks on the given graph.
 ```sh
-$ grid --grid-type hexagon --output-format graph |
-    traverse \
-        --seed=10268415722561053759 \
-        --traversals 2 \
-        --length 20 \
-        --untraversed |
-    wkt2svg --scale 100 --output ./examples/traverse/hex-walk.svg
+$ @TRAVERSE_SNIPPET@
 ```
 ![](examples/traverse/hex-walk.svg)
 
@@ -479,9 +304,7 @@ The `triangulate` tool finds the Delaunay triangulation of the given geometries.
 individual geometries, or relax all geometries into a point cloud, and triangulate the point cloud.
 
 ```sh
-$ point-cloud --seed 11878883030565683752 --points 20 --scale 200 |
-    triangulate | sort | tee /tmp/triangulation.wkt |
-    wkt2svg --output ./examples/urquhart/triangulation.svg
+$ @TRIANGULATE_SNIPPET@
 ```
 ![](examples/urquhart/triangulation.svg)
 
@@ -492,17 +315,7 @@ Graph](https://en.wikipedia.org/wiki/Relative_neighborhood_graph). It's formed f
 triangulation.
 
 ```sh
-point-cloud --seed 11878883030565683752 --points 20 --scale 200 |
-    urquhart | sort >/tmp/urquhart.wkt
-{
-    echo "STROKE(gray)"
-    echo "STROKEDASHARRAY(6)"
-    # the triangulation minus the urquhart graph
-    comm -23 /tmp/triangulation.wkt /tmp/urquhart.wkt
-    echo "STROKE(black)"
-    echo "STROKEDASHARRAY(none)"
-    cat /tmp/urquhart.wkt
-} | wkt2svg --output ./examples/urquhart/urquhart.svg
+@URQUHART_SNIPPET@
 ```
 ![](examples/urquhart/urquhart.svg)
 
@@ -512,8 +325,7 @@ The `project.py` tool can be used to project 3D geometries to 2D. It supports se
 types, I recommend PCA or isometric.
 
 ```sh
-$ ./tools/project.py --kind=isometric --input=examples/unit-cube.wkt |
-    wkt2svg --scale=200 --output ./examples/project/isometric.svg
+$ @PROJECT_SNIPPET@
 ```
 ![](examples/project/isometric.svg)
 
@@ -523,10 +335,7 @@ scale, offset, and skew (applied in that order). Note that `wkt2svg` can also sc
 because it's very common for the generative algorithms to work on a sub-pixel scale.
 
 ```sh
-$ transform <examples/unit-square.wkt \
-    --rotation=45 |
-    transform --scale=200 --scale-x=0.8 |
-    wkt2svg --output ./examples/transform/square.svg
+$ @TRANSFORM_SNIPPET@
 ```
 ![](examples/transform/square.svg)
 
@@ -537,48 +346,15 @@ intersections, and convert to a graph representation of a set of geometries usef
 of algorithms (See [Asemic Writing](#asemic-writing) above).
 
 ```sh
-# Offset the unit square to result in two overlapping geometries
-transform <examples/unit-square.wkt --offset-x=0.5 --offset-y=0.5 >/tmp/offset-square.wkt
-cat examples/unit-square.wkt /tmp/offset-square.wkt | geom2graph >/tmp/graph.tgf
+@GEOM2GRAPH_SNIPPET@
 ```
 this give a TGF graph
 ```
-0	POINT(0 0)
-1	POINT(0 1)
-2	POINT(0.5 1)
-3	POINT(1 1)
-4	POINT(1 0.5)
-5	POINT(1 0)
-6	POINT(0.5 0.5)
-7	POINT(0.5 1.5)
-8	POINT(1.5 1.5)
-9	POINT(1.5 0.5)
-#
-0	5
-0	1
-1	2
-2	7
-2	6
-2	3
-3	4
-4	6
-4	9
-4	5
-7	8
-8	9
+@GEOM2GRAPH_OUTPUT@
 ```
 that we can observe has the intersection points added
 ```sh
-# Extract the vertices, so we can overlay them
-grep --only-matching 'POINT.*$' /tmp/graph.tgf >/tmp/vertices.wkt
-# Convert graph back into a set of geometries
-geom2graph --graph2geom </tmp/graph.tgf >/tmp/offset-squares.wkt
-
-{
-    cat /tmp/offset-squares.wkt
-    echo "STROKE(red)"
-    cat /tmp/vertices.wkt
-} | wkt2svg --scale=200 --output ./examples/geom2graph/offset-squares.svg
+@GEOM2GRAPH_SNIPPET2@
 ```
 ![](examples/geom2graph/offset-squares.svg)
 
@@ -589,14 +365,12 @@ geom2graph --graph2geom </tmp/graph.tgf >/tmp/offset-squares.wkt
 ### smooth
 The `smooth` tool smooths geometries.
 ```sh
-smooth <examples/unit-square.wkt --iterations 1 |
-    wkt2svg --scale=200 --output=examples/smooth/beveled.svg
+@SMOOTH_SNIPPET1@
 ```
 ![](examples/smooth/beveled.svg)
 
 ```sh
-smooth <examples/unit-square.wkt --iterations 5 |
-    wkt2svg --scale=200 --output=examples/smooth/rounded.svg
+@SMOOTH_SNIPPET2@
 ```
 ![](examples/smooth/rounded.svg)
 
@@ -606,35 +380,20 @@ to the closest vertex of a nearby geometry.
 
 To demonstrate, start with a couple of squares offset from each other by `0.1`
 ```sh
-generate_grid() {
-    transform <examples/unit-square.wkt --offset-y=1.1
-    transform <examples/unit-square.wkt --offset-x=1.1 --offset-y=1.1
-    cat examples/unit-square.wkt
-    transform <examples/unit-square.wkt --offset-x=1.1
-}
-
-generate_grid | wkt2svg --scale=200 --output=examples/snap/grid.svg
+@SNAP_CREATE_GRID@
 ```
 ![](examples/snap/grid.svg)
 
 You can snap the vertices of the geometries to the closest nearby points
 ```sh
-generate_grid |
-    geom2graph |
-    snap --input-format=tgf --strategy=closest-point --tolerance=0.2 |
-    geom2graph --graph2geom |
-    wkt2svg --scale=200 --output=examples/snap/snap-closest.svg
+@SNAP_CLOSEST@
 ```
 ![](examples/snap/snap-closest.svg)
 
 Or you can snap the vertices of the geometries to a regular grid centered at `(0, 0)` with spacing
 given by the `--tolerance` flag.
 ```sh
-generate_grid |
-    geom2graph |
-    snap --input-format=tgf --strategy=regular-grid --tolerance=1.0 |
-    geom2graph --graph2geom |
-    wkt2svg --scale=200 --output=examples/snap/snap-grid.svg
+@SNAP_GRID@
 ```
 ![](examples/snap/snap-grid.svg)
 
@@ -649,13 +408,10 @@ the first stage of snapping geometries is to build the graph representation.
 The `bundle` tool is a simple tool that bundles multiple geometries together into a single
 `GEOMETRYCOLLECTION`. This is useful when combined with the [`pack`](#pack) tool.
 ```sh
-bundle <<EOF
-POINT(0 0)
-POINT(1 1)
-EOF
+@BUNDLE_SNIPPET@
 ```
 ```
-GEOMETRYCOLLECTION(POINT(0 0),POINT(1 1))
+@BUNDLE_OUTPUT@
 ```
 
 ### pack
@@ -665,11 +421,7 @@ pack each geometry into a rectangular region of a fixed size.
 
 
 ```sh
-cat examples/unit-square.wkt examples/unit-square.wkt examples/unit-square.wkt examples/unit-square.wkt |
-    transform --scale=200 >/tmp/squares.wkt
-
-pack --padding=10 --width=450 --height=450 </tmp/squares.wkt |
-    wkt2svg --output=examples/pack/squares.svg
+@PACK_SNIPPET@
 ```
 ![](examples/pack/squares.svg)
 
@@ -707,14 +459,6 @@ or by the use of commands that can be interleaved with the WKT being processed.
   docs](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray) for help.
 
 ```sh
-wkt2svg --output=examples/wkt2svg/styles.svg <<EOF
-POINT(0 0)
-POINT(100 100)
-STROKEWIDTH(4)
-STROKEDASHARRAY(6 1)
-POINTRADIUS(20)
-FILL(red)
-POINT(50 50)
-EOF
+@WKT2SVG_SNIPPET@
 ```
 ![](examples/wkt2svg/styles.svg)
