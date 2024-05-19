@@ -149,8 +149,7 @@ main() {
 
     # Generate the README at the end, so that we don't leave it in a broken state, and so that we
     # can optionally run just a single example.
-    # TODO: Replace README.md.out with README.md once this is ready.
-    configure README.md.in README.md.out
+    configure README.md.in README.md
 }
 
 main "$@"

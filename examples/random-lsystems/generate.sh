@@ -21,5 +21,7 @@ debug "Generating markdown links"
 RANDOM_LSYSTEM_IMAGES=""
 for svg in examples/random-lsystems/random-*.svg; do
     LINK="![$svg]($svg)"
-    RANDOM_LSYSTEM_IMAGES="$RANDOM_LSYSTEM_IMAGES\n\n$LINK"
+    RANDOM_LSYSTEM_IMAGES="$RANDOM_LSYSTEM_IMAGES
+
+$LINK"
 done
