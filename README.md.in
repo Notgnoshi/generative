@@ -406,6 +406,15 @@ the first stage of snapping geometries is to build the graph representation.
 
 ## Utilities
 ### bundle
+The `bundle` tool is a simple tool that bundles multiple geometries together into a single
+`GEOMETRYCOLLECTION`. This is useful when combined with the [`pack`](#pack) tool.
+```sh
+@BUNDLE_SNIPPET@
+```
+```
+@BUNDLE_OUTPUT@
+```
+
 ### pack
 ### render.py
 ### wkt2svg
