@@ -64,7 +64,7 @@ extract_snippet() {
 
     # Extract the contents between '# BEGIN $snippet' and '# END $snippet'
     local snippet_contents
-    snippet_contents="$(sed -En "/^[[:space:]]*# BEGIN $snippet/,/^[[:space:]]*# END $snippet/p" "$source_file" | sed '1d;$d')"
+    snippet_contents="$(sed -En "/^[[:space:]]*# BEGIN $snippet\\b/,/^[[:space:]]*# END $snippet\\b/p" "$source_file" | sed '1d;$d')"
     snippet_contents="$(echo -e "$snippet_contents" | sed -E "s/^[[:space:]]{$gobble_leading_whitespace}//")"
 
     # Populate the variable with name '$snippet' with '$snippet_contents'
