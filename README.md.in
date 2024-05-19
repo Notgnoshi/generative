@@ -341,6 +341,28 @@ $ @TRANSFORM_SNIPPET@
 ![](examples/transform/square.svg)
 
 ### geom2graph
+The `geom2graph` tool converts back and forth between WKT geometries, and their TGF connection-graph
+representation. It can be useful to de-duplicate vertices and overlapping segments, find all-pairs
+intersections, and convert to a graph representation of a set of geometries useful for other kinds
+of algorithms (See [Asemic Writing](#asemic-writing) above).
+
+```sh
+@GEOM2GRAPH_SNIPPET@
+```
+this give a TGF graph
+```
+@GEOM2GRAPH_OUTPUT@
+```
+that we can observe has the intersection points added
+```sh
+@GEOM2GRAPH_SNIPPET2@
+```
+![](examples/geom2graph/offset-squares.svg)
+
+> **NOTE:** Converting the graph back into a set of geometries is sub-optimal; it returns a set of
+> polygons, and returns anything else as a set of "dangles" each of which is a single line segment,
+> even if the original geometry was all one big long connected linestring.
+
 ### smooth
 ### snap
 
