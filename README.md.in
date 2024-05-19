@@ -322,14 +322,22 @@ triangulation.
 
 ## Transformations
 ### project.py
+The `project.py` tool can be used to project 3D geometries to 2D. It supports several projection
+types, I recommend PCA or isometric.
+
+```sh
+$ @PROJECT_SNIPPET@
+```
+![](examples/project/isometric.svg)
+
+### transform
 ### geom2graph
 ### smooth
 ### snap
-### transform
 
 ## Utilities
-### wkt2svg
-### render.py
 ### bundle
 ### pack
+### render.py
+### wkt2svg
 ### format.py
