@@ -331,6 +331,15 @@ $ @PROJECT_SNIPPET@
 ![](examples/project/isometric.svg)
 
 ### transform
+The `transform` tool can be used to apply affine transformations to the given geometries; rotation,
+scale, offset, and skew (applied in that order). Note that `wkt2svg` can also scale geometries,
+because it's very common for the generative algorithms to work on a sub-pixel scale.
+
+```sh
+$ @TRANSFORM_SNIPPET@
+```
+![](examples/transform/square.svg)
+
 ### geom2graph
 ### smooth
 ### snap
