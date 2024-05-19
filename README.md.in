@@ -40,7 +40,6 @@ A polyglot collection of composable generative art tools, with a focus on 2D com
     * [render.py](#renderpy)
     * [bundle](#bundle)
     * [pack](#pack)
-    * [format.py](#formatpy)
 
 # How to build
 This project contains a mix of Rust, C++, and Python. It's primarily Rust.
@@ -433,5 +432,33 @@ pack each geometry into a rectangular region of a fixed size.
 > geometries to enable more control.
 
 ### render.py
+The `render.py` tool can be used to interactively render 2D and 3D WKT geometries in an OpenGL
+visualizer.
+
+```sh
+$ tools/parse-production-rules.py --config examples/maya-tree-2.json |
+    tools/interpret-lstring.py --angle 30 |
+    tools/render.py --axis
+```
+![](examples/maya-tree-2.png)
+
 ### wkt2svg
-### format.py
+The `wkt2svg` tool can be used to render 2D WKT geometries to an SVG image.
+
+> **Note:** `wkt2svg` only accepts 2D geometries. If you have 3D geometries, you'll need to use
+> [`project.py`](#projectpy) to project the 3D geometries down to 2D.
+
+Additionally, `wkt2svg` supports styling through its CLI arguments (to override the global default)
+or by the use of commands that can be interleaved with the WKT being processed.
+* `POINTRADIUS(1.0)` - Can be used to set the radius of WKT `POINT`s
+* `STROKE(black)` - Can be used to set the color of geometries
+* `STROKEWIDTH(2.0)` - Can be used to set the width lines
+* `FILL(red)` - Can be used to fill in `POLYGON`s and `POINT`s (if the `POINTRADIUS` is large enough
+  that there's an interior to fill).
+* `STROKEDASHARRAY(...)` - Can be used to draw dotted lines; See [the MDN
+  docs](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-dasharray) for help.
+
+```sh
+@WKT2SVG_SNIPPET@
+```
+![](examples/wkt2svg/styles.svg)
