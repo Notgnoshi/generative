@@ -364,6 +364,17 @@ that we can observe has the intersection points added
 > even if the original geometry was all one big long connected linestring.
 
 ### smooth
+The `smooth` tool smooths geometries.
+```sh
+@SMOOTH_SNIPPET1@
+```
+![](examples/smooth/beveled.svg)
+
+```sh
+@SMOOTH_SNIPPET2@
+```
+![](examples/smooth/rounded.svg)
+
 ### snap
 
 ## Utilities
