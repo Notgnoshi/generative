@@ -4,7 +4,9 @@ use clap::{Parser, ValueEnum};
 use generative::io::{
     get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
 };
-use geo::{coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, Rect};
+use geo::{
+    coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, MapCoordsInPlace, Rect,
+};
 use stderrlog::ColorChoice;
 use wkt::ToWkt;
 
@@ -90,7 +92,20 @@ struct CmdlineOptions {
     /// Degrees y skew, applied after offset
     #[clap(long)]
     skew_y: Option<f64>,
+
+    /// Convert the input geometries from (x, y) to (r, theta)
+    ///
+    /// Any affine transformations are applied in the original coordinate space
+    #[clap(long, conflicts_with = "from_polar")]
+    to_polar: bool,
+
+    /// Convert the input geometries from (r, theta) to (x, y)
+    ///
+    /// Any affine transformations are applied in the original coordinate space
+    #[clap(long, conflicts_with = "to_polar")]
+    from_polar: bool,
 }
+
 fn build_transform(args: &CmdlineOptions, center: Coord) -> AffineTransform {
     let mut transform = AffineTransform::rotate(args.rotation, center);
 
@@ -204,6 +219,31 @@ fn affine_transform(
     }
 }
 
+fn from_polar(coord: Coord) -> Coord {
+    let r = coord.x;
+    let theta = coord.y;
+    coord! { x: r * f64::cos(theta), y: r * f64::sin(theta) }
+}
+
+fn to_polar(coord: Coord) -> Coord {
+    let r = f64::sqrt(coord.x.powi(2) + coord.y.powi(2));
+    let mut theta = f64::atan2(coord.y, coord.x);
+    if theta < 0.0 {
+        theta += 2.0 * std::f64::consts::PI;
+    }
+    coord! { x: r, y: theta}
+}
+
+fn geoms_coordwise(
+    geometries: impl Iterator<Item = Geometry>,
+    transform: impl Fn(Coord) -> Coord + Copy,
+) -> impl Iterator<Item = Geometry> {
+    geometries.into_iter().map(move |mut geom| {
+        geom.map_coords_in_place(transform);
+        geom
+    })
+}
+
 fn main() {
     let args = CmdlineOptions::parse();
 
@@ -216,7 +256,13 @@ fn main() {
     let reader = get_input_reader(&args.input).unwrap();
     let writer = get_output_writer(&args.output).unwrap();
     let geometries = read_geometries(reader, &args.input_format); // lazily loaded
-    let transformed = affine_transform(geometries, &args);
+    let mut transformed = affine_transform(geometries, &args);
+
+    if args.to_polar {
+        transformed = Box::new(geoms_coordwise(transformed, to_polar));
+    } else if args.from_polar {
+        transformed = Box::new(geoms_coordwise(transformed, from_polar));
+    }
 
     write_geometries(writer, transformed, &args.output_format);
 }
