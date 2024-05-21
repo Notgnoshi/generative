@@ -137,28 +137,18 @@ fn build_transform(args: &CmdlineOptions, center: Coord) -> AffineTransform {
     transform
 }
 
-fn main() {
-    let args = CmdlineOptions::parse();
-
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
-
-    let reader = get_input_reader(&args.input).unwrap();
-    let writer = get_output_writer(&args.output).unwrap();
-    let geometries = read_geometries(reader, &args.input_format); // lazily loaded
-
+fn affine_transform(
+    geometries: impl Iterator<Item = Geometry> + 'static,
+    args: &CmdlineOptions,
+) -> Box<dyn Iterator<Item = Geometry> + '_> {
     match args.center {
         TransformCenter::Origin => {
             let center = coord! {x:0.0, y: 0.0};
-            let transform = build_transform(&args, center);
-            let transformed = geometries.map(|geom| geom.affine_transform(&transform));
-            write_geometries(writer, transformed, &args.output_format);
+            let transform = build_transform(args, center);
+            Box::new(geometries.map(move |geom| geom.affine_transform(&transform)))
         }
         TransformCenter::EachGeometry => {
-            let transformed = geometries.map(|geom| {
+            let map = geometries.map(move |geom| {
                 let center = geom
                     .bounding_rect()
                     .unwrap_or_else(|| {
@@ -168,10 +158,10 @@ fn main() {
                         )
                     })
                     .center();
-                let transform = build_transform(&args, center);
+                let transform = build_transform(args, center);
                 geom.affine_transform(&transform)
             });
-            write_geometries(writer, transformed, &args.output_format);
+            Box::new(map)
         }
         // more expensive for large numbers of geometries (has to load all of them into RAM before
         // performing the transformations)
@@ -201,15 +191,32 @@ fn main() {
             }
             let rect = Rect::new(coord! {x:min_x, y:min_y}, coord! {x:max_x, y:max_y});
             let center = rect.center();
-            let transform = build_transform(&args, center);
+            let transform = build_transform(args, center);
 
             // Instead of applying the transformation in-place all at once _and then_ writing the
             // results, we lazily perform the transformation so that we can pipeline the
             // transformation and the serialization.
-            let transformed = geometries
+            let map = geometries
                 .into_iter()
-                .map(|geom| geom.affine_transform(&transform));
-            write_geometries(writer, transformed, &args.output_format);
+                .map(move |geom| geom.affine_transform(&transform));
+            Box::new(map)
         }
     }
+}
+
+fn main() {
+    let args = CmdlineOptions::parse();
+
+    stderrlog::new()
+        .verbosity(args.log_level)
+        .color(ColorChoice::Auto)
+        .init()
+        .expect("Failed to initialize stderrlog");
+
+    let reader = get_input_reader(&args.input).unwrap();
+    let writer = get_output_writer(&args.output).unwrap();
+    let geometries = read_geometries(reader, &args.input_format); // lazily loaded
+    let transformed = affine_transform(geometries, &args);
+
+    write_geometries(writer, transformed, &args.output_format);
 }
