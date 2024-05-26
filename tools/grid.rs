@@ -5,6 +5,8 @@ use generative::graph::GeometryGraph;
 use generative::io::{
     get_output_writer, write_geometries, write_graph, GeometryFormat, GraphFormat,
 };
+#[cfg(feature = "cxx-bindings")]
+use generative::noding::polygonize;
 use geo::{Geometry, Point};
 use petgraph::Undirected;
 use stderrlog::ColorChoice;
@@ -17,6 +19,9 @@ enum GridFormat {
     Lines,
     /// Output the grid points in WKT
     Points,
+    /// Output the grid cells as WKT POLYGONs
+    #[cfg(feature = "cxx-bindings")]
+    Cells,
 }
 
 impl std::fmt::Display for GridFormat {
@@ -26,6 +31,8 @@ impl std::fmt::Display for GridFormat {
             GridFormat::Graph => write!(f, "graph"),
             GridFormat::Lines => write!(f, "lines"),
             GridFormat::Points => write!(f, "points"),
+            #[cfg(feature = "cxx-bindings")]
+            GridFormat::Cells => write!(f, "cells"),
         }
     }
 }
@@ -479,5 +486,13 @@ fn main() {
             graph.node_weights().map(|p| Geometry::Point(*p)),
             GeometryFormat::Wkt,
         ),
+        #[cfg(feature = "cxx-bindings")]
+        GridFormat::Cells => {
+            let (polygons, dangles) = polygonize(&graph);
+            let polygons = polygons.into_iter().map(Geometry::Polygon);
+            let dangles = dangles.into_iter().map(Geometry::LineString);
+            let geoms = polygons.chain(dangles);
+            write_geometries(writer, geoms, GeometryFormat::Wkt);
+        }
     }
 }
