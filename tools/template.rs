@@ -48,5 +48,5 @@ fn main() {
     // Do some kind of transformation to the geometries here.
 
     let writer = get_output_writer(&args.output).unwrap();
-    write_geometries(writer, geometries, &args.output_format);
+    write_geometries(writer, geometries, args.output_format);
 }

@@ -11,7 +11,7 @@ use log::warn;
 use wkb::{geom_to_wkb, wkb_to_geom, write_geom_to_wkb};
 use wkt::{ToWkt, Wkt};
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum GeometryFormat {
     /// One WKT geometry per line. Ignores trailing garbage; does not skip over leading garbage.
     Wkt,
@@ -168,7 +168,7 @@ where
     }
 }
 
-pub fn write_geometries<W, G>(writer: W, geometries: G, format: &GeometryFormat)
+pub fn write_geometries<W, G>(writer: W, geometries: G, format: GeometryFormat)
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,

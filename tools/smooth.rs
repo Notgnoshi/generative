@@ -65,5 +65,5 @@ fn main() {
     });
 
     let writer = get_output_writer(&args.output).unwrap();
-    write_geometries(writer, geometries, &args.output_format);
+    write_geometries(writer, geometries, args.output_format);
 }

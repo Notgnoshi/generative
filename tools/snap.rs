@@ -110,7 +110,7 @@ fn main() {
         InputFormat::Wkt | InputFormat::WkbHex | InputFormat::WkbRaw => {
             let geometries = read_geometries(reader, &args.input_format.clone().into());
             let geometries = snap_geoms(geometries, strategy);
-            write_geometries(writer, geometries, &args.input_format.into());
+            write_geometries(writer, geometries, args.input_format.into());
         }
         InputFormat::Tgf => {
             let graph: GeometryGraph<Undirected> = read_tgf_graph(reader);

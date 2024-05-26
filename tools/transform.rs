@@ -4,7 +4,9 @@ use clap::{Parser, ValueEnum};
 use generative::io::{
     get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
 };
-use geo::{coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, Rect};
+use geo::{
+    coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, MapCoordsInPlace, Rect,
+};
 use stderrlog::ColorChoice;
 use wkt::ToWkt;
 
@@ -90,7 +92,32 @@ struct CmdlineOptions {
     /// Degrees y skew, applied after offset
     #[clap(long)]
     skew_y: Option<f64>,
+
+    /// Convert the input geometries from (x, y) to (r, theta)
+    ///
+    /// Any affine transformations are applied in the original coordinate space
+    #[clap(long, conflicts_with = "from_polar")]
+    to_polar: bool,
+
+    /// Convert the input geometries from (r, theta) to (x, y)
+    ///
+    /// Any affine transformations are applied in the original coordinate space
+    #[clap(long, conflicts_with = "to_polar")]
+    from_polar: bool,
+
+    /// Scale coordinate 1 (x, or r) to fit in the given range
+    ///
+    /// If specified, will be applied regardless of whether polar conversion is performed
+    #[clap(long, num_args = 2)]
+    range1: Vec<f64>,
+
+    /// Scale coordinate 2 (y, or theta) to fit in the given range
+    ///
+    /// If specified, will be applied regardless of whether polar conversion is performed
+    #[clap(long, num_args = 2)]
+    range2: Vec<f64>,
 }
+
 fn build_transform(args: &CmdlineOptions, center: Coord) -> AffineTransform {
     let mut transform = AffineTransform::rotate(args.rotation, center);
 
@@ -137,6 +164,127 @@ fn build_transform(args: &CmdlineOptions, center: Coord) -> AffineTransform {
     transform
 }
 
+fn bounding_box(geometries: &[Geometry]) -> Rect {
+    // Calculate the center of the bounding box; needed to build the AffineTransform
+    let mut min_x = f64::MAX;
+    let mut min_y = f64::MAX;
+    let mut max_x = f64::MIN;
+    let mut max_y = f64::MIN;
+    for geom in geometries.iter() {
+        let temp = geom.bounding_rect().unwrap_or_else(|| {
+            panic!(
+                "Geometry '{}' didn't have a bounding rectangle",
+                geom.to_wkt()
+            )
+        });
+
+        let min = temp.min();
+        let max = temp.max();
+
+        min_x = min_x.min(min.x);
+        min_y = min_y.min(min.y);
+        max_x = max_x.max(max.x);
+        max_y = max_y.max(max.y);
+    }
+    Rect::new(coord! {x:min_x, y:min_y}, coord! {x:max_x, y:max_y})
+}
+
+fn affine_transform(
+    geometries: impl Iterator<Item = Geometry> + 'static,
+    args: &CmdlineOptions,
+) -> Box<dyn Iterator<Item = Geometry> + '_> {
+    match args.center {
+        TransformCenter::Origin => {
+            let center = coord! {x:0.0, y: 0.0};
+            let transform = build_transform(args, center);
+            Box::new(geometries.map(move |geom| geom.affine_transform(&transform)))
+        }
+        TransformCenter::EachGeometry => {
+            let map = geometries.map(move |geom| {
+                let center = geom
+                    .bounding_rect()
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "Geometry '{}' didn't have a bounding rectangle",
+                            geom.to_wkt()
+                        )
+                    })
+                    .center();
+                let transform = build_transform(args, center);
+                geom.affine_transform(&transform)
+            });
+            Box::new(map)
+        }
+        // more expensive for large numbers of geometries (has to load all of them into RAM before
+        // performing the transformations)
+        TransformCenter::WholeCollection => {
+            let geometries: Vec<_> = geometries.collect();
+            let rect = bounding_box(&geometries);
+            let center = rect.center();
+            let transform = build_transform(args, center);
+
+            // Instead of applying the transformation in-place all at once _and then_ writing the
+            // results, we lazily perform the transformation so that we can pipeline the
+            // transformation and the serialization.
+            let map = geometries
+                .into_iter()
+                .map(move |geom| geom.affine_transform(&transform));
+            Box::new(map)
+        }
+    }
+}
+
+fn from_polar(coord: Coord) -> Coord {
+    let r = coord.x;
+    let theta = coord.y;
+    coord! { x: r * f64::cos(theta), y: r * f64::sin(theta) }
+}
+
+fn to_polar(coord: Coord) -> Coord {
+    let r = f64::sqrt(coord.x.powi(2) + coord.y.powi(2));
+    let mut theta = f64::atan2(coord.y, coord.x);
+    if theta < 0.0 {
+        theta += 2.0 * std::f64::consts::PI;
+    }
+    coord! { x: r, y: theta}
+}
+
+fn scale_range(src: &[f64; 2], dst: &[f64; 2], v: f64) -> f64 {
+    (dst[1] - dst[0]) * (v - src[0]) / (src[1] - src[0]) + dst[0]
+}
+
+fn scale_coord_range(
+    bounds: &Rect,
+    x_dst: Option<&[f64; 2]>,
+    y_dst: Option<&[f64; 2]>,
+    coord: Coord,
+) -> Coord {
+    let min = bounds.min();
+    let max = bounds.max();
+    let mut x = coord.x;
+    let mut y = coord.y;
+
+    if let Some(dst) = x_dst {
+        let src = [min.x, max.x];
+        x = scale_range(&src, dst, coord.x);
+    }
+    if let Some(dst) = y_dst {
+        let src = [min.y, max.y];
+        y = scale_range(&src, dst, coord.y);
+    }
+    coord! {x: x, y: y}
+}
+
+fn geoms_coordwise(
+    geometries: impl Iterator<Item = Geometry>,
+    transform: impl Fn(Coord) -> Coord + Copy,
+) -> impl Iterator<Item = Geometry> {
+    geometries.into_iter().map(move |mut geom| {
+        geom.map_coords_in_place(transform);
+        geom
+    })
+}
+
 fn main() {
     let args = CmdlineOptions::parse();
 
@@ -148,68 +296,43 @@ fn main() {
 
     let reader = get_input_reader(&args.input).unwrap();
     let writer = get_output_writer(&args.output).unwrap();
-    let geometries = read_geometries(reader, &args.input_format); // lazily loaded
+    let geometries = read_geometries(reader, &args.input_format);
+    let mut transformed = affine_transform(geometries, &args);
 
-    match args.center {
-        TransformCenter::Origin => {
-            let center = coord! {x:0.0, y: 0.0};
-            let transform = build_transform(&args, center);
-            let transformed = geometries.map(|geom| geom.affine_transform(&transform));
-            write_geometries(writer, transformed, &args.output_format);
+    if args.range1.len() == 2 || args.range2.len() == 2 {
+        let geometries: Vec<_> = transformed.collect();
+        let bounds = bounding_box(&geometries);
+
+        let mut x_dst = None;
+        let mut y_dst = None;
+        if args.range1.len() == 2 {
+            let dst = [args.range1[0], args.range1[1]];
+            x_dst = Some(dst);
         }
-        TransformCenter::EachGeometry => {
-            let transformed = geometries.map(|geom| {
-                let center = geom
-                    .bounding_rect()
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "Geometry '{}' didn't have a bounding rectangle",
-                            geom.to_wkt()
-                        )
-                    })
-                    .center();
-                let transform = build_transform(&args, center);
-                geom.affine_transform(&transform)
-            });
-            write_geometries(writer, transformed, &args.output_format);
+        if args.range2.len() == 2 {
+            // If we're converting from polar, then the "y" coordinate is actually theta.
+            // Use degrees in the CLI args, because it's waaaay easier to do "0 360" than it is
+            // "0 2PI"
+            let dst = if args.from_polar {
+                [args.range2[0].to_radians(), args.range2[1].to_radians()]
+            } else {
+                [args.range2[0], args.range2[1]]
+            };
+            y_dst = Some(dst);
         }
-        // more expensive for large numbers of geometries (has to load all of them into RAM before
-        // performing the transformations)
-        TransformCenter::WholeCollection => {
-            // Read geometries into memory so we can loop over them twice
-            let geometries: Vec<Geometry<f64>> = geometries.collect();
-            // Calculate the center of the bounding box; needed to build the AffineTransform
-            let mut min_x = f64::MAX;
-            let mut min_y = f64::MAX;
-            let mut max_x = f64::MIN;
-            let mut max_y = f64::MIN;
-            for geom in geometries.iter() {
-                let temp = geom.bounding_rect().unwrap_or_else(|| {
-                    panic!(
-                        "Geometry '{}' didn't have a bounding rectangle",
-                        geom.to_wkt()
-                    )
-                });
 
-                let min = temp.min();
-                let max = temp.max();
-
-                min_x = min_x.min(min.x);
-                min_y = min_y.min(min.y);
-                max_x = max_x.max(max.x);
-                max_y = max_y.max(max.y);
-            }
-            let rect = Rect::new(coord! {x:min_x, y:min_y}, coord! {x:max_x, y:max_y});
-            let center = rect.center();
-            let transform = build_transform(&args, center);
-
-            // Instead of applying the transformation in-place all at once _and then_ writing the
-            // results, we lazily perform the transformation so that we can pipeline the
-            // transformation and the serialization.
-            let transformed = geometries
-                .into_iter()
-                .map(|geom| geom.affine_transform(&transform));
-            write_geometries(writer, transformed, &args.output_format);
-        }
+        let scaled: Vec<_> = geoms_coordwise(geometries.into_iter(), |coord| {
+            scale_coord_range(&bounds, x_dst.as_ref(), y_dst.as_ref(), coord)
+        })
+        .collect();
+        transformed = Box::new(scaled.into_iter());
     }
+
+    if args.to_polar {
+        transformed = Box::new(geoms_coordwise(transformed, to_polar));
+    } else if args.from_polar {
+        transformed = Box::new(geoms_coordwise(transformed, from_polar));
+    }
+
+    write_geometries(writer, transformed, args.output_format);
 }
