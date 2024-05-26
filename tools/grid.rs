@@ -99,6 +99,28 @@ struct CmdlineOptions {
     /// The height of each grid cell. The radius for radial grids. Ignored for hex grids.
     #[clap(long)]
     size_y: Option<f64>,
+
+    /// How many points to fill in on the rings in between radial spokes
+    ///
+    /// Only used for radial grids
+    #[clap(long, conflicts_with = "ring_fill_ratio")]
+    ring_fill_points: Option<usize>,
+
+    /// Desired point spacing between points as a ratio of the radius (--size-y)
+    ///
+    /// A value of 0.5 will use 0.5 * --size-y as the point spacing when filling points in the
+    /// concentric rings.
+    ///
+    /// Only used for radial grids
+    #[clap(long, conflicts_with = "ring_fill_points")]
+    ring_fill_ratio: Option<f64>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum FillStrategy {
+    None,
+    NumPoints(usize),
+    RadiusRatio(f64),
 }
 
 fn grid(
@@ -465,10 +487,48 @@ fn from_polar(r: f64, theta: f64) -> Coord {
     }
 }
 
+fn fill_in_ring(
+    ring: &mut Vec<Coord>,
+    delta_radius: f64,
+    ring_index: usize,
+    delta_theta: f64,
+    spoke_index: usize,
+    strategy: FillStrategy,
+) {
+    let base_theta = delta_theta * spoke_index as f64;
+    let radius = delta_radius * (ring_index + 1) as f64;
+    match strategy {
+        FillStrategy::None => {}
+        FillStrategy::NumPoints(n) => {
+            let slice_delta = delta_theta / (n + 1) as f64;
+            for i in 1..=n {
+                let theta = base_theta + slice_delta * i as f64;
+                let coord = from_polar(radius, theta);
+                ring.push(coord);
+            }
+        }
+        FillStrategy::RadiusRatio(ratio) => {
+            if !(0.0..=1.0).contains(&ratio) {
+                return;
+            }
+            let arc_length = delta_theta * radius;
+            let separation = delta_radius * ratio;
+            let n = (arc_length / separation).ceil() as usize;
+            let slice_delta = delta_theta / (n + 1) as f64;
+            for i in 1..=n {
+                let theta = base_theta + slice_delta * i as f64;
+                let coord = from_polar(radius, theta);
+                ring.push(coord);
+            }
+        }
+    }
+}
+
 fn radial_grid(
     num_spokes: usize,
     num_rings: usize,
     ring_separation: f64,
+    fill_strategy: FillStrategy,
 ) -> (Vec<LineString>, Vec<Polygon>) {
     let mut spokes: Vec<Vec<Coord>> = Vec::new();
     for _ in 0..num_spokes {
@@ -492,6 +552,8 @@ fn radial_grid(
             let new_point = from_polar(radius, theta);
             spoke.push(new_point);
             ring.push(new_point);
+
+            fill_in_ring(ring, ring_separation, r, delta_theta, s, fill_strategy);
         }
     }
 
@@ -553,7 +615,14 @@ fn main() {
     // itself is desired, because it makes it possible to densify / smooth the rings separately
     // from the spokes.
     if args.grid_type == GridType::Radial {
-        let (spokes, rings) = radial_grid(args.width, args.height, size_y);
+        let strategy = if let Some(points) = args.ring_fill_points {
+            FillStrategy::NumPoints(points)
+        } else if let Some(ratio) = args.ring_fill_ratio {
+            FillStrategy::RadiusRatio(ratio)
+        } else {
+            FillStrategy::None
+        };
+        let (spokes, rings) = radial_grid(args.width, args.height, size_y, strategy);
         let spokes = spokes.into_iter().map(Geometry::LineString);
         let rings = rings.into_iter().map(Geometry::Polygon);
         let geoms = rings.chain(spokes);
