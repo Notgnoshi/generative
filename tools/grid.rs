@@ -477,7 +477,7 @@ fn main() {
         GridFormat::Points => write_geometries(
             writer,
             graph.node_weights().map(|p| Geometry::Point(*p)),
-            &GeometryFormat::Wkt,
+            GeometryFormat::Wkt,
         ),
     }
 }

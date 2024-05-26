@@ -201,14 +201,14 @@ fn main() {
     .map(Geometry::LineString);
 
     let mut writer = get_output_writer(&args.output).unwrap();
-    write_geometries(&mut writer, traversals, &args.output_format);
+    write_geometries(&mut writer, traversals, args.output_format);
 
     // dump the remaining nodes
     if args.untraversed {
         write_geometries(
             &mut writer,
             graph.node_weights().map(|p| Geometry::Point(*p)),
-            &args.output_format,
+            args.output_format,
         );
     }
 }

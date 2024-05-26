@@ -334,5 +334,5 @@ fn main() {
         transformed = Box::new(geoms_coordwise(transformed, from_polar));
     }
 
-    write_geometries(writer, transformed, &args.output_format);
+    write_geometries(writer, transformed, args.output_format);
 }

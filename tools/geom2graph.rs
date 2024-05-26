@@ -113,6 +113,6 @@ fn main() {
             Box::new(geometries)
         };
 
-        write_geometries(writer, geometries, &args.geometry_format);
+        write_geometries(writer, geometries, args.geometry_format);
     }
 }

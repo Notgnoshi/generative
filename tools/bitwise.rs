@@ -67,7 +67,7 @@ fn expression(engine: &Engine, ast: &AST, x: i64, y: i64) -> Result<i64, Box<Eva
     engine.eval_ast_with_scope::<i64>(&mut scope, ast)
 }
 
-fn write_line<W>(writer: W, format: &GeometryFormat, x1: i64, y1: i64, x2: i64, y2: i64)
+fn write_line<W>(writer: W, format: GeometryFormat, x1: i64, y1: i64, x2: i64, y2: i64)
 where
     W: Write,
 {
@@ -79,7 +79,7 @@ where
     write_geometries(writer, geometries, format);
 }
 
-fn write_point<W>(writer: W, format: &GeometryFormat, x1: i64, y1: i64)
+fn write_point<W>(writer: W, format: GeometryFormat, x1: i64, y1: i64)
 where
     W: Write,
 {
@@ -163,7 +163,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
             None
         });
 
-        write_geometries(writer, geometries, &args.output_format);
+        write_geometries(writer, geometries, args.output_format);
     } else {
         log::info!(
             "Searching neighbors in order: {:?}",
@@ -175,13 +175,13 @@ fn main() -> Result<(), Box<EvalAltResult>> {
                 for n in args.neighbor_search_order.iter() {
                     let (x2, y2) = neighbor(x, y, n.clone());
                     if expression(&engine, &ast, x2, y2)? > 0 {
-                        write_line(&mut writer, &args.output_format, x, y, x2, y2);
+                        write_line(&mut writer, args.output_format, x, y, x2, y2);
                         wrote_line = true;
                         break;
                     }
                 }
                 if !wrote_line {
-                    write_point(&mut writer, &args.output_format, x, y);
+                    write_point(&mut writer, args.output_format, x, y);
                 }
             }
         }

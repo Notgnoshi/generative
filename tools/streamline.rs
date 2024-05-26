@@ -194,7 +194,7 @@ impl VectorField {
         ((y - self.min_y) / self.stride) as usize
     }
 
-    fn write<W>(&self, writer: &mut W, format: &GeometryFormat)
+    fn write<W>(&self, writer: &mut W, format: GeometryFormat)
     where
         W: std::io::Write,
     {
@@ -436,7 +436,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
         for style in args.vector_field_style {
             writeln!(&mut writer, "{style}").unwrap();
         }
-        field.write(&mut writer, &args.output_format);
+        field.write(&mut writer, args.output_format);
     }
 
     let geometries = read_geometries(reader, &args.input_format);
@@ -458,13 +458,13 @@ fn main() -> Result<(), Box<EvalAltResult>> {
         for style in args.streamline_style {
             writeln!(&mut writer, "{style}").unwrap();
         }
-        write_geometries(&mut writer, streamlines, &args.output_format);
+        write_geometries(&mut writer, streamlines, args.output_format);
     }
     if args.draw_geometries {
         for style in args.geometry_style {
             writeln!(&mut writer, "{style}").unwrap();
         }
-        write_geometries(&mut writer, geometries, &args.output_format);
+        write_geometries(&mut writer, geometries, args.output_format);
     }
     Ok(())
 }
