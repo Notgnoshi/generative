@@ -6,12 +6,13 @@ use generative::io::{
     get_output_writer, write_geometries, write_graph, GeometryFormat, GraphFormat,
 };
 #[cfg(feature = "cxx-bindings")]
-use generative::noding::polygonize;
-use geo::{Geometry, Point};
+use generative::noding::{node, polygonize};
+use generative::snap::{snap_geoms, SnappingStrategy};
+use geo::{Coord, CoordsIter, Geometry, LineString, Point, Polygon};
 use petgraph::Undirected;
 use stderrlog::ColorChoice;
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum GridFormat {
     /// Output the grid as a graph in TGF with WKT POINT node labels
     Graph,
@@ -37,13 +38,14 @@ impl std::fmt::Display for GridFormat {
     }
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum GridType {
     Triangle,
     Quad,
     /// Quads, slanted to the right with ragged edges
     Ragged,
     Hexagon,
+    Radial,
 }
 impl std::fmt::Display for GridType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -53,6 +55,7 @@ impl std::fmt::Display for GridType {
             GridType::Quad => write!(f, "quad"),
             GridType::Ragged => write!(f, "ragged"),
             GridType::Hexagon => write!(f, "hexagon"),
+            GridType::Radial => write!(f, "radial"),
         }
     }
 }
@@ -77,11 +80,11 @@ struct CmdlineOptions {
     #[clap(short, long, default_value_t = GridType::Quad)]
     grid_type: GridType,
 
-    /// The number of cells along the x-axis
+    /// The number of cells along the x-axis, or angular division if using radial grids.
     #[clap(short = 'W', long, default_value_t = 5)]
     width: usize,
 
-    /// The number of cells along the y-axis
+    /// The number of cells along the y-axis, or radius if using radial grids.
     #[clap(short = 'H', long, default_value_t = 5)]
     height: usize,
 
@@ -89,11 +92,11 @@ struct CmdlineOptions {
     #[clap(short = 's', long)]
     size: Option<f64>,
 
-    /// The width of each grid cell
+    /// The width of each grid cell. Ignored for radial grids.
     #[clap(long)]
     size_x: Option<f64>,
 
-    /// The height of each grid cell
+    /// The height of each grid cell. The radius for radial grids. Ignored for hex grids.
     #[clap(long)]
     size_y: Option<f64>,
 }
@@ -114,6 +117,7 @@ fn grid(
         GridType::Quad => quad_grid(width, height, size_x, size_y),
         GridType::Ragged => ragged_grid(width, height, size_x, size_y),
         GridType::Hexagon => hex_grid(width, height, size_x, size_y),
+        GridType::Radial => unreachable!("Radial grid types are implemented differently"),
     }
 }
 
@@ -454,6 +458,59 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
     graph
 }
 
+fn from_polar(r: f64, theta: f64) -> Coord {
+    Coord {
+        x: r * f64::cos(theta),
+        y: r * f64::sin(theta),
+    }
+}
+
+fn radial_grid(
+    num_spokes: usize,
+    num_rings: usize,
+    ring_separation: f64,
+) -> (Vec<LineString>, Vec<Polygon>) {
+    let mut spokes: Vec<Vec<Coord>> = Vec::new();
+    for _ in 0..num_spokes {
+        let mut spoke = Vec::with_capacity(num_rings + 1);
+        spoke.push(Coord { x: 0.0, y: 0.0 });
+        spokes.push(spoke);
+    }
+    let mut rings: Vec<Vec<Coord>> = Vec::new();
+    for _ in 0..num_rings {
+        rings.push(Vec::with_capacity(num_spokes));
+    }
+
+    let delta_theta = 2.0 * std::f64::consts::PI / num_spokes as f64;
+
+    for (r, ring) in rings.iter_mut().enumerate() {
+        let radius = ring_separation * (r + 1) as f64;
+
+        for (s, spoke) in spokes.iter_mut().enumerate() {
+            let theta = delta_theta * s as f64;
+
+            let new_point = from_polar(radius, theta);
+            spoke.push(new_point);
+            ring.push(new_point);
+        }
+    }
+
+    (
+        spokes.into_iter().map(LineString::new).collect(),
+        rings
+            .into_iter()
+            .filter_map(|r| {
+                if r.len() < 3 {
+                    None
+                } else {
+                    let ring = LineString::new(r);
+                    Some(Polygon::new(ring, Vec::new()))
+                }
+            })
+            .collect(),
+    )
+}
+
 fn main() {
     let args = CmdlineOptions::parse();
 
@@ -462,6 +519,20 @@ fn main() {
         .color(ColorChoice::Auto)
         .init()
         .expect("Failed to initialize stderrlog");
+
+    // Exit early with a nice error message here, so that I can use unreachable!() later
+    if !cfg!(feature = "cxx-bindings")
+        && args.grid_type == GridType::Radial
+        && args.output_format == GridFormat::Graph
+    {
+        // No need to check if args.output_format == GridFormat::Cells, because that's hidden
+        // behind the cxx-bindings feature already.
+        eprintln!(
+            "Using the {} output format with radial grids requires the 'cxx-bindings' feature",
+            args.output_format
+        );
+        std::process::exit(1);
+    }
 
     let (mut size_x, mut size_y) = if let Some(size) = args.size {
         (size, size)
@@ -475,24 +546,69 @@ fn main() {
         size_y = size;
     }
 
-    let graph = grid(args.width, args.height, size_x, size_y, args.grid_type);
-
     let writer = get_output_writer(&args.output).unwrap();
-    match args.output_format {
-        GridFormat::Graph => write_graph(writer, &graph, &GraphFormat::Tgf),
-        GridFormat::Lines => write_graph(writer, &graph, &GraphFormat::Wkt),
-        GridFormat::Points => write_geometries(
-            writer,
-            graph.node_weights().map(|p| Geometry::Point(*p)),
-            GeometryFormat::Wkt,
-        ),
-        #[cfg(feature = "cxx-bindings")]
-        GridFormat::Cells => {
-            let (polygons, dangles) = polygonize(&graph);
-            let polygons = polygons.into_iter().map(Geometry::Polygon);
-            let dangles = dangles.into_iter().map(Geometry::LineString);
-            let geoms = polygons.chain(dangles);
-            write_geometries(writer, geoms, GeometryFormat::Wkt);
+
+    // Radial grids need to be created as geometry-first instead of grid-first, to enable
+    // outputting the radial spokes as LINESTRINGs, and the concentric rings as POLYGONs, which
+    // itself is desired, because it makes it possible to densify / smooth the rings separately
+    // from the spokes.
+    if args.grid_type == GridType::Radial {
+        let (spokes, rings) = radial_grid(args.width, args.height, size_y);
+        let spokes = spokes.into_iter().map(Geometry::LineString);
+        let rings = rings.into_iter().map(Geometry::Polygon);
+        let geoms = rings.chain(spokes);
+
+        match args.output_format {
+            GridFormat::Lines => write_geometries(writer, geoms, GeometryFormat::Wkt),
+            GridFormat::Points => {
+                let mut points = Vec::new();
+                for geom in geoms {
+                    let new_points = geom
+                        .coords_iter()
+                        .map(|c| Geometry::Point(Point::new(c.x, c.y)));
+                    points.extend(new_points);
+                }
+                // Snap points as a way of deduplicating vertices
+                let points = snap_geoms(points.into_iter(), SnappingStrategy::ClosestPoint(0.0));
+                write_geometries(writer, points, GeometryFormat::Wkt);
+            }
+            #[cfg(feature = "cxx-bindings")]
+            GridFormat::Graph | GridFormat::Cells => {
+                let graph: GeometryGraph = node(geoms);
+                if args.output_format == GridFormat::Graph {
+                    write_graph(writer, &graph, &GraphFormat::Tgf);
+                } else {
+                    let (polygons, dangles) = polygonize(&graph);
+                    let polygons = polygons.into_iter().map(Geometry::Polygon);
+                    let dangles = dangles.into_iter().map(Geometry::LineString);
+                    let geoms = polygons.chain(dangles);
+                    write_geometries(writer, geoms, GeometryFormat::Wkt);
+                }
+            }
+            #[cfg(not(feature = "cxx-bindings"))]
+            GridFormat::Graph => {
+                unreachable!("Graph and Cells format not possible without cxx-bindings feature")
+            }
+        }
+    } else {
+        let graph = grid(args.width, args.height, size_x, size_y, args.grid_type);
+
+        match args.output_format {
+            GridFormat::Graph => write_graph(writer, &graph, &GraphFormat::Tgf),
+            GridFormat::Lines => write_graph(writer, &graph, &GraphFormat::Wkt),
+            GridFormat::Points => write_geometries(
+                writer,
+                graph.node_weights().map(|p| Geometry::Point(*p)),
+                GeometryFormat::Wkt,
+            ),
+            #[cfg(feature = "cxx-bindings")]
+            GridFormat::Cells => {
+                let (polygons, dangles) = polygonize(&graph);
+                let polygons = polygons.into_iter().map(Geometry::Polygon);
+                let dangles = dangles.into_iter().map(Geometry::LineString);
+                let geoms = polygons.chain(dangles);
+                write_geometries(writer, geoms, GeometryFormat::Wkt);
+            }
         }
     }
 }
