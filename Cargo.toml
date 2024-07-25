@@ -76,7 +76,7 @@ clap = {version="4.0", features=["derive"]}
 cxx = {version = "1.0", optional=true}
 delaunator = "1.0"
 hex = "0.4"
-itertools = "0.12"
+itertools = "0.13"
 geo = "0.28"
 kdtree = "0.7"
 log = "0.4"
