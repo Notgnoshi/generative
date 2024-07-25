@@ -149,7 +149,7 @@ where
     type Error = wkt::conversion::Error;
 
     fn try_from(wkt: Wkt<T>) -> Result<Self, Self::Error> {
-        let geometry = Geometry::try_from(wkt.item)?;
+        let geometry = Geometry::try_from(wkt)?;
         Ok(geometry.into())
     }
 }
@@ -380,7 +380,7 @@ where
 {
     for geometry in geometries {
         let wkt_geom = geometry.to_wkt();
-        writeln!(writer, "{}", wkt_geom.item).expect("Writing failed");
+        writeln!(writer, "{}", wkt_geom).expect("Writing failed");
     }
 }
 
@@ -545,11 +545,12 @@ mod tests {
     }
 
     #[test]
-    fn test_cant_parse_3d_sad_face() {
+    fn test_can_parse_3d() {
         let wkt = b"POINT Z(1 2 3)";
-        let geometries = read_wkt_geometries(&wkt[..]);
+        let mut geometries = read_wkt_geometries(&wkt[..]);
 
-        assert_eq!(geometries.count(), 0);
+        let point = geometries.next();
+        assert_eq!(point, Some(Geometry::Point(Point::new(1.0, 2.0))));
     }
 
     #[test]
