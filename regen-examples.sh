@@ -89,8 +89,13 @@ configure() {
         local placeholder_var="${placeholder//@/}"
         if [[ -n ${!placeholder_var+x} ]]; then
             local placeholder_value="${!placeholder_var}"
+            # There are a few symbols that are special in the context of a sed replacement
+            # expression.
             placeholder_value="${placeholder_value//\\/\\\\}"
+            # Actual newlines should be replaced with the two characters '\' and 'n'
             placeholder_value="${placeholder_value//$'\n'/'\n'}"
+            # Ampersands are placeholders for the matched pattern, so they need to be escaped
+            placeholder_value="${placeholder_value//&/\\&}"
             # debug "Found placeholder '$placeholder' with value '$placeholder_value'"
             debug "Processing placeholder '$placeholder' ..."
             sed -i "s~$placeholder~${placeholder_value}~" "$temp_output"

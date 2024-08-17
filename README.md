@@ -363,13 +363,13 @@ adjacent non-zero cells with a line. The particulars of the pattern are highly i
 A better number-theorist than me could probably extract some meaning from the resulting patterns.
 
 ```sh
-$ bitwise "(x @BITWISE_EXPR1@ y) @BITWISE_EXPR1@ (x ^ y) % 13" |
+$ bitwise "(x & y) & (x ^ y) % 13" |
     wkt2svg --scale 10 --output ./examples/bitwise/expr1.svg
 ```
 ![](./examples/bitwise/expr1.svg)
 
 ```sh
-$ bitwise "(x @BITWISE_EXPR2@ y) @BITWISE_EXPR2@ (x ^ y) % 11" |
+$ bitwise "(x & y) & (x ^ y) % 11" |
     wkt2svg --scale 10 --output ./examples/bitwise/expr2.svg
 ```
 ![](./examples/bitwise/expr2.svg)
@@ -377,7 +377,7 @@ $ bitwise "(x @BITWISE_EXPR2@ y) @BITWISE_EXPR2@ (x ^ y) % 11" |
 Changing the search order doesn't change which cells are non-zero, just which cells are connected
 via a line.
 ```sh
-$ bitwise "(x @BITWISE_EXPR3@ y) @BITWISE_EXPR3@ (x ^ y) % 11" --neighbor-search-order south-west,south-east,south,east |
+$ bitwise "(x & y) & (x ^ y) % 11" --neighbor-search-order south-west,south-east,south,east |
     wkt2svg --scale 10 --output ./examples/bitwise/expr3.svg
 ```
 ![](./examples/bitwise/expr3.svg)
