@@ -154,13 +154,10 @@ where
     let mut graph = GeometryGraph::<Direction>::default();
 
     // Read the nodes
-    loop {
-        let current_line = if let Some(line) = lines.next() {
-            line.unwrap()
-        } else {
+    for line in lines.by_ref() {
+        let Ok(current_line) = line else {
             break;
         };
-
         if current_line.starts_with('#') {
             break;
         }

@@ -54,7 +54,7 @@ fn wkt_inner<'a>(prefix: &'a str, s: &'a str) -> &'a str {
     }
 }
 
-impl<'a> TryFrom<&'a str> for SvgStyle {
+impl TryFrom<&str> for SvgStyle {
     type Error = String;
 
     // This isn't a very good parser (there's lots of edge cases it doesn't handle) but for now it
