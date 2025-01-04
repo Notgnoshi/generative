@@ -29,37 +29,23 @@ jobs:
               run: |
                   sudo apt-get update
                   sudo apt-get install -y --no-install-recommends cmake build-essential ninja-build
-            - name: Set up Rust stable
-              uses: actions-rs/toolchain@v1
+            - name: Setup Rust toolchain
+              uses: dtolnay/rust-toolchain@master
               with:
-                  toolchain: stable
-                  profile: minimal
-                  override: true
-                  components: rustfmt, clippy
-            - uses: Swatinem/rust-cache@v2
+                toolchain: stable
+            - name: Setup nextest
+              uses: taiki-e/install-action@v2
               with:
-                  # modify to trigger clearing the cache
-                  prefix-key: v1-rust
-            - name: Run rustfmt
-              uses: actions-rs/cargo@v1
-              with:
-                  command: fmt
-                  args: --check
+                tool: cargo-nextest
+                components: clippy
+            - name: Setup Rust cache
+              uses: swatinem/rust-cache@v2
             - name: Build
-              uses: actions-rs/cargo@v1
-              with:
-                  command: build
-                  args: --release --all-targets --all-features -vv
-            - name: Lint
-              uses: actions-rs/cargo@v1
-              with:
-                  command: clippy
-                  args: --release --all-targets --no-default-features
+              run: cargo build --all-targets --all-features
+            - name: Clippy
+              run: cargo clippy --no-deps --all-targets --all-features
             - name: Rust Tests
-              uses: actions-rs/cargo@v1
-              with:
-                  command: test
-                  args: --release --all-targets --all-features
+              run: cargo nextest run --all-features --all-targets
             - name: C++ Tests
               run: |
-                  ./target/release/cxx-tests --gtest_color=yes
+                  ./target/debug/cxx-tests --gtest_color=yes

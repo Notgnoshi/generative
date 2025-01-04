@@ -21,3 +21,15 @@ jobs:
                   find generative/ tests/ tools/ -name '*.py' -and -not -path '*geom2graph*' -exec isort {} +
                   find generative/ tests/ tools/ -name '*.py' -and -not -path '*geom2graph*' -exec black --line-length 100 {} +
                   git diff --exit-code
+    rust-format:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Setup Rust toolchain
+              uses: dtolnay/rust-toolchain@master
+              with:
+                toolchain: stable
+                components: rustfmt
+            - name: Run rustfmt
+              run: cargo fmt -- --check --config group_imports=StdExternalCrate,imports_granularity=Module
+

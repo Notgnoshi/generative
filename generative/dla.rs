@@ -1,3 +1,5 @@
+use std::io::{BufWriter, Write};
+
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use log::{debug, info, trace, warn};
@@ -5,9 +7,7 @@ use petgraph::graph::{Graph, NodeIndex};
 use petgraph::visit::EdgeRef;
 use petgraph::Undirected;
 use rand::rngs::StdRng;
-use rand::Rng;
-use rand::SeedableRng;
-use std::io::{BufWriter, Write};
+use rand::{Rng, SeedableRng};
 
 type DimensionType = f64;
 
