@@ -2,10 +2,10 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
-use generative::MapCoordsInPlaceMut;
 use generative::io::{
-    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
+    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
 };
+use generative::MapCoordsInPlaceMut;
 use geo::{AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString};
 // use noise::Billow;
 use noise::{NoiseFn, Perlin};
