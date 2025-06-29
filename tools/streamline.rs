@@ -2,17 +2,16 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
-use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
-};
 use generative::MapCoordsInPlaceMut;
+use generative::io::{
+    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
+};
 use geo::{AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString};
 // use noise::Billow;
 use noise::{NoiseFn, Perlin};
-use rand::distributions::Distribution;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use rand_distr::Binomial;
+use rand_distr::{Binomial, Distribution};
 use rhai::{Engine, EvalAltResult, Scope};
 use stderrlog::ColorChoice;
 
@@ -142,8 +141,8 @@ struct CmdlineOptions {
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     if seed == 0 {
-        let mut rng = rand::thread_rng();
-        rng.gen()
+        let mut rng = rand::rng();
+        rng.random()
     } else {
         seed
     }

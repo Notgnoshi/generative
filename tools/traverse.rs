@@ -4,14 +4,13 @@ use std::path::PathBuf;
 use clap::Parser;
 use generative::graph::GeometryGraph;
 use generative::io::{
-    get_input_reader, get_output_writer, read_tgf_graph, write_geometries, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_tgf_graph, write_geometries,
 };
 use geo::{Geometry, LineString, Point};
 use petgraph::{EdgeType, Undirected};
-use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use rand_distr::Binomial;
+use rand_distr::{Binomial, Distribution, Uniform};
 use stderrlog::ColorChoice;
 
 /// Randomly traverse the given graph.
@@ -69,8 +68,8 @@ struct CmdlineOptions {
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     if seed == 0 {
-        let mut rng = rand::thread_rng();
-        rng.gen()
+        let mut rng = rand::rng();
+        rng.random()
     } else {
         seed
     }
@@ -93,7 +92,7 @@ where
     let mut result = Vec::<Point>::with_capacity(length);
 
     // Pick a random starting point
-    let node_dist = Uniform::from(0..graph.node_count());
+    let node_dist = Uniform::new(0, graph.node_count()).unwrap();
     let mut start_index = node_dist.sample(rng).into();
 
     let point = graph[start_index];
@@ -108,7 +107,7 @@ where
         // Pick the next node to visit
         let next_index = match buffer.len().cmp(&1) {
             Ordering::Greater => {
-                let dist = Uniform::from(0..buffer.len());
+                let dist = Uniform::new(0, buffer.len()).unwrap();
                 let next_index = dist.sample(rng);
                 buffer[next_index]
             }

@@ -1,11 +1,11 @@
 use std::io::{BufWriter, Write};
 
-use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
+use kdtree::distance::squared_euclidean;
 use log::{debug, info, trace, warn};
+use petgraph::Undirected;
 use petgraph::graph::{Graph, NodeIndex};
 use petgraph::visit::EdgeRef;
-use petgraph::Undirected;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
@@ -133,7 +133,10 @@ impl Model {
                 // Random walk
                 let v = &coords;
                 let m = f64::max(self.min_move_distance, distance - self.attraction_distance);
-                let u = Model::norm(&[self.rng.gen_range(0.0..1.0), self.rng.gen_range(0.0..1.0)]);
+                let u = Model::norm(&[
+                    self.rng.random_range(0.0..1.0),
+                    self.rng.random_range(0.0..1.0),
+                ]);
                 coords = [v[0] + u[0] * m, v[1] + u[1] * m];
 
                 if Model::length(&coords) > self.bounding_radius * 2.0 {
@@ -184,7 +187,7 @@ impl Model {
         parent.join_attempts += 1;
 
         if parent.join_attempts >= self.stubbornness
-            && self.rng.gen_range(0.0..1.0) <= self.stickiness
+            && self.rng.random_range(0.0..1.0) <= self.stickiness
         {
             // Bump the new particle away from the parent by the particle spacing
             *new_coords = Model::lerp(&parent.coordinates, new_coords, self.particle_spacing);
@@ -219,7 +222,7 @@ impl Model {
 
     fn generate_random(&mut self) -> f64 {
         self.rng
-            .gen_range(-self.bounding_radius..self.bounding_radius)
+            .random_range(-self.bounding_radius..self.bounding_radius)
     }
 
     // TODO: ndarray::Array1
@@ -245,8 +248,8 @@ impl Model {
     /// Generate a random seed, or pass one through if specified.
     fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
         if seed == 0 {
-            let mut rng = rand::thread_rng();
-            rng.gen()
+            let mut rng = rand::rng();
+            rng.random()
         } else {
             seed
         }

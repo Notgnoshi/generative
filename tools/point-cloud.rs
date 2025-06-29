@@ -3,10 +3,9 @@ use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use generative::io::get_output_writer;
-use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use rand_distr::Binomial;
+use rand_distr::{Binomial, Distribution, Uniform};
 use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -62,7 +61,7 @@ fn generate(points: usize, domain: RandomDomain, rng: &mut StdRng) -> Vec<Double
 
 fn generate_square(points: usize, rng: &mut StdRng) -> Vec<Double2> {
     let mut v = Vec::with_capacity(points);
-    let dist = Uniform::from(0.0..1.0);
+    let dist = Uniform::new(0.0, 1.0).unwrap();
 
     for _ in 0..points {
         let point = Double2 {
@@ -78,8 +77,8 @@ fn generate_square(points: usize, rng: &mut StdRng) -> Vec<Double2> {
 fn generate_circle(points: usize, rng: &mut StdRng) -> Vec<Double2> {
     let mut v = Vec::with_capacity(points);
 
-    let r_dist = Uniform::from(0.0..1.0);
-    let theta_dist = Uniform::from(0.0..2.0 * std::f64::consts::PI);
+    let r_dist = Uniform::new(0.0, 1.0).unwrap();
+    let theta_dist = Uniform::new(0.0, 2.0 * std::f64::consts::PI).unwrap();
 
     for _ in 0..points {
         let r = r_dist.sample(rng);
@@ -97,8 +96,8 @@ fn generate_circle(points: usize, rng: &mut StdRng) -> Vec<Double2> {
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     if seed == 0 {
-        let mut rng = rand::thread_rng();
-        rng.gen()
+        let mut rng = rand::rng();
+        rng.random()
     } else {
         seed
     }
