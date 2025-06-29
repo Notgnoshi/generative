@@ -51,7 +51,7 @@ impl Triangulation {
 
     pub fn triangles(&self) -> impl Iterator<Item = geo::Triangle> + '_ {
         self.triangle_points()
-            .map(|(a, b, c)| geo::Triangle(a, b, c))
+            .map(|(a, b, c)| geo::Triangle::new(a, b, c))
     }
 
     pub fn lines(&self) -> impl Iterator<Item = geo::Line> + '_ {
