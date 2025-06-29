@@ -65,20 +65,14 @@ impl Model {
         stickiness: f64,
     ) -> Model {
         let seed = Model::generate_random_seed_if_not_specified(seed);
-        info!("Intializing rng with seed {}", seed);
+        info!("Intializing rng with seed {seed}");
 
         if dimensions != 2 {
-            warn!("{} dimensions not supported (yet?). Using 2D.", dimensions);
+            warn!("{dimensions} dimensions not supported (yet?). Using 2D.");
         }
 
-        debug!("Initializing model with parameters <seeds={}, seed={}, particle_spacing={}, attraction_distance={}, min_move_distance={}, stubbornness={}, stickiness={}>",
-               seeds,
-               seed,
-               particle_spacing,
-               attraction_distance,
-               min_move_distance,
-               stubbornness,
-               stickiness,
+        debug!(
+            "Initializing model with parameters <seeds={seeds}, seed={seed}, particle_spacing={particle_spacing}, attraction_distance={attraction_distance}, min_move_distance={min_move_distance}, stubbornness={stubbornness}, stickiness={stickiness}>"
         );
 
         let mut model = Model {
@@ -105,7 +99,7 @@ impl Model {
 
     /// Add the specified number of particles to the model.
     pub fn run(&mut self, particles: usize) {
-        debug!("Adding {} particles", particles);
+        debug!("Adding {particles} particles");
         for _ in 0..particles {
             self.add_particle();
         }
@@ -151,7 +145,7 @@ impl Model {
 
     /// Add starting seeds to the DLA model.
     fn add_seeds(&mut self, particles: usize) {
-        debug!("Adding {} seed particles", particles);
+        debug!("Adding {particles} seed particles");
 
         for _ in 0..particles {
             let coords = self.generate_random_coord();
@@ -268,8 +262,8 @@ pub fn format_tgf(writer: &mut BufWriter<Box<dyn Write>>, graph: GraphType) {
         let label = idx.index();
         writeln!(
             writer,
-            "{}\tPOINT({} {})",
-            label, particle.coordinates[0], particle.coordinates[1]
+            "{label}\tPOINT({} {})",
+            particle.coordinates[0], particle.coordinates[1]
         )
         .expect("Failed to write node label");
     }

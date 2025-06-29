@@ -387,7 +387,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
         .expect("Failed to initialize stderrlog");
 
     let seed = generate_random_seed_if_not_specified(args.seed);
-    log::info!("Seeding RNG with: {}", seed);
+    log::info!("Seeding RNG with: {seed}");
     let mut rng = StdRng::seed_from_u64(seed);
 
     // TODO: Add some of the noise generators as CLI options

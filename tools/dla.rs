@@ -118,7 +118,7 @@ fn main() {
 
     model.run(args.particles);
 
-    trace!("Model {:?}", model);
+    trace!("Model {model:?}");
 
     let mut writer = args.get_output_writer();
     match args.format {

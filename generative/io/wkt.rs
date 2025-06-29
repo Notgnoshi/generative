@@ -220,17 +220,17 @@ where
                 Ok(geometry) => match geometry.try_into() {
                     Ok(geometry) => Some(geometry),
                     Err(e) => {
-                        warn!("Failed to convert '{}' to geo geometry: {:?}", line, e);
+                        warn!("Failed to convert '{line}' to geo geometry: {e:?}");
                         None
                     }
                 },
                 Err(e) => {
-                    warn!("Failed to parse '{}' as WKT: {:?}", line, e);
+                    warn!("Failed to parse '{line}' as WKT: {e:?}");
                     None
                 }
             },
             Some(Err(e)) => {
-                warn!("Failed to read line: {:?}", e);
+                warn!("Failed to read line: {e:?}");
                 None
             }
             None => None,
@@ -250,23 +250,20 @@ where
                 Ok(geometry) => match geometry.try_into() {
                     Ok(geometry) => Some(geometry),
                     Err(e) => {
-                        warn!("Failed to convert '{}' to geo geometry: {:?}", line, e);
+                        warn!("Failed to convert '{line}' to geo geometry: {e:?}");
                         None
                     }
                 },
                 Err(e) => match SvgStyle::try_from(line.as_str()) {
                     Ok(style) => Some(GeometryAndStyle::Style(style)),
                     Err(ee) => {
-                        warn!(
-                            "Failed to parse '{}' as WKT: {:?} and as SVG STYLE: {:?}",
-                            line, e, ee
-                        );
+                        warn!("Failed to parse '{line}' as WKT: {e:?} and as SVG STYLE: {ee:?}");
                         None
                     }
                 },
             },
             Some(Err(e)) => {
-                warn!("Failed to read line: {:?}", e);
+                warn!("Failed to read line: {e:?}");
                 None
             }
             None => None,
@@ -290,7 +287,7 @@ where
                 }
             }
             Err(e) => {
-                warn!("Failed to read WKB: {:?}", e);
+                warn!("Failed to read WKB: {e:?}");
                 return None;
             }
         }
@@ -298,7 +295,7 @@ where
         match wkb_to_geom(&mut self.reader) {
             Ok(geom) => Some(geom),
             Err(e) => {
-                warn!("Failed to parse WKB: {:?}", e);
+                warn!("Failed to parse WKB: {e:?}");
                 None
             }
         }
@@ -318,17 +315,17 @@ where
                     Ok(buf) => match wkb_to_geom(&mut &buf[..]) {
                         Ok(geom) => Some(geom),
                         Err(e) => {
-                            warn!("Failed to parse WKB(hex): {:?}", e);
+                            warn!("Failed to parse WKB(hex): {e:?}");
                             None
                         }
                     },
                     Err(e) => {
-                        warn!("Failed to decode WKB(hex): {:?}", e);
+                        warn!("Failed to decode WKB(hex): {e:?}");
                         None
                     }
                 },
                 Err(e) => {
-                    warn!("Failed to read WKB(hex) from line: {:?}", e);
+                    warn!("Failed to read WKB(hex) from line: {e:?}");
                     None
                 }
             },
@@ -380,7 +377,7 @@ where
 {
     for geometry in geometries {
         let wkt_geom = geometry.to_wkt();
-        writeln!(writer, "{}", wkt_geom).expect("Writing failed");
+        writeln!(writer, "{wkt_geom}").expect("Writing failed");
     }
 }
 
@@ -395,7 +392,7 @@ where
                 writeln!(writer, "{}", encode_upper(buffer)).unwrap();
             }
             Err(e) => {
-                warn!("Failed to serialize geometry to WKB: {:?}", e);
+                warn!("Failed to serialize geometry to WKB: {e:?}");
             }
         }
     }
@@ -409,7 +406,7 @@ where
     for geom in geometries {
         // TODO: What's this about the endianity byte?
         if let Err(e) = write_geom_to_wkb(&geom, &mut writer) {
-            warn!("Failed to write geometry: {:?}", e);
+            warn!("Failed to write geometry: {e:?}");
         }
     }
 }

@@ -157,7 +157,7 @@ fn main() {
         .expect("Failed to initialize stderrlog");
 
     let seed = generate_random_seed_if_not_specified(args.seed);
-    log::info!("Seeding RNG with: {}", seed);
+    log::info!("Seeding RNG with: {seed}");
     let mut rng = StdRng::seed_from_u64(seed);
 
     let reader = get_input_reader(&args.input).unwrap();
@@ -174,7 +174,7 @@ fn main() {
     if num_traversals == 0 {
         num_traversals = 1;
     }
-    log::debug!("Making {} traversals", num_traversals);
+    log::debug!("Making {num_traversals} traversals");
 
     let traversals = std::iter::repeat_with(|| {
         let mut length = if args.random_length {
@@ -188,7 +188,7 @@ fn main() {
         if length < 2 {
             length = 2;
         }
-        log::debug!("Making random traversal with length {}", length);
+        log::debug!("Making random traversal with length {length}");
         random_traversal(
             length as usize,
             args.remove_after_traverse,

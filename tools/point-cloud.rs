@@ -126,7 +126,7 @@ fn main() {
         args.points
     };
 
-    log::info!("Generating {} points with seed {}", num_points, seed);
+    log::info!("Generating {num_points} points with seed {seed}");
 
     let points = generate(num_points as usize, args.domain, &mut rng);
     let mut writer = get_output_writer(&args.output).unwrap();
