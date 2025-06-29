@@ -72,34 +72,34 @@ path = "tools/geom2graph.rs"
 required-features = ["cxx-bindings"]
 
 [dependencies]
-clap = {version="4.0", features=["derive"]}
-cxx = {version = "1.0", optional=true}
+clap = { version = "4.0", features = ["derive"] }
+cxx = { version = "1.0", optional = true }
 delaunator = "1.0"
+geo = "0.30"
 hex = "0.4"
 itertools = "0.14"
-geo = "0.29"
 kdtree = "0.7"
 log = "0.4"
 noise = "0.9"
-petgraph = "0.7"
-rand = "0.8"
-rand_distr = "0.4"
+petgraph = "0.8"
+rand = "0.9"
+rand_distr = "0.5"
 rectangle-pack = "0.4"
-rhai = {version="1.13", features=["only_i64", "no_index", "no_object", "no_time", "no_function", "no_module", "no_custom_syntax"]}
+rhai = { version = "1.13", features = ["only_i64", "no_index", "no_object", "no_time", "no_function", "no_module", "no_custom_syntax"] }
 stderrlog = "0.6"
 svg = "0.18"
-wkb = "0.7"
-wkt = "0.12"
+wkb = "0.7" # Hard to update. See #183
+wkt = "0.14"
 
 [build-dependencies]
-cc = {version="*", features=["parallel"], optional=true}
-cmake = {version="0.1", optional=true}
-cxx-build = {version="1.0", optional=true}
-fs_extra = {version="1.3", optional=true}
-glob = {version="0.3", optional=true}
+cc = { version = "*", features = ["parallel"], optional = true }
+cmake = { version = "0.1", optional = true }
+cxx-build = { version = "1.0", optional = true }
+fs_extra = { version = "1.3", optional = true }
+glob = { version = "0.3", optional = true }
 
 [dev-dependencies]
-ctor = "0.2"
+ctor = "0.4"
 float-cmp = "0.10"
 
 [features]

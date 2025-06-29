@@ -9,10 +9,9 @@ use generative::MapCoordsInPlaceMut;
 use geo::{AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString};
 // use noise::Billow;
 use noise::{NoiseFn, Perlin};
-use rand::distributions::Distribution;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use rand_distr::Binomial;
+use rand_distr::{Binomial, Distribution};
 use rhai::{Engine, EvalAltResult, Scope};
 use stderrlog::ColorChoice;
 
@@ -142,8 +141,8 @@ struct CmdlineOptions {
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     if seed == 0 {
-        let mut rng = rand::thread_rng();
-        rng.gen()
+        let mut rng = rand::rng();
+        rng.random()
     } else {
         seed
     }
@@ -387,7 +386,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
         .expect("Failed to initialize stderrlog");
 
     let seed = generate_random_seed_if_not_specified(args.seed);
-    log::info!("Seeding RNG with: {}", seed);
+    log::info!("Seeding RNG with: {seed}");
     let mut rng = StdRng::seed_from_u64(seed);
 
     // TODO: Add some of the noise generators as CLI options

@@ -165,7 +165,7 @@ where
         let (raw_id, label) = match read_raw_node(current_line) {
             Ok(node) => node,
             Err(e) => {
-                log::warn!("Failed to parse node: {:?}", e);
+                log::warn!("Failed to parse node: {e:?}");
                 continue;
             }
         };
@@ -182,7 +182,7 @@ where
         let (raw_source, raw_target) = match read_raw_edge(current_line) {
             Ok(edge) => edge,
             Err(e) => {
-                log::warn!("Failed to parse edge: {:?}", e);
+                log::warn!("Failed to parse edge: {e:?}");
                 continue;
             }
         };
@@ -194,11 +194,7 @@ where
                 graph.add_edge(*real_source, *real_target, ());
             }
             _ => {
-                log::warn!(
-                    "Failed to find node from edge {} -> {} in graph",
-                    raw_source,
-                    raw_target
-                );
+                log::warn!("Failed to find node from edge {raw_source} -> {raw_target} in graph");
                 continue;
             }
         }

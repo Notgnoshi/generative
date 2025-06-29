@@ -154,10 +154,8 @@ fn main() -> Result<(), Box<EvalAltResult>> {
                 }
             } else {
                 log::error!(
-                    "Failed to evaluate expression '{}' given x={}, y={}",
+                    "Failed to evaluate expression '{}' given x={x}, y={y}",
                     args.expression,
-                    x,
-                    y
                 );
             }
             None

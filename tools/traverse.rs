@@ -8,10 +8,9 @@ use generative::io::{
 };
 use geo::{Geometry, LineString, Point};
 use petgraph::{EdgeType, Undirected};
-use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use rand_distr::Binomial;
+use rand_distr::{Binomial, Distribution, Uniform};
 use stderrlog::ColorChoice;
 
 /// Randomly traverse the given graph.
@@ -69,8 +68,8 @@ struct CmdlineOptions {
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     if seed == 0 {
-        let mut rng = rand::thread_rng();
-        rng.gen()
+        let mut rng = rand::rng();
+        rng.random()
     } else {
         seed
     }
@@ -93,7 +92,7 @@ where
     let mut result = Vec::<Point>::with_capacity(length);
 
     // Pick a random starting point
-    let node_dist = Uniform::from(0..graph.node_count());
+    let node_dist = Uniform::new(0, graph.node_count()).unwrap();
     let mut start_index = node_dist.sample(rng).into();
 
     let point = graph[start_index];
@@ -108,7 +107,7 @@ where
         // Pick the next node to visit
         let next_index = match buffer.len().cmp(&1) {
             Ordering::Greater => {
-                let dist = Uniform::from(0..buffer.len());
+                let dist = Uniform::new(0, buffer.len()).unwrap();
                 let next_index = dist.sample(rng);
                 buffer[next_index]
             }
@@ -157,7 +156,7 @@ fn main() {
         .expect("Failed to initialize stderrlog");
 
     let seed = generate_random_seed_if_not_specified(args.seed);
-    log::info!("Seeding RNG with: {}", seed);
+    log::info!("Seeding RNG with: {seed}");
     let mut rng = StdRng::seed_from_u64(seed);
 
     let reader = get_input_reader(&args.input).unwrap();
@@ -174,7 +173,7 @@ fn main() {
     if num_traversals == 0 {
         num_traversals = 1;
     }
-    log::debug!("Making {} traversals", num_traversals);
+    log::debug!("Making {num_traversals} traversals");
 
     let traversals = std::iter::repeat_with(|| {
         let mut length = if args.random_length {
@@ -188,7 +187,7 @@ fn main() {
         if length < 2 {
             length = 2;
         }
-        log::debug!("Making random traversal with length {}", length);
+        log::debug!("Making random traversal with length {length}");
         random_traversal(
             length as usize,
             args.remove_after_traverse,

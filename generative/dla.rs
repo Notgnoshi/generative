@@ -65,20 +65,14 @@ impl Model {
         stickiness: f64,
     ) -> Model {
         let seed = Model::generate_random_seed_if_not_specified(seed);
-        info!("Intializing rng with seed {}", seed);
+        info!("Intializing rng with seed {seed}");
 
         if dimensions != 2 {
-            warn!("{} dimensions not supported (yet?). Using 2D.", dimensions);
+            warn!("{dimensions} dimensions not supported (yet?). Using 2D.");
         }
 
-        debug!("Initializing model with parameters <seeds={}, seed={}, particle_spacing={}, attraction_distance={}, min_move_distance={}, stubbornness={}, stickiness={}>",
-               seeds,
-               seed,
-               particle_spacing,
-               attraction_distance,
-               min_move_distance,
-               stubbornness,
-               stickiness,
+        debug!(
+            "Initializing model with parameters <seeds={seeds}, seed={seed}, particle_spacing={particle_spacing}, attraction_distance={attraction_distance}, min_move_distance={min_move_distance}, stubbornness={stubbornness}, stickiness={stickiness}>"
         );
 
         let mut model = Model {
@@ -105,7 +99,7 @@ impl Model {
 
     /// Add the specified number of particles to the model.
     pub fn run(&mut self, particles: usize) {
-        debug!("Adding {} particles", particles);
+        debug!("Adding {particles} particles");
         for _ in 0..particles {
             self.add_particle();
         }
@@ -139,7 +133,10 @@ impl Model {
                 // Random walk
                 let v = &coords;
                 let m = f64::max(self.min_move_distance, distance - self.attraction_distance);
-                let u = Model::norm(&[self.rng.gen_range(0.0..1.0), self.rng.gen_range(0.0..1.0)]);
+                let u = Model::norm(&[
+                    self.rng.random_range(0.0..1.0),
+                    self.rng.random_range(0.0..1.0),
+                ]);
                 coords = [v[0] + u[0] * m, v[1] + u[1] * m];
 
                 if Model::length(&coords) > self.bounding_radius * 2.0 {
@@ -151,7 +148,7 @@ impl Model {
 
     /// Add starting seeds to the DLA model.
     fn add_seeds(&mut self, particles: usize) {
-        debug!("Adding {} seed particles", particles);
+        debug!("Adding {particles} seed particles");
 
         for _ in 0..particles {
             let coords = self.generate_random_coord();
@@ -190,7 +187,7 @@ impl Model {
         parent.join_attempts += 1;
 
         if parent.join_attempts >= self.stubbornness
-            && self.rng.gen_range(0.0..1.0) <= self.stickiness
+            && self.rng.random_range(0.0..1.0) <= self.stickiness
         {
             // Bump the new particle away from the parent by the particle spacing
             *new_coords = Model::lerp(&parent.coordinates, new_coords, self.particle_spacing);
@@ -225,7 +222,7 @@ impl Model {
 
     fn generate_random(&mut self) -> f64 {
         self.rng
-            .gen_range(-self.bounding_radius..self.bounding_radius)
+            .random_range(-self.bounding_radius..self.bounding_radius)
     }
 
     // TODO: ndarray::Array1
@@ -251,8 +248,8 @@ impl Model {
     /// Generate a random seed, or pass one through if specified.
     fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
         if seed == 0 {
-            let mut rng = rand::thread_rng();
-            rng.gen()
+            let mut rng = rand::rng();
+            rng.random()
         } else {
             seed
         }
@@ -268,8 +265,8 @@ pub fn format_tgf(writer: &mut BufWriter<Box<dyn Write>>, graph: GraphType) {
         let label = idx.index();
         writeln!(
             writer,
-            "{}\tPOINT({} {})",
-            label, particle.coordinates[0], particle.coordinates[1]
+            "{label}\tPOINT({} {})",
+            particle.coordinates[0], particle.coordinates[1]
         )
         .expect("Failed to write node label");
     }

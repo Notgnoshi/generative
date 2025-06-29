@@ -135,8 +135,8 @@ impl SvgOptions {
         };
 
         let style = format!(
-            "{} stroke:{}; stroke-width:{}; fill:{};",
-            style, self.global_stroke, self.global_stroke_width, self.global_fill
+            "{style} stroke:{}; stroke-width:{}; fill:{};",
+            self.global_stroke, self.global_stroke_width, self.global_fill
         );
 
         element::Style::new(format!("svg {{{style}}}"))
@@ -514,11 +514,7 @@ fn main() {
     }
     let min = viewbox.min();
     let viewbox = (min.x, min.y, viewbox.width(), viewbox.height());
-    log::debug!(
-        "Transforming geometries with: {:?} to fit into viewBox {:?}",
-        transform,
-        viewbox
-    );
+    log::debug!("Transforming geometries with: {transform:?} to fit into viewBox {viewbox:?}");
 
     let mut document = Document::new().set("viewBox", viewbox);
     if !args.screen_coordinates {
