@@ -109,7 +109,7 @@ static CmdlineArgs::GraphFormat to_graph_format(std::string format)
         return CmdlineArgs::GraphFormat::TGF;
     }
 
-    throw cxxopts::OptionException("Unknown graph format: " + format);
+    throw cxxopts::exceptions::incorrect_argument_type("Unknown graph format: " + format);
 }
 
 CmdlineArgs CmdlineArgs::parse_args(int argc, const char* argv[])
@@ -154,7 +154,7 @@ CmdlineArgs CmdlineArgs::parse_args(int argc, const char* argv[])
         args.graph2geom = graph2geom;
 
         return args;
-    } catch (cxxopts::OptionException& e)
+    } catch (cxxopts::exceptions::exception& e)
     {
         LOG4CPLUS_ERROR(s_logger, "Failed to parse commandline options: " << e.what());
         std::cout << options.help() << "\n";
