@@ -6,7 +6,6 @@ use generative::io::get_output_writer;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::{Binomial, Distribution, Uniform};
-use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, ValueEnum)]
 enum RandomDomain {
@@ -19,8 +18,8 @@ enum RandomDomain {
 #[clap(name = "point-cloud")]
 struct CmdlineOptions {
     /// The log level
-    #[clap(long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
@@ -106,11 +105,14 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
 fn main() {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let seed = generate_random_seed_if_not_specified(args.seed);
     let mut rng = StdRng::seed_from_u64(seed);
@@ -125,7 +127,7 @@ fn main() {
         args.points
     };
 
-    log::info!("Generating {num_points} points with seed {seed}");
+    tracing::info!("Generating {num_points} points with seed {seed}");
 
     let points = generate(num_points as usize, args.domain, &mut rng);
     let mut writer = get_output_writer(&args.output).unwrap();

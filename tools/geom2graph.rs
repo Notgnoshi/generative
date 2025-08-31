@@ -9,7 +9,6 @@ use generative::io::{
 use generative::noding::{node, polygonize};
 use generative::snap::{snap_geoms, snap_graph, SnappingStrategy};
 use geo::Geometry;
-use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, ValueEnum)]
 enum CliSnappingStrategy {
@@ -32,8 +31,8 @@ impl std::fmt::Display for CliSnappingStrategy {
 #[clap(name = "geom2graph", verbatim_doc_comment)]
 struct CmdlineOptions {
     /// The log level
-    #[clap(short, long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(short, long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
@@ -71,11 +70,14 @@ struct CmdlineOptions {
 fn main() {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let reader = get_input_reader(&args.input).unwrap();
     let writer = get_output_writer(&args.output).unwrap();

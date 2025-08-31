@@ -15,9 +15,12 @@ pub use geometry_mut_map::MapCoordsInPlaceMut;
 #[cfg(test)]
 #[ctor::ctor]
 fn init_test_logging() {
-    stderrlog::new()
-        .verbosity(log::Level::Trace)
-        .color(stderrlog::ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(tracing::Level::TRACE.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_test_writer()
+        .init();
 }

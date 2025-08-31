@@ -6,7 +6,6 @@ use generative::io::{get_output_writer, write_geometries, GeometryFormat};
 use geo::{Geometry, Line, Point};
 use itertools::Itertools;
 use rhai::{Engine, EvalAltResult, Scope, AST};
-use stderrlog::ColorChoice;
 
 /// Perform bitwise operations on a grid
 ///
@@ -15,8 +14,8 @@ use stderrlog::ColorChoice;
 #[clap(name = "bitwise", verbatim_doc_comment)]
 struct CmdlineOptions {
     /// The log level
-    #[clap(short, long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(short, long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
@@ -132,11 +131,14 @@ fn neighbor(x: i64, y: i64, n: Neighbor) -> (i64, i64) {
 fn main() -> Result<(), Box<EvalAltResult>> {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let engine = Engine::new();
     let ast = engine.compile_expression(&args.expression)?;
@@ -153,7 +155,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
                     return Some(Geometry::Point(Point::new(x as f64, y as f64)));
                 }
             } else {
-                log::error!(
+                tracing::error!(
                     "Failed to evaluate expression '{}' given x={x}, y={y}",
                     args.expression,
                 );
@@ -163,7 +165,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
 
         write_geometries(writer, geometries, args.output_format);
     } else {
-        log::info!(
+        tracing::info!(
             "Searching neighbors in order: {:?}",
             args.neighbor_search_order
         );

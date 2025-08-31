@@ -11,7 +11,6 @@ use petgraph::{EdgeType, Undirected};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::{Binomial, Distribution, Uniform};
-use stderrlog::ColorChoice;
 
 /// Randomly traverse the given graph.
 ///
@@ -20,8 +19,8 @@ use stderrlog::ColorChoice;
 #[clap(name = "traverse", verbatim_doc_comment)]
 struct CmdlineOptions {
     /// The log level
-    #[clap(long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Input file to read input from. Defaults to stdin.
     ///
@@ -85,7 +84,7 @@ where
     D: EdgeType,
 {
     if graph.edge_count() == 0 {
-        log::warn!("Graph has no edges. Can't do a traversal");
+        tracing::warn!("Graph has no edges. Can't do a traversal");
         return None;
     }
 
@@ -132,7 +131,7 @@ where
             if remove_after_traverse {
                 graph.remove_node(next_index);
             }
-            log::debug!("Hit the end of a connected component - nowhere to go!");
+            tracing::debug!("Hit the end of a connected component - nowhere to go!");
             break;
         }
 
@@ -149,14 +148,17 @@ where
 fn main() {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let seed = generate_random_seed_if_not_specified(args.seed);
-    log::info!("Seeding RNG with: {seed}");
+    tracing::info!("Seeding RNG with: {seed}");
     let mut rng = StdRng::seed_from_u64(seed);
 
     let reader = get_input_reader(&args.input).unwrap();
@@ -173,7 +175,7 @@ fn main() {
     if num_traversals == 0 {
         num_traversals = 1;
     }
-    log::debug!("Making {num_traversals} traversals");
+    tracing::debug!("Making {num_traversals} traversals");
 
     let traversals = std::iter::repeat_with(|| {
         let mut length = if args.random_length {
@@ -187,7 +189,7 @@ fn main() {
         if length < 2 {
             length = 2;
         }
-        log::debug!("Making random traversal with length {length}");
+        tracing::debug!("Making random traversal with length {length}");
         random_traversal(
             length as usize,
             args.remove_after_traverse,

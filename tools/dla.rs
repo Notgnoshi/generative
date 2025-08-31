@@ -4,8 +4,6 @@ use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use generative::dla::{format_tgf, format_wkt, Model};
-use log::trace;
-use stderrlog::ColorChoice;
 
 /// Specifies the plaintext output format.
 /// In all cases, the seed points will be written first.
@@ -24,8 +22,8 @@ enum OutputFormat {
 #[clap(name = "dla")]
 struct CmdlineOptions {
     /// The log level
-    #[clap(short, long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(short, long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
@@ -84,12 +82,12 @@ impl CmdlineOptions {
             Some(path) => match File::create(path) {
                 Err(why) => panic!("Couldn't create: {} because: {}", path.display(), why),
                 Ok(file) => {
-                    trace!("Using file output: {}", path.display());
+                    tracing::trace!("Using file output: {}", path.display());
                     BufWriter::new(Box::new(file))
                 }
             },
             None => {
-                trace!("Using stdout output");
+                tracing::trace!("Using stdout output");
                 BufWriter::new(Box::new(std::io::stdout()))
             }
         }
@@ -98,11 +96,14 @@ impl CmdlineOptions {
 fn main() {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .unwrap();
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let mut model = Model::new(
         args.dimensions,
@@ -118,7 +119,7 @@ fn main() {
 
     model.run(args.particles);
 
-    trace!("Model {model:?}");
+    tracing::trace!("Model {model:?}");
 
     let mut writer = args.get_output_writer();
     match args.format {

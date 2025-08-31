@@ -10,7 +10,6 @@ use generative::noding::{node, polygonize};
 use generative::snap::{snap_geoms, SnappingStrategy};
 use geo::{Coord, CoordsIter, Geometry, LineString, Point, Polygon};
 use petgraph::Undirected;
-use stderrlog::ColorChoice;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum GridFormat {
@@ -65,8 +64,8 @@ impl std::fmt::Display for GridType {
 #[clap(name = "grid", verbatim_doc_comment)]
 struct CmdlineOptions {
     /// The log level
-    #[clap(short, long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(short, long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
@@ -171,7 +170,7 @@ fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGr
             let y = tri_j2y(j, triangle_height);
             let point = Point::new(x, y);
             let index = graph.add_node(point);
-            log::trace!("id={} node={point:?}", index.index());
+            tracing::trace!("id={} node={point:?}", index.index());
             debug_assert_eq!(index.index(), node_index);
         }
     }
@@ -181,7 +180,7 @@ fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGr
         for i in 0..=width {
             let current_index = (width + 1) * j + i;
             let odd_row = j % 2 != 0;
-            log::trace!("adding neighbors for id={current_index}");
+            tracing::trace!("adding neighbors for id={current_index}");
 
             // Start to the left of the current node, and work clockwise around its neighbors.
             //
@@ -195,7 +194,7 @@ fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGr
             // even j=2  6---7---8
             if i > 0 {
                 let left = current_index - 1;
-                log::trace!("added left id={left}");
+                tracing::trace!("added left id={left}");
                 graph.update_edge(current_index.into(), left.into(), ());
             }
             if j > 0 && (i > 0 || odd_row) {
@@ -204,7 +203,7 @@ fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGr
                 } else {
                     current_index - (width + 2)
                 };
-                log::trace!("added upper left id={upper_left}");
+                tracing::trace!("added upper left id={upper_left}");
                 graph.update_edge(current_index.into(), upper_left.into(), ());
             }
             if j > 0 && (!odd_row || i < width) {
@@ -213,12 +212,12 @@ fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGr
                 } else {
                     current_index - (width + 1)
                 };
-                log::trace!("added upper right id={upper_right}");
+                tracing::trace!("added upper right id={upper_right}");
                 graph.update_edge(current_index.into(), upper_right.into(), ());
             }
             if i < width {
                 let right = current_index + 1;
-                log::trace!("added right id={right}");
+                tracing::trace!("added right id={right}");
                 graph.update_edge(current_index.into(), right.into(), ());
             }
             if j < height && (!odd_row || i < width) {
@@ -227,7 +226,7 @@ fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGr
                 } else {
                     current_index + width + 1
                 };
-                log::trace!("added lower right id={lower_right}");
+                tracing::trace!("added lower right id={lower_right}");
                 graph.update_edge(current_index.into(), lower_right.into(), ());
             }
             if j < height && (i > 0 || odd_row) {
@@ -236,7 +235,7 @@ fn tri_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryGr
                 } else {
                     current_index + width
                 };
-                log::trace!("added lower left id={lower_left}");
+                tracing::trace!("added lower left id={lower_left}");
                 graph.update_edge(current_index.into(), lower_left.into(), ());
             }
         }
@@ -266,7 +265,7 @@ fn quad_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryG
             let point = Point::new(x, y);
             let index = graph.add_node(point);
             let node_index = (width + 1) * j + i;
-            log::trace!("id={} node={point:?}", index.index());
+            tracing::trace!("id={} node={point:?}", index.index());
             debug_assert_eq!(index.index(), node_index);
         }
     }
@@ -277,7 +276,7 @@ fn quad_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryG
             // As an implementation detail, the GeometryGraph gives nodes integer IDs in the order
             // they were added. This is the index of the current node in the graph.
             let current_index = (width + 1) * j + i;
-            log::trace!("adding neighbors for id={current_index}");
+            tracing::trace!("adding neighbors for id={current_index}");
 
             // Add the four neighbors, starting at the left and working clockwise
             //
@@ -288,22 +287,22 @@ fn quad_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> GeometryG
             // 6--7--8
             if i > 0 {
                 let left = current_index - 1;
-                log::trace!("added left id={left}");
+                tracing::trace!("added left id={left}");
                 graph.update_edge(current_index.into(), left.into(), ());
             }
             if j < height {
                 let upper = current_index + width + 1;
-                log::trace!("added upper id={upper}");
+                tracing::trace!("added upper id={upper}");
                 graph.update_edge(current_index.into(), upper.into(), ());
             }
             if i < width {
                 let right = current_index + 1;
-                log::trace!("added right id={right}");
+                tracing::trace!("added right id={right}");
                 graph.update_edge(current_index.into(), right.into(), ());
             }
             if j > 0 {
                 let lower = current_index - width - 1;
-                log::trace!("added lower id={lower}");
+                tracing::trace!("added lower id={lower}");
                 graph.update_edge(current_index.into(), lower.into(), ());
             }
         }
@@ -324,7 +323,7 @@ fn ragged_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> Geometr
             let point = Point::new(x, y);
             let index = graph.add_node(point);
             let node_index = (width + 2) * j + i;
-            log::trace!("id={} node={point:?}", index.index());
+            tracing::trace!("id={} node={point:?}", index.index());
             debug_assert_eq!(index.index(), node_index);
         }
     }
@@ -334,7 +333,7 @@ fn ragged_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> Geometr
         // Because of the ragged edges, you need one more index to get another column of cells
         for i in 0..=(width + 1) {
             let current_index = (width + 2) * j + i;
-            log::trace!("adding neighbors for id={current_index}");
+            tracing::trace!("adding neighbors for id={current_index}");
 
             // Add the four neighbors, starting at the left and working clockwise
             //
@@ -345,22 +344,22 @@ fn ragged_grid(width: usize, height: usize, size_x: f64, size_y: f64) -> Geometr
             // 8-9-0-1
             if i > 0 {
                 let left = current_index - 1;
-                log::trace!("added left id={left}");
+                tracing::trace!("added left id={left}");
                 graph.update_edge(current_index.into(), left.into(), ());
             }
             if j > 0 {
                 let upper = current_index - (width + 1);
-                log::trace!("added upper id={upper}");
+                tracing::trace!("added upper id={upper}");
                 graph.update_edge(current_index.into(), upper.into(), ());
             }
             if i < (width + 1) {
                 let right = current_index + 1;
-                log::trace!("added right id={right}");
+                tracing::trace!("added right id={right}");
                 graph.update_edge(current_index.into(), right.into(), ());
             }
             if j < height {
                 let lower = current_index + width + 1;
-                log::trace!("added lower id={lower}");
+                tracing::trace!("added lower id={lower}");
                 graph.update_edge(current_index.into(), lower.into(), ());
             }
         }
@@ -427,7 +426,7 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
             let x = base_x + x_offset;
             let point = Point::new(x, base_y);
             let index = graph.add_node(point);
-            log::trace!("id={} node={point:?}", index.index());
+            tracing::trace!("id={} node={point:?}", index.index());
         }
     }
 
@@ -437,15 +436,15 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
     for row in 0..rows {
         let even_row = row % 2 == 0;
         for _col in 0..cols {
-            log::trace!("adding neighbors for id={n}");
+            tracing::trace!("adding neighbors for id={n}");
             if n > adjacency_offset {
                 let upper = n - adjacency_offset;
-                log::trace!("added upper id={upper}");
+                tracing::trace!("added upper id={upper}");
                 graph.update_edge(n.into(), upper.into(), ());
             }
             if n < (nodes - adjacency_offset) {
                 let lower = n + adjacency_offset;
-                log::trace!("added lower id={lower}");
+                tracing::trace!("added lower id={lower}");
                 graph.update_edge(n.into(), lower.into(), ());
             }
 
@@ -460,7 +459,7 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
 
             if has_right_neighbor {
                 let right = n + 1;
-                log::trace!("added right id={right}");
+                tracing::trace!("added right id={right}");
                 graph.update_edge(n.into(), right.into(), ());
             }
 
@@ -576,11 +575,14 @@ fn radial_grid(
 fn main() {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     // Exit early with a nice error message here, so that I can use unreachable!() later
     if !cfg!(feature = "cxx-bindings")

@@ -23,7 +23,7 @@ where
     if ffi_graph.is_null() {
         insert_isolated_points = true;
         let tolerance = 0.000001;
-        log::error!("GEOS IteratedNoder failed. Falling back on SnappingNoder");
+        tracing::error!("GEOS IteratedNoder failed. Falling back on SnappingNoder");
         ffi_graph = unsafe { cxxbridge::node(&collection, tolerance) }
     }
 
@@ -32,7 +32,7 @@ where
     // The SnappingNoder throws away isolated points, so add them back in. Unfortunately, this
     // doesn't calculate any node-segment intersections, and may result in duplicate nodes.
     if insert_isolated_points {
-        log::warn!("Adding isolated points back in ... may result in duplicate nodes");
+        tracing::warn!("Adding isolated points back in ... may result in duplicate nodes");
         let points = collection.get_geo_points();
         for point in points.into_iter() {
             graph.add_node(point);

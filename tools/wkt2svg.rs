@@ -9,7 +9,6 @@ use geo::{
     AffineOps, AffineTransform, BoundingRect, Coord, CoordsIter, Geometry, Line, LineString, Point,
     Polygon, Rect, Triangle,
 };
-use stderrlog::ColorChoice;
 use svg::node::element;
 use svg::Document;
 
@@ -23,8 +22,8 @@ use svg::Document;
 #[clap(group(ArgGroup::new("sizing")))]
 struct CmdlineOptions {
     /// The log level
-    #[clap(short, long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(short, long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
@@ -456,11 +455,14 @@ fn calculate_transform(
 fn main() {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let reader = get_input_reader(&args.input).unwrap();
     // Can't lazily convert to SVG because we have to know the whole collection's bounding box to
@@ -495,7 +497,7 @@ fn main() {
     }
     let bbox = bounding_box(geometries.iter());
     if bbox.is_none() {
-        log::error!("Failed to calculate geometry bounding box");
+        tracing::error!("Failed to calculate geometry bounding box");
         return;
     }
     let bbox = bbox.unwrap();
@@ -514,7 +516,7 @@ fn main() {
     }
     let min = viewbox.min();
     let viewbox = (min.x, min.y, viewbox.width(), viewbox.height());
-    log::debug!("Transforming geometries with: {transform:?} to fit into viewBox {viewbox:?}");
+    tracing::debug!("Transforming geometries with: {transform:?} to fit into viewBox {viewbox:?}");
 
     let mut document = Document::new().set("viewBox", viewbox);
     if !args.screen_coordinates {
