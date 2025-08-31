@@ -9,16 +9,21 @@ static bool is_multi_geometry(const geos::geom::Geometry* geometry)
 {
     switch (geometry->getGeometryTypeId())
     {
-    case geos::geom::GeometryTypeId::GEOS_POINT:
-    case geos::geom::GeometryTypeId::GEOS_LINESTRING:
+    case geos::geom::GeometryTypeId::GEOS_CIRCULARSTRING:
+    case geos::geom::GeometryTypeId::GEOS_CURVEPOLYGON:
     case geos::geom::GeometryTypeId::GEOS_LINEARRING:
+    case geos::geom::GeometryTypeId::GEOS_LINESTRING:
+    case geos::geom::GeometryTypeId::GEOS_POINT:
     case geos::geom::GeometryTypeId::GEOS_POLYGON:
         return false;
 
-    case geos::geom::GeometryTypeId::GEOS_MULTIPOINT:
-    case geos::geom::GeometryTypeId::GEOS_MULTILINESTRING:
-    case geos::geom::GeometryTypeId::GEOS_MULTIPOLYGON:
+    case geos::geom::GeometryTypeId::GEOS_COMPOUNDCURVE:
     case geos::geom::GeometryTypeId::GEOS_GEOMETRYCOLLECTION:
+    case geos::geom::GeometryTypeId::GEOS_MULTICURVE:
+    case geos::geom::GeometryTypeId::GEOS_MULTILINESTRING:
+    case geos::geom::GeometryTypeId::GEOS_MULTIPOINT:
+    case geos::geom::GeometryTypeId::GEOS_MULTIPOLYGON:
+    case geos::geom::GeometryTypeId::GEOS_MULTISURFACE:
         return true;
     }
     return false;
