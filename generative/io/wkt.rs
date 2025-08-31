@@ -46,8 +46,7 @@ fn wkt_inner<'a>(prefix: &'a str, s: &'a str) -> &'a str {
     if let Some(s) = s.strip_prefix(prefix) {
         let s = s.trim();
         let s = s.trim_start_matches('(');
-        let s = s.trim_end_matches(')');
-        s
+        s.trim_end_matches(')')
     } else {
         ""
     }
