@@ -332,6 +332,7 @@ The `grid` tool generates different kinds of grids:
 * `quad`
 * `ragged`
 * `hexagon`
+* `radial`
 and supports outputting the resulting grid in TGF graph format, WKT POINTs, or WKT LINESTRINGs.
 
 ```sh
@@ -351,6 +352,21 @@ $ grid --output-format lines --grid-type hexagon --size 20 |
     wkt2svg --output ./examples/grid/hex.svg
 ```
 ![](./examples/grid/hex.svg)
+
+```sh
+$ grid --output-format lines --grid-type radial --size 20 |
+    wkt2svg --output ./examples/grid/radial.svg
+```
+![](./examples/grid/radial.svg)
+
+There's `--ring-fill-points` and `--ring-fill-ratio` options for filling in the points along the
+rings to get a smoother radial grid. You may also use the [smooth](#smooth) tool to get smoother
+curves.
+```sh
+$ grid --output-format lines --grid-type radial --ring-fill-ratio 0.3 --size 20 |
+    wkt2svg --output ./examples/grid/radial-filled.svg
+```
+![](./examples/grid/radial-filled.svg)
 
 ## Algorithms
 ### bitwise
