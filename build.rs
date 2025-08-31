@@ -60,12 +60,6 @@ fn main() {
 
     #[cfg(feature = "cxx-bindings")]
     {
-        println!("cargo:rustc-link-search=native={}/../../../lib/", &out_dir);
-        println!("cargo:rustc-link-lib=static:+whole-archive=generative");
-        println!("cargo:rustc-link-lib=log4cplus");
-        println!("cargo:rustc-link-lib=geos");
-        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN/lib");
-
         let cxxbridge_sources = [
             "generative/cxxbridge/coord_ffi.rs",
             "generative/cxxbridge/geometry_collection_ffi.rs",
@@ -79,6 +73,12 @@ fn main() {
             .flag("-isystemsubmodules/geos/include/")
             .std("c++17")
             .compile("cxxbridge");
+
+        println!("cargo:rustc-link-search=native={}/../../../lib/", &out_dir);
+        println!("cargo:rustc-link-lib=static=generative");
+        println!("cargo:rustc-link-lib=log4cplus");
+        println!("cargo:rustc-link-lib=geos");
+        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN/lib");
 
         for src in cxxbridge_sources {
             println!("cargo:rerun-if-changed={src}");
