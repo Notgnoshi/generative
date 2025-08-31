@@ -68,6 +68,15 @@ public:
         }
 
         // Intentional fallthrough
+        case geos::geom::GeometryTypeId::GEOS_CIRCULARSTRING:
+        case geos::geom::GeometryTypeId::GEOS_COMPOUNDCURVE:
+        case geos::geom::GeometryTypeId::GEOS_MULTICURVE:
+        case geos::geom::GeometryTypeId::GEOS_MULTISURFACE:
+        case geos::geom::GeometryTypeId::GEOS_CURVEPOLYGON:
+            // TODO: Add support for curved geometries? How would that work with the Rust side?
+            break;
+
+        // Intentional fallthrough
         case geos::geom::GeometryTypeId::GEOS_MULTIPOINT:
         case geos::geom::GeometryTypeId::GEOS_MULTILINESTRING:
         case geos::geom::GeometryTypeId::GEOS_MULTIPOLYGON:

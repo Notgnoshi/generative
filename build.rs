@@ -9,8 +9,7 @@ fn main() {
     // Rebuild if any of the C++ code changes
     println!("cargo:rerun-if-changed=CMakeLists.txt");
 
-    // TODO: Remove tools/ when geom2graph.rs is swapped in
-    for allow_dir in ["generative", "tests", "tools"] {
+    for allow_dir in ["generative", "tests"] {
         for cmakelist in glob::glob(format!("{allow_dir}/**/CMakeLists.txt").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cmakelist.unwrap().display());
         }
@@ -45,11 +44,6 @@ fn main() {
     options.overwrite = true;
     fs_extra::dir::copy(src, dest, &options).unwrap();
 
-    // TODO: Remove in favor of geom2graph.rs
-    let geom2graph = format!("{}/bin/geom2graph-cxx", install_dir.display());
-    let dest = format!("{}/../../../geom2graph-cxx", &out_dir);
-    std::fs::copy(geom2graph, dest).unwrap();
-
     let libgenerative = format!("{}/build/generative/libgenerative.a", install_dir.display());
     let dest = format!("{}/../../../lib/libgenerative.a", &out_dir);
     std::fs::copy(libgenerative, dest).unwrap();
@@ -66,12 +60,6 @@ fn main() {
 
     #[cfg(feature = "cxx-bindings")]
     {
-        println!("cargo:rustc-link-search=native={}/../../../lib/", &out_dir);
-        println!("cargo:rustc-link-lib=static:+whole-archive=generative");
-        println!("cargo:rustc-link-lib=log4cplus");
-        println!("cargo:rustc-link-lib=geos");
-        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN/lib");
-
         let cxxbridge_sources = [
             "generative/cxxbridge/coord_ffi.rs",
             "generative/cxxbridge/geometry_collection_ffi.rs",
@@ -85,6 +73,12 @@ fn main() {
             .flag("-isystemsubmodules/geos/include/")
             .std("c++17")
             .compile("cxxbridge");
+
+        println!("cargo:rustc-link-search=native={}/../../../lib/", &out_dir);
+        println!("cargo:rustc-link-lib=static=generative");
+        println!("cargo:rustc-link-lib=log4cplus");
+        println!("cargo:rustc-link-lib=geos");
+        println!("cargo:rustc-link-arg=-Wl,-rpath,$ORIGIN/lib");
 
         for src in cxxbridge_sources {
             println!("cargo:rerun-if-changed={src}");
