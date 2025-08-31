@@ -59,11 +59,6 @@ set(BUILD_BENCHMARKS
 add_subdirectory(submodules/geos)
 set(ROOT ../../)
 
-# cxxopts has some very reasonable configuration that detects if it's being
-# built by a third party, and does the right thing so as to not break said
-# party.
-add_subdirectory(submodules/cxxopts)
-
 # Prevents duplicate target failure :(
 set(LOG4CPLUS_BUILD_TESTING
     OFF
@@ -80,7 +75,6 @@ else()
 endif()
 
 add_subdirectory(generative/)
-add_subdirectory(tools/)
 
 # TODO: Overwrite the geos-defined 'make check' target to run the tests.
 option(GENERATIVE_ENABLE_TESTING "Enable unit tests" ON)

@@ -9,8 +9,7 @@ fn main() {
     // Rebuild if any of the C++ code changes
     println!("cargo:rerun-if-changed=CMakeLists.txt");
 
-    // TODO: Remove tools/ when geom2graph.rs is swapped in
-    for allow_dir in ["generative", "tests", "tools"] {
+    for allow_dir in ["generative", "tests"] {
         for cmakelist in glob::glob(format!("{allow_dir}/**/CMakeLists.txt").as_str()).unwrap() {
             println!("cargo:rerun-if-changed={}", cmakelist.unwrap().display());
         }
@@ -44,11 +43,6 @@ fn main() {
     let mut options = fs_extra::dir::CopyOptions::new();
     options.overwrite = true;
     fs_extra::dir::copy(src, dest, &options).unwrap();
-
-    // TODO: Remove in favor of geom2graph.rs
-    let geom2graph = format!("{}/bin/geom2graph-cxx", install_dir.display());
-    let dest = format!("{}/../../../geom2graph-cxx", &out_dir);
-    std::fs::copy(geom2graph, dest).unwrap();
 
     let libgenerative = format!("{}/build/generative/libgenerative.a", install_dir.display());
     let dest = format!("{}/../../../lib/libgenerative.a", &out_dir);
