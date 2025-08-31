@@ -1,10 +1,10 @@
 use std::io::{BufWriter, Write};
 
-use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
+use kdtree::distance::squared_euclidean;
+use petgraph::Undirected;
 use petgraph::graph::{Graph, NodeIndex};
 use petgraph::visit::EdgeRef;
-use petgraph::Undirected;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 

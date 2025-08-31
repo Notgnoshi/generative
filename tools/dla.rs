@@ -3,7 +3,7 @@ use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
-use generative::dla::{format_tgf, format_wkt, Model};
+use generative::dla::{Model, format_tgf, format_wkt};
 
 /// Specifies the plaintext output format.
 /// In all cases, the seed points will be written first.

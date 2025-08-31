@@ -78,8 +78,8 @@ pub fn polygonize<Direction: petgraph::EdgeType>(
 #[cfg(test)]
 mod tests {
     use geo::Point;
-    use petgraph::graph::{EdgeIndex, NodeIndex};
     use petgraph::Undirected;
+    use petgraph::graph::{EdgeIndex, NodeIndex};
     use wkt::TryFromWkt;
 
     use super::*;

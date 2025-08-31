@@ -1,12 +1,12 @@
 use geo::{Coord, CoordsIter, Geometry, Line, LineString, Polygon, Triangle};
-use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use petgraph::graph::NodeIndex;
+use kdtree::distance::squared_euclidean;
 use petgraph::EdgeType;
+use petgraph::graph::NodeIndex;
 
+use crate::MapCoordsInPlaceMut;
 use crate::flatten::{flatten_geometries_into_points_ref, flatten_nested_geometries};
 use crate::graph::GeometryGraph;
-use crate::MapCoordsInPlaceMut;
 
 pub type GeomKdTree = KdTree<f64, Coord, [f64; 2]>;
 pub type GraphKdTree = KdTree<f64, NodeIndex<usize>, [f64; 2]>;

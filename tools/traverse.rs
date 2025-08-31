@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use generative::graph::GeometryGraph;
 use generative::io::{
-    get_input_reader, get_output_writer, read_tgf_graph, write_geometries, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_tgf_graph, write_geometries,
 };
 use geo::{Geometry, LineString, Point};
 use petgraph::{EdgeType, Undirected};

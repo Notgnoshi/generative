@@ -2,10 +2,10 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
-use generative::io::{get_output_writer, write_geometries, GeometryFormat};
+use generative::io::{GeometryFormat, get_output_writer, write_geometries};
 use geo::{Geometry, Line, Point};
 use itertools::Itertools;
-use rhai::{Engine, EvalAltResult, Scope, AST};
+use rhai::{AST, Engine, EvalAltResult, Scope};
 
 /// Perform bitwise operations on a grid
 ///

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use generative::flatten::flatten_geometries_into_points;
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_graph, GeometryFormat, GraphFormat,
+    GeometryFormat, GraphFormat, get_input_reader, get_output_writer, read_geometries, write_graph,
 };
 use generative::triangulation::triangulate;
 

@@ -6,7 +6,7 @@ mod noder_ffi;
 
 pub use coord_ffi::ffi::{CoordShim, GraphEdge, LineStringShim, PolygonShim, PolygonizationResult};
 pub use geometry_collection::GeometryCollectionShim;
-pub use geometry_graph_ffi::ffi::{from_nodes_edges, GeometryGraphShim};
+pub use geometry_graph_ffi::ffi::{GeometryGraphShim, from_nodes_edges};
 pub use noder_ffi::ffi::{node, polygonize};
 
 pub fn to_ffi_graph<Direction: petgraph::EdgeType>(

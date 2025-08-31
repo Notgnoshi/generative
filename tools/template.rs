@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
 };
 
 /// A template tool

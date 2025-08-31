@@ -3,12 +3,12 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
 };
 use geo::{BoundingRect, Coord, Translate};
 use rectangle_pack::{
-    contains_smallest_box, pack_rects, volume_heuristic, GroupedRectsToPlace, RectToInsert,
-    TargetBin,
+    GroupedRectsToPlace, RectToInsert, TargetBin, contains_smallest_box, pack_rects,
+    volume_heuristic,
 };
 
 /// Pack the given geometries into a rectangle

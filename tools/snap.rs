@@ -3,10 +3,10 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 use generative::graph::GeometryGraph;
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, read_tgf_graph, write_geometries,
-    write_tgf_graph, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_geometries, read_tgf_graph,
+    write_geometries, write_tgf_graph,
 };
-use generative::snap::{snap_geoms, snap_graph, SnappingStrategy};
+use generative::snap::{SnappingStrategy, snap_geoms, snap_graph};
 use petgraph::Undirected;
 
 #[derive(Debug, Clone, ValueEnum)]

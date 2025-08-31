@@ -3,8 +3,8 @@ use std::io::{BufRead, BufReader, Read, Write};
 
 use clap::ValueEnum;
 use geo::{Geometry, Line, Point};
-use petgraph::visit::EdgeRef;
 use petgraph::EdgeType;
+use petgraph::visit::EdgeRef;
 use wkt::TryFromWkt;
 
 use crate::graph::GeometryGraph;

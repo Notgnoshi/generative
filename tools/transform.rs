@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
 };
 use geo::{
-    coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, MapCoordsInPlace, Rect,
+    AffineOps, AffineTransform, BoundingRect, Coord, Geometry, MapCoordsInPlace, Rect, coord,
 };
 use wkt::ToWkt;
 

@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 use generative::graph::GeometryGraph;
 use generative::io::{
-    get_output_writer, write_geometries, write_graph, GeometryFormat, GraphFormat,
+    GeometryFormat, GraphFormat, get_output_writer, write_geometries, write_graph,
 };
 #[cfg(feature = "cxx-bindings")]
 use generative::noding::{node, polygonize};
-use generative::snap::{snap_geoms, SnappingStrategy};
+use generative::snap::{SnappingStrategy, snap_geoms};
 use geo::{Coord, CoordsIter, Geometry, LineString, Point, Polygon};
 use petgraph::Undirected;
 

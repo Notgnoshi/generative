@@ -3,14 +3,14 @@ use std::path::PathBuf;
 use clap::{ArgGroup, Parser};
 use generative::flatten::flatten_nested_geometries;
 use generative::io::{
-    get_input_reader, get_output_writer, read_wkt_geometries_and_styles, GeometryAndStyle, SvgStyle,
+    GeometryAndStyle, SvgStyle, get_input_reader, get_output_writer, read_wkt_geometries_and_styles,
 };
 use geo::{
     AffineOps, AffineTransform, BoundingRect, Coord, CoordsIter, Geometry, Line, LineString, Point,
     Polygon, Rect, Triangle,
 };
-use svg::node::element;
 use svg::Document;
+use svg::node::element;
 
 /// Convert the given geometries to SVG
 ///
