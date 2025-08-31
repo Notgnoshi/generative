@@ -205,6 +205,35 @@ glyphs grid_jagged 100 20 | wkt2svg --output $ASEMIC_GRID_JAGGED
 ```
 ![](./examples/asemic/grid-jagged.svg)
 
+If we use a radial grid with no point filling between the spokes, smooth after the traversals, we
+results without much self-symmetry.
+```sh
+grid_radial() {
+    local size="$1"
+    grid --grid-type radial --output-format graph --width=5 --height=3 |
+        traverse --log-level WARN --traversals 5 --length 5 --remove-after-traverse |
+        transform --scale="$size" |
+        smooth --iterations 4 |
+        bundle
+}
+glyphs grid_radial 75 10 | wkt2svg --output $ASEMIC_GRID_RADIAL
+```
+![](./examples/asemic/grid-radial.svg)
+
+If instead we use a radial grid with a high point density along the rings, we get more compelling
+glyphs reminiscent of a circular maze.
+```sh
+grid_radial_dense() {
+    local size="$1"
+    grid --grid-type radial --output-format graph --width=5 --height=4 --ring-fill-ratio=0.7 |
+        traverse --log-level WARN --traversals 10 --length 30 |
+        transform --scale="$size" |
+        bundle
+}
+glyphs grid_radial_dense 64 10 | wkt2svg --output $ASEMIC_GRID_RADIAL_DENSE
+```
+![](./examples/asemic/grid-radial-dense.svg)
+
 ## Random L-Systems
 [examples/random-lsystems/saved.json](examples/random-lsystems/saved.json) contains parameters for
 randomly (pre)generated Lindenmayer systems.

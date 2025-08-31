@@ -110,3 +110,32 @@ grid_jagged() {
 glyphs grid_jagged 100 20 | wkt2svg --output $ASEMIC_GRID_JAGGED
 # END ASEMIC_GRID_JAGGED_SNIPPET
 extract_snippet ASEMIC_GRID_JAGGED_SNIPPET
+
+ASEMIC_GRID_RADIAL=./examples/asemic/grid-radial.svg
+debug "Generating $ASEMIC_GRID_RADIAL ..."
+# BEGIN ASEMIC_GRID_RADIAL_SNIPPET
+grid_radial() {
+    local size="$1"
+    grid --grid-type radial --output-format graph --width=5 --height=3 |
+        traverse --log-level WARN --traversals 5 --length 5 --remove-after-traverse |
+        transform --scale="$size" |
+        smooth --iterations 4 |
+        bundle
+}
+glyphs grid_radial 75 10 | wkt2svg --output $ASEMIC_GRID_RADIAL
+# END ASEMIC_GRID_RADIAL_SNIPPET
+extract_snippet ASEMIC_GRID_RADIAL_SNIPPET
+
+ASEMIC_GRID_RADIAL_DENSE=./examples/asemic/grid-radial-dense.svg
+debug "Generating $ASEMIC_GRID_RADIAL_DENSE ..."
+# BEGIN ASEMIC_GRID_RADIAL_DENSE_SNIPPET
+grid_radial_dense() {
+    local size="$1"
+    grid --grid-type radial --output-format graph --width=5 --height=4 --ring-fill-ratio=0.7 |
+        traverse --log-level WARN --traversals 10 --length 30 |
+        transform --scale="$size" |
+        bundle
+}
+glyphs grid_radial_dense 64 10 | wkt2svg --output $ASEMIC_GRID_RADIAL_DENSE
+# END ASEMIC_GRID_RADIAL_DENSE_SNIPPET
+extract_snippet ASEMIC_GRID_RADIAL_DENSE_SNIPPET

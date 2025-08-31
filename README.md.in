@@ -145,6 +145,20 @@ removed.
 ```
 ![](@ASEMIC_GRID_JAGGED@)
 
+If we use a radial grid with no point filling between the spokes, smooth after the traversals, we
+results without much self-symmetry.
+```sh
+@ASEMIC_GRID_RADIAL_SNIPPET@
+```
+![](@ASEMIC_GRID_RADIAL@)
+
+If instead we use a radial grid with a high point density along the rings, we get more compelling
+glyphs reminiscent of a circular maze.
+```sh
+@ASEMIC_GRID_RADIAL_DENSE_SNIPPET@
+```
+![](@ASEMIC_GRID_RADIAL_DENSE@)
+
 ## Random L-Systems
 [examples/random-lsystems/saved.json](examples/random-lsystems/saved.json) contains parameters for
 randomly (pre)generated Lindenmayer systems.
