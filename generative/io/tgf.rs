@@ -3,8 +3,8 @@ use std::io::{BufRead, BufReader, Read, Write};
 
 use clap::ValueEnum;
 use geo::{Geometry, Line, Point};
-use petgraph::visit::EdgeRef;
 use petgraph::EdgeType;
+use petgraph::visit::EdgeRef;
 use wkt::TryFromWkt;
 
 use crate::graph::GeometryGraph;
@@ -165,7 +165,7 @@ where
         let (raw_id, label) = match read_raw_node(current_line) {
             Ok(node) => node,
             Err(e) => {
-                log::warn!("Failed to parse node: {e:?}");
+                tracing::warn!("Failed to parse node: {e:?}");
                 continue;
             }
         };
@@ -182,7 +182,7 @@ where
         let (raw_source, raw_target) = match read_raw_edge(current_line) {
             Ok(edge) => edge,
             Err(e) => {
-                log::warn!("Failed to parse edge: {e:?}");
+                tracing::warn!("Failed to parse edge: {e:?}");
                 continue;
             }
         };
@@ -194,7 +194,9 @@ where
                 graph.add_edge(*real_source, *real_target, ());
             }
             _ => {
-                log::warn!("Failed to find node from edge {raw_source} -> {raw_target} in graph");
+                tracing::warn!(
+                    "Failed to find node from edge {raw_source} -> {raw_target} in graph"
+                );
                 continue;
             }
         }

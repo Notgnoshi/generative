@@ -1,7 +1,8 @@
 [package]
 name = "generative"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.89"
 
 [lib]
 path = "generative/lib.rs"
@@ -79,15 +80,15 @@ geo = "0.30"
 hex = "0.4"
 itertools = "0.14"
 kdtree = "0.7"
-log = "0.4"
 noise = "0.9"
 petgraph = "0.8"
 rand = "0.9"
 rand_distr = "0.5"
 rectangle-pack = "0.4"
 rhai = { version = "1.13", features = ["only_i64", "no_index", "no_object", "no_time", "no_function", "no_module", "no_custom_syntax"] }
-stderrlog = "0.6"
 svg = "0.18"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 wkb = "0.7" # Hard to update. See #183
 wkt = "0.14"
 

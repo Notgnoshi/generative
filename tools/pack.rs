@@ -3,14 +3,13 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
 };
 use geo::{BoundingRect, Coord, Translate};
 use rectangle_pack::{
-    contains_smallest_box, pack_rects, volume_heuristic, GroupedRectsToPlace, RectToInsert,
-    TargetBin,
+    GroupedRectsToPlace, RectToInsert, TargetBin, contains_smallest_box, pack_rects,
+    volume_heuristic,
 };
-use stderrlog::ColorChoice;
 
 /// Pack the given geometries into a rectangle
 ///
@@ -20,8 +19,8 @@ use stderrlog::ColorChoice;
 #[clap(name = "pack", verbatim_doc_comment)]
 struct CmdlineOptions {
     /// The log level
-    #[clap(short, long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(short, long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
@@ -55,11 +54,14 @@ struct CmdlineOptions {
 fn main() -> Result<(), String> {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let reader = get_input_reader(&args.input).unwrap();
     let mut geometries: Vec<_> = read_geometries(reader, &args.input_format).collect();

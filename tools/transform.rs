@@ -2,12 +2,11 @@ use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use generative::io::{
-    get_input_reader, get_output_writer, read_geometries, write_geometries, GeometryFormat,
+    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
 };
 use geo::{
-    coord, AffineOps, AffineTransform, BoundingRect, Coord, Geometry, MapCoordsInPlace, Rect,
+    AffineOps, AffineTransform, BoundingRect, Coord, Geometry, MapCoordsInPlace, Rect, coord,
 };
-use stderrlog::ColorChoice;
 use wkt::ToWkt;
 
 #[derive(Debug, Clone, ValueEnum)]
@@ -38,8 +37,8 @@ enum TransformCenter {
 #[clap(name = "transform", verbatim_doc_comment)]
 struct CmdlineOptions {
     /// The log level
-    #[clap(short, long, default_value_t = log::Level::Info)]
-    log_level: log::Level,
+    #[clap(short, long, default_value_t = tracing::Level::INFO)]
+    log_level: tracing::Level,
 
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
@@ -288,11 +287,14 @@ fn geoms_coordwise(
 fn main() {
     let args = CmdlineOptions::parse();
 
-    stderrlog::new()
-        .verbosity(args.log_level)
-        .color(ColorChoice::Auto)
-        .init()
-        .expect("Failed to initialize stderrlog");
+    let filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(args.log_level.into())
+        .from_env_lossy();
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_ansi(true)
+        .with_writer(std::io::stderr)
+        .init();
 
     let reader = get_input_reader(&args.input).unwrap();
     let writer = get_output_writer(&args.output).unwrap();
