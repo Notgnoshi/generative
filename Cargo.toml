@@ -68,6 +68,10 @@ name = "snap"
 path = "tools/snap.rs"
 
 [[bin]]
+name = "attractor"
+path = "tools/attractor.rs"
+
+[[bin]]
 name = "geom2graph"
 path = "tools/geom2graph.rs"
 required-features = ["cxx-bindings"]
