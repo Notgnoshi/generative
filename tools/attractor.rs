@@ -5,6 +5,25 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::{Distribution, Uniform};
 
+#[derive(Clone, Copy, Debug, clap::ValueEnum)]
+enum OutputFormat {
+    /// Write out each visited point as a WKT POINT
+    Points,
+    /// Write out each visited point in a WKT LINESTRING
+    Line,
+    // TODO: Image
+}
+
+impl std::fmt::Display for OutputFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            // important: Should match clap::ValueEnum format
+            OutputFormat::Points => write!(f, "points"),
+            OutputFormat::Line => write!(f, "line"),
+        }
+    }
+}
+
 /// Attractor; runs dynamical systems
 ///
 /// If neither --math nor --script are provided, a default dynamical system is provided for
@@ -15,6 +34,9 @@ struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = tracing::Level::INFO)]
     log_level: tracing::Level,
+
+    #[clap(short, long, default_value_t = OutputFormat::Points)]
+    output_format: OutputFormat,
 
     /// Mathematical expressions defining the dynamical system
     ///
@@ -224,6 +246,7 @@ fn main() -> eyre::Result<()> {
         initial_values.push((initial_x, initial_y));
     }
 
+    // TODO: A performant output writer that can handle parallelism and different output formats
     // TODO: This is a prime candidate for parallelism
     for (i, (mut x, mut y)) in initial_values.into_iter().enumerate() {
         for j in 0..args.iterations {
