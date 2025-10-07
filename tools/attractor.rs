@@ -1,6 +1,11 @@
+use std::io::BufRead;
+
 use clap::Parser;
 
 /// Attractor; runs dynamical systems
+///
+/// If neither --math nor --script are provided, a default dynamical system is provided for
+/// prototyping.
 #[derive(Debug, Parser)]
 #[clap(name = "attractor", verbatim_doc_comment)]
 struct CmdlineOptions {
@@ -8,15 +13,26 @@ struct CmdlineOptions {
     #[clap(short, long, default_value_t = tracing::Level::INFO)]
     log_level: tracing::Level,
 
+    /// Mathematical expressions defining the dynamical system
+    ///
+    /// The --math argument may be provided multiple times. The initial values of x and y will be
+    /// populated, and the expression is expected to define new variables x_new and y_new.
     #[clap(short, long)]
     math: Vec<String>,
+
+    /// The path to a rune script defining the dynamical system
+    ///
+    /// Has the same rules as --math. May be combined with --math (all --math arguments are
+    /// appended to the end of the script).
+    #[clap(short, long)]
+    script: Option<String>,
 }
 
 type DynamicalSystemFn = Box<dyn Fn(f64, f64) -> (f64, f64) + 'static>;
 
 fn build_dynamical_system_function(args: &CmdlineOptions) -> eyre::Result<DynamicalSystemFn> {
     // Interpret the CLI arguments to build the dynamical system function
-    if !args.math.is_empty() {
+    if !args.math.is_empty() || args.script.is_some() {
         build_dynamical_system_function_from_args(args)
     } else {
         // If no --math arguments are provided, use a default function useful for prototyping
@@ -55,11 +71,25 @@ fn build_dynamical_system_function_from_args(
 }
 
 fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
-    // TODO: There should be a way to define all of the a_i parameters
+    // TODO: There should be a way to define parameters from --letters
+    // TODO: There should be a way to define parameters from --parameter
 
     let mut lines = vec!["pub fn iterate(x, y) {".to_string()];
-    // TODO: I also want to be able to read from stdin or a .rn script. In those cases, should the
-    // whole fn be provided, or just the body?
+    if let Some(script) = &args.script {
+        if script == "-" {
+            for maybe_line in std::io::stdin().lock().lines() {
+                let line = maybe_line?;
+                lines.push(line);
+            }
+        } else {
+            let file = std::fs::File::open(script)?;
+            let reader = std::io::BufReader::new(file);
+            for maybe_line in reader.lines() {
+                let line = maybe_line?;
+                lines.push(line);
+            }
+        }
+    }
     lines.append(&mut args.math.clone());
     lines.append(&mut vec!["return (x_new, y_new); }".to_string()]);
     let func = lines.join("\n");
