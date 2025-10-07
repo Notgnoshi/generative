@@ -1,6 +1,8 @@
 use std::io::BufRead;
+use std::path::PathBuf;
 
 use clap::Parser;
+use generative::attractor::{AttractorFormatter, OutputFormat};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::{Distribution, Uniform};
@@ -15,6 +17,12 @@ struct CmdlineOptions {
     /// The log level
     #[clap(short, long, default_value_t = tracing::Level::INFO)]
     log_level: tracing::Level,
+
+    #[clap(short = 'O', long, default_value_t = OutputFormat::Points)]
+    output_format: OutputFormat,
+
+    #[clap(short, long)]
+    output: Option<PathBuf>,
 
     /// Mathematical expressions defining the dynamical system
     ///
@@ -72,7 +80,7 @@ struct CmdlineOptions {
     ///
     /// --initial-x and --initial-y will be ignored if this is greater than one.
     #[clap(short, long, default_value_t = 1)]
-    num_points: u32,
+    num_points: u64,
 }
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
@@ -214,7 +222,7 @@ fn main() -> eyre::Result<()> {
         args.initial_y = None;
     }
 
-    let mut initial_values = Vec::new();
+    let mut initial_values = Vec::with_capacity(args.num_points as usize);
     for i in 0..args.num_points {
         let initial_x = args.initial_x.unwrap_or_else(|| dist.sample(&mut rng));
         let initial_y = args.initial_y.unwrap_or_else(|| dist.sample(&mut rng));
@@ -222,12 +230,16 @@ fn main() -> eyre::Result<()> {
         initial_values.push((initial_x, initial_y));
     }
 
+    let expected_coords = (args.iterations * args.num_points) as usize;
+    let mut formatter = AttractorFormatter::new(args.output_format, args.output, expected_coords)?;
+
     // TODO: This is a prime candidate for parallelism
-    for (i, (mut x, mut y)) in initial_values.into_iter().enumerate() {
-        for j in 0..args.iterations {
+    for (mut x, mut y) in initial_values {
+        for _ in 0..args.iterations {
             (x, y) = dynamical_system(x, y);
-            println!("i={i}, j={j}: ({x}, {x})");
+            formatter.handle_point(x, y)?;
         }
+        formatter.flush()?;
     }
 
     Ok(())
