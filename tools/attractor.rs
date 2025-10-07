@@ -63,6 +63,16 @@ struct CmdlineOptions {
     /// If not given, a random value will be used.
     #[clap(short = 'y', long)]
     initial_y: Option<f64>,
+
+    /// Number of iterations to perform
+    #[clap(short, long, default_value_t = 10)]
+    iterations: u64,
+
+    /// Number of points to trace
+    ///
+    /// --initial-x and --initial-y will be ignored if this is greater than one.
+    #[clap(short, long, default_value_t = 1)]
+    num_points: u32,
 }
 
 fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
@@ -181,7 +191,7 @@ fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
 
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
-    let args = CmdlineOptions::parse();
+    let mut args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
         .with_default_directive(args.log_level.into())
@@ -199,15 +209,25 @@ fn main() -> eyre::Result<()> {
     let dynamical_system = build_dynamical_system_function(&args)?;
 
     let dist = Uniform::new(-1.0, 1.0).unwrap();
-    let initial_x = args.initial_x.unwrap_or_else(|| dist.sample(&mut rng));
-    let initial_y = args.initial_y.unwrap_or_else(|| dist.sample(&mut rng));
-    tracing::debug!("Starting at: ({initial_x}, {initial_y})");
+    if args.num_points > 1 {
+        args.initial_x = None;
+        args.initial_y = None;
+    }
 
-    let mut x = initial_x;
-    let mut y = initial_y;
-    for _ in 0..10 {
-        (x, y) = dynamical_system(x, y);
-        println!("({}, {})", x, y);
+    let mut initial_values = Vec::new();
+    for i in 0..args.num_points {
+        let initial_x = args.initial_x.unwrap_or_else(|| dist.sample(&mut rng));
+        let initial_y = args.initial_y.unwrap_or_else(|| dist.sample(&mut rng));
+        tracing::trace!("i={i}: Starting at: ({initial_x}, {initial_y})");
+        initial_values.push((initial_x, initial_y));
+    }
+
+    // TODO: This is a prime candidate for parallelism
+    for (i, (mut x, mut y)) in initial_values.into_iter().enumerate() {
+        for j in 0..args.iterations {
+            (x, y) = dynamical_system(x, y);
+            println!("i={i}, j={j}: ({x}, {x})");
+        }
     }
 
     Ok(())
