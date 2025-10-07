@@ -26,6 +26,24 @@ struct CmdlineOptions {
     /// appended to the end of the script).
     #[clap(short, long)]
     script: Option<String>,
+
+    /// Parameters to define when the dynamical system is evaluated
+    ///
+    /// May be given multiple times. Each parameter should be defined as '-p name=value'
+    ///
+    /// Anything defined with --math or --script may override these parameters.
+    #[clap(short, long)]
+    parameter: Vec<String>,
+
+    /// Letters A..=Y used to generate the values of parameters a_1, a_2, ..., a_n
+    ///
+    /// Example: "ABCD" will generate parameters a_1=-1.2, a_2=-1.1, a_3=-1.0, a_4=-0.9
+    ///
+    /// Example: "WXY" will generate parameters a_1=1.0, a_2=1.1, a_3=1.2
+    ///
+    /// Anything defined with --math or --script may override these parameters.
+    #[clap(long)]
+    letters: Option<String>,
 }
 
 type DynamicalSystemFn = Box<dyn Fn(f64, f64) -> (f64, f64) + 'static>;
@@ -72,9 +90,17 @@ fn build_dynamical_system_function_from_args(
 
 fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
     // TODO: There should be a way to define parameters from --letters
-    // TODO: There should be a way to define parameters from --parameter
 
-    let mut lines = vec!["pub fn iterate(x, y) {".to_string()];
+    let mut lines = Vec::new();
+    lines.push("pub fn iterate(x, y) {".into());
+    // Add the alphabetic parameters first
+
+    // Add the explicit parameters second (allows overrides if you so wanted)
+    for parameter in &args.parameter {
+        lines.push(format!("let {parameter};"));
+    }
+
+    // Add the script if given
     if let Some(script) = &args.script {
         if script == "-" {
             for maybe_line in std::io::stdin().lock().lines() {
@@ -90,11 +116,12 @@ fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
             }
         }
     }
-    lines.append(&mut args.math.clone());
-    lines.append(&mut vec!["return (x_new, y_new); }".to_string()]);
-    let func = lines.join("\n");
 
-    let source = rune::Source::memory(func)?;
+    // Finally append any --math expressions
+    lines.append(&mut args.math.clone());
+
+    lines.push("return (x_new, y_new); }".into());
+    let source = rune::Source::memory(lines.join("\n"))?;
     Ok(source)
 }
 
