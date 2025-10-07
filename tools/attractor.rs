@@ -88,12 +88,31 @@ fn build_dynamical_system_function_from_args(
     Ok(Box::new(closure))
 }
 
-fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
-    // TODO: There should be a way to define parameters from --letters
+fn params_from_letters(letters: &str) -> eyre::Result<Vec<String>> {
+    let mut params = Vec::new();
+    for (param_index, ch) in letters.chars().enumerate() {
+        if !('A'..='Y').contains(&ch) {
+            eyre::bail!("--letters may only contain letters A..=Y; found '{ch}'");
+        }
+        let alphabet_index = ((ch as u8) - b'A') as f64;
+        let value = -1.2 + (alphabet_index * 0.1);
 
+        let param_index = param_index + 1; // make 1-based
+        params.push(format!("let a_{param_index} = {value};"));
+    }
+
+    Ok(params)
+}
+
+fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
     let mut lines = Vec::new();
     lines.push("pub fn iterate(x, y) {".into());
+    lines.push("// parameters".into());
     // Add the alphabetic parameters first
+    if let Some(letters) = &args.letters {
+        let mut params = params_from_letters(letters)?;
+        lines.append(&mut params);
+    }
 
     // Add the explicit parameters second (allows overrides if you so wanted)
     for parameter in &args.parameter {
@@ -102,6 +121,7 @@ fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
 
     // Add the script if given
     if let Some(script) = &args.script {
+        lines.push("// script".into());
         if script == "-" {
             for maybe_line in std::io::stdin().lock().lines() {
                 let line = maybe_line?;
@@ -118,10 +138,16 @@ fn build_rune_script(args: &CmdlineOptions) -> eyre::Result<rune::Source> {
     }
 
     // Finally append any --math expressions
+    if !args.math.is_empty() {
+        lines.push("// math".into());
+    }
     lines.append(&mut args.math.clone());
 
-    lines.push("return (x_new, y_new); }".into());
-    let source = rune::Source::memory(lines.join("\n"))?;
+    lines.push("return (x_new, y_new);".into());
+    lines.push("}".into());
+    let script = lines.join("\n");
+    tracing::debug!("Generated rune script:\n==========\n{script}\n==========");
+    let source = rune::Source::memory(script)?;
     Ok(source)
 }
 
