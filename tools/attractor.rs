@@ -1,6 +1,9 @@
 use std::io::BufRead;
 
 use clap::Parser;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
+use rand_distr::{Distribution, Uniform};
 
 /// Attractor; runs dynamical systems
 ///
@@ -44,6 +47,31 @@ struct CmdlineOptions {
     /// Anything defined with --math or --script may override these parameters.
     #[clap(long)]
     letters: Option<String>,
+
+    /// The random seed to use. Use zero to let the tool pick its own random seed.
+    #[clap(long, default_value_t = 0)]
+    seed: u64,
+
+    /// The initial x value
+    ///
+    /// If not given, a random value will be used.
+    #[clap(short = 'x', long)]
+    initial_x: Option<f64>,
+
+    /// The initial y value
+    ///
+    /// If not given, a random value will be used.
+    #[clap(short = 'y', long)]
+    initial_y: Option<f64>,
+}
+
+fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
+    if seed == 0 {
+        let mut rng = rand::rng();
+        rng.random()
+    } else {
+        seed
+    }
 }
 
 type DynamicalSystemFn = Box<dyn Fn(f64, f64) -> (f64, f64) + 'static>;
@@ -164,10 +192,19 @@ fn main() -> eyre::Result<()> {
         .with_writer(std::io::stderr)
         .init();
 
+    let seed = generate_random_seed_if_not_specified(args.seed);
+    tracing::info!("Seeding RNG with: {seed}");
+    let mut rng = StdRng::seed_from_u64(seed);
+
     let dynamical_system = build_dynamical_system_function(&args)?;
 
-    let mut x = 0.1;
-    let mut y = -0.01;
+    let dist = Uniform::new(-1.0, 1.0).unwrap();
+    let initial_x = args.initial_x.unwrap_or_else(|| dist.sample(&mut rng));
+    let initial_y = args.initial_y.unwrap_or_else(|| dist.sample(&mut rng));
+    tracing::debug!("Starting at: ({initial_x}, {initial_y})");
+
+    let mut x = initial_x;
+    let mut y = initial_y;
     for _ in 0..10 {
         (x, y) = dynamical_system(x, y);
         println!("({}, {})", x, y);
