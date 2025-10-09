@@ -100,7 +100,12 @@ fn build_dynamical_system_function(args: &CmdlineOptions) -> eyre::Result<Dynami
         build_dynamical_system_function_from_args(args)
     } else {
         // If no --math arguments are provided, use a default function useful for prototyping
-        Ok(Box::new(|x, y| (x + 1.0, x * y - y)))
+        Ok(Box::new(|x, y| {
+            (
+                f64::sin(0.97 * y) - f64::cos(-1.899 * x),
+                f64::sin(1.381 * x) - f64::cos(-1.506 * y),
+            )
+        }))
     }
 }
 
