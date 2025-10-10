@@ -124,8 +124,8 @@ cxx-bindings = ["cxx", "dep:cxx", "dep:cxx-build"]
 default = ["cxx-bindings"]
 
 [patch.crates-io]
-# Until https://github.com/rune-rs/rune/pull/966 is merged and released
+# Unreleased changes add support for Trig functions
 #
 # Unfortunately 0.14.1 was a hotfix branch, and master is still 0.14.0 with breaking API changes
 # since 0.14.0 was released.
-rune = { git = "https://github.com/Notgnoshi/rune.git", branch = "ag/moar-float" }
+rune = { git = "https://github.com/rune-rs/rune.git", branch = "main" }
