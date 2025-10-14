@@ -36,7 +36,8 @@ struct CmdlineOptions {
     iterations: usize,
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -48,7 +49,7 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
+    let reader = get_input_reader(&args.input)?;
     let geometries = read_geometries(reader, &args.input_format);
     let geometries = flatten_nested_geometries(geometries);
     let geometries = geometries.map(|g| match g {
@@ -66,6 +67,6 @@ fn main() {
         Geometry::MultiPolygon(g) => Geometry::MultiPolygon(g.chaikin_smoothing(args.iterations)),
     });
 
-    let writer = get_output_writer(&args.output).unwrap();
-    write_geometries(writer, geometries, args.output_format);
+    let writer = get_output_writer(&args.output)?;
+    write_geometries(writer, geometries, args.output_format)
 }

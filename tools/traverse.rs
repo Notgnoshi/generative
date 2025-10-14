@@ -145,7 +145,8 @@ where
     }
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -161,13 +162,13 @@ fn main() {
     tracing::info!("Seeding RNG with: {seed}");
     let mut rng = StdRng::seed_from_u64(seed);
 
-    let reader = get_input_reader(&args.input).unwrap();
+    let reader = get_input_reader(&args.input)?;
     let mut graph: GeometryGraph<Undirected> = read_tgf_graph(reader);
 
     let mut num_traversals = if args.random_traversals {
         let n = args.traversals * 2; // changes mean
         let p = 0.5; // changes skew
-        let dist = Binomial::new(n as u64, p).unwrap();
+        let dist = Binomial::new(n as u64, p)?;
         dist.sample(&mut rng)
     } else {
         args.traversals as u64
@@ -201,8 +202,8 @@ fn main() {
     .flatten()
     .map(Geometry::LineString);
 
-    let mut writer = get_output_writer(&args.output).unwrap();
-    write_geometries(&mut writer, traversals, args.output_format);
+    let mut writer = get_output_writer(&args.output)?;
+    write_geometries(&mut writer, traversals, args.output_format)?;
 
     // dump the remaining nodes
     if args.untraversed {
@@ -210,6 +211,7 @@ fn main() {
             &mut writer,
             graph.node_weights().map(|p| Geometry::Point(*p)),
             args.output_format,
-        );
+        )?;
     }
+    Ok(())
 }

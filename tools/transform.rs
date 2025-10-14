@@ -284,7 +284,8 @@ fn geoms_coordwise(
     })
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -296,8 +297,8 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
-    let writer = get_output_writer(&args.output).unwrap();
+    let reader = get_input_reader(&args.input)?;
+    let writer = get_output_writer(&args.output)?;
     let geometries = read_geometries(reader, &args.input_format);
     let mut transformed = affine_transform(geometries, &args);
 
@@ -336,5 +337,5 @@ fn main() {
         transformed = Box::new(geoms_coordwise(transformed, from_polar));
     }
 
-    write_geometries(writer, transformed, args.output_format);
+    write_geometries(writer, transformed, args.output_format)
 }

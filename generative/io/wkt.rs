@@ -166,7 +166,7 @@ where
     }
 }
 
-pub fn write_geometries<W, G>(writer: W, geometries: G, format: GeometryFormat)
+pub fn write_geometries<W, G>(writer: W, geometries: G, format: GeometryFormat) -> eyre::Result<()>
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,
@@ -370,18 +370,19 @@ where
 /// Write the given geometries with the given Writer in WKT format
 ///
 /// Each geometry will be written on its own line.
-pub fn write_wkt_geometries<W, G>(mut writer: W, geometries: G)
+pub fn write_wkt_geometries<W, G>(mut writer: W, geometries: G) -> eyre::Result<()>
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,
 {
     for geometry in geometries {
         let wkt_geom = geometry.to_wkt();
-        writeln!(writer, "{wkt_geom}").expect("Writing failed");
+        writeln!(writer, "{wkt_geom}")?;
     }
+    Ok(())
 }
 
-fn write_wkbhex_geometries<W, G>(mut writer: W, geometries: G)
+fn write_wkbhex_geometries<W, G>(mut writer: W, geometries: G) -> eyre::Result<()>
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,
@@ -389,26 +390,27 @@ where
     for geom in geometries {
         match geom_to_wkb(&geom) {
             Ok(buffer) => {
-                writeln!(writer, "{}", encode_upper(buffer)).unwrap();
+                writeln!(writer, "{}", encode_upper(buffer))?;
             }
             Err(e) => {
                 tracing::warn!("Failed to serialize geometry to WKB: {e:?}");
             }
         }
     }
+    Ok(())
 }
 
-fn write_wkbraw_geometries<W, G>(mut writer: W, geometries: G)
+fn write_wkbraw_geometries<W, G>(mut writer: W, geometries: G) -> eyre::Result<()>
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,
 {
     for geom in geometries {
         // TODO: What's this about the endianity byte?
-        if let Err(e) = write_geom_to_wkb(&geom, &mut writer) {
-            tracing::warn!("Failed to write geometry: {e:?}");
-        }
+        write_geom_to_wkb(&geom, &mut writer)
+            .map_err(|e| eyre::eyre!("Failed to write WKB geometry: {e:?}"))?;
     }
+    Ok(())
 }
 
 pub fn read_wkt_geometries_and_styles<R>(reader: R) -> WktGeometriesAndStyles<R>
@@ -521,7 +523,7 @@ mod tests {
         let geometries = read_wkbhex_geometries(&input_wkbhex[..]);
 
         let mut output_buffer = Vec::<u8>::new();
-        write_wkbhex_geometries(&mut output_buffer, geometries);
+        write_wkbhex_geometries(&mut output_buffer, geometries).unwrap();
 
         assert_eq!(output_buffer, input_wkbhex);
     }
@@ -536,7 +538,7 @@ mod tests {
         let geometries = read_wkbraw_geometries(buffer.as_slice());
 
         let mut output_buffer = Vec::<u8>::new();
-        write_wkbraw_geometries(&mut output_buffer, geometries);
+        write_wkbraw_geometries(&mut output_buffer, geometries).unwrap();
 
         assert_eq!(output_buffer, buffer);
     }

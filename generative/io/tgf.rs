@@ -34,7 +34,8 @@ pub fn write_graph<Direction, W>(
     mut writer: W,
     graph: &GeometryGraph<Direction>,
     format: &GraphFormat,
-) where
+) -> eyre::Result<()>
+where
     W: Write,
     Direction: EdgeType,
 {
@@ -44,7 +45,10 @@ pub fn write_graph<Direction, W>(
     }
 }
 
-pub fn write_tgf_graph<Direction, W>(writer: &mut W, graph: &GeometryGraph<Direction>)
+pub fn write_tgf_graph<Direction, W>(
+    writer: &mut W,
+    graph: &GeometryGraph<Direction>,
+) -> eyre::Result<()>
 where
     W: Write,
     Direction: EdgeType,
@@ -55,22 +59,24 @@ where
             .node_weight(idx)
             .expect("Got index to nonexistent node.");
         let index = idx.index();
-        writeln!(writer, "{}\tPOINT({} {})", index, coord.x(), coord.y())
-            .expect("Failed to write node label");
+        writeln!(writer, "{}\tPOINT({} {})", index, coord.x(), coord.y())?;
     }
-    writeln!(writer, "#").expect("Failed to write node/edge separator");
+    writeln!(writer, "#")?;
     for edge in graph.edge_references() {
         writeln!(
             writer,
             "{}\t{}",
             edge.source().index(),
             edge.target().index()
-        )
-        .expect("Failed to write edge");
+        )?;
     }
+    Ok(())
 }
 
-pub fn write_wkt_graph<Direction, W>(writer: W, graph: &GeometryGraph<Direction>)
+pub fn write_wkt_graph<Direction, W>(
+    writer: W,
+    graph: &GeometryGraph<Direction>,
+) -> eyre::Result<()>
 where
     W: Write,
     Direction: EdgeType,
@@ -79,7 +85,7 @@ where
         .edge_references()
         .map(|e| Line::new(graph[e.source()], graph[e.target()]))
         .map(Geometry::Line);
-    write_wkt_geometries(writer, edges);
+    write_wkt_geometries(writer, edges)
 }
 
 fn read_raw_node(line: String) -> Result<(usize, Point), String> {

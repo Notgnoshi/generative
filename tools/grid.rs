@@ -572,7 +572,8 @@ fn radial_grid(
     )
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -610,7 +611,7 @@ fn main() {
         size_y = size;
     }
 
-    let writer = get_output_writer(&args.output).unwrap();
+    let writer = get_output_writer(&args.output)?;
 
     // Radial grids need to be created as geometry-first instead of grid-first, to enable
     // outputting the radial spokes as LINESTRINGs, and the concentric rings as POLYGONs, which
@@ -641,19 +642,19 @@ fn main() {
                 }
                 // Snap points as a way of deduplicating vertices
                 let points = snap_geoms(points.into_iter(), SnappingStrategy::ClosestPoint(0.0));
-                write_geometries(writer, points, GeometryFormat::Wkt);
+                write_geometries(writer, points, GeometryFormat::Wkt)
             }
             #[cfg(feature = "cxx-bindings")]
             GridFormat::Graph | GridFormat::Cells => {
                 let graph: GeometryGraph = node(geoms);
                 if args.output_format == GridFormat::Graph {
-                    write_graph(writer, &graph, &GraphFormat::Tgf);
+                    write_graph(writer, &graph, &GraphFormat::Tgf)
                 } else {
                     let (polygons, dangles) = polygonize(&graph);
                     let polygons = polygons.into_iter().map(Geometry::Polygon);
                     let dangles = dangles.into_iter().map(Geometry::LineString);
                     let geoms = polygons.chain(dangles);
-                    write_geometries(writer, geoms, GeometryFormat::Wkt);
+                    write_geometries(writer, geoms, GeometryFormat::Wkt)
                 }
             }
             #[cfg(not(feature = "cxx-bindings"))]
@@ -678,7 +679,7 @@ fn main() {
                 let polygons = polygons.into_iter().map(Geometry::Polygon);
                 let dangles = dangles.into_iter().map(Geometry::LineString);
                 let geoms = polygons.chain(dangles);
-                write_geometries(writer, geoms, GeometryFormat::Wkt);
+                write_geometries(writer, geoms, GeometryFormat::Wkt)
             }
         }
     }

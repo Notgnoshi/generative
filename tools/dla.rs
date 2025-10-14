@@ -93,7 +93,8 @@ impl CmdlineOptions {
         }
     }
 }
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -123,11 +124,7 @@ fn main() {
 
     let mut writer = args.get_output_writer();
     match args.format {
-        OutputFormat::Tgf => {
-            format_tgf(&mut writer, model.particle_graph);
-        }
-        OutputFormat::Wkt => {
-            format_wkt(&mut writer, model.particle_graph);
-        }
-    };
+        OutputFormat::Tgf => format_tgf(&mut writer, model.particle_graph),
+        OutputFormat::Wkt => format_wkt(&mut writer, model.particle_graph),
+    }
 }

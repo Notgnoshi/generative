@@ -452,9 +452,9 @@ fn calculate_transform(
     }
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
-
     let filter = tracing_subscriber::EnvFilter::builder()
         .with_default_directive(args.log_level.into())
         .from_env_lossy();
@@ -464,7 +464,7 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
+    let reader = get_input_reader(&args.input)?;
     // Can't lazily convert to SVG because we have to know the whole collection's bounding box to
     // know how to scale.
     let geometries = read_wkt_geometries_and_styles(reader);
@@ -493,14 +493,10 @@ fn main() {
     let geometries: Vec<_> = flattened.flatten().collect();
 
     if geometries.is_empty() {
-        return;
+        return Ok(());
     }
-    let bbox = bounding_box(geometries.iter());
-    if bbox.is_none() {
-        tracing::error!("Failed to calculate geometry bounding box");
-        return;
-    }
-    let bbox = bbox.unwrap();
+    let bbox = bounding_box(geometries.iter())
+        .ok_or_else(|| eyre::eyre!("Failed to calculate geometry bounding box"))?;
     let mut options = SvgOptions::from(&args);
 
     let (transform, mut viewbox) = calculate_transform(&bbox, &options);
@@ -528,6 +524,8 @@ fn main() {
         document = to_svg(geometry, &transform, document, &mut options);
     }
 
-    let writer = get_output_writer(&args.output).unwrap();
-    svg::write(writer, &document).unwrap();
+    let writer = get_output_writer(&args.output)?;
+    svg::write(writer, &document)?;
+
+    Ok(())
 }

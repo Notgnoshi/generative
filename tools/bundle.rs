@@ -30,7 +30,8 @@ struct CmdlineOptions {
     output_format: GeometryFormat,
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -42,12 +43,12 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
+    let reader = get_input_reader(&args.input)?;
     let geometries = read_geometries(reader, &args.input_format);
 
     let bundle: geo::GeometryCollection = geometries.collect();
     let geometries = std::iter::once(geo::Geometry::GeometryCollection(bundle));
 
-    let writer = get_output_writer(&args.output).unwrap();
-    write_geometries(writer, geometries, args.output_format);
+    let writer = get_output_writer(&args.output)?;
+    write_geometries(writer, geometries, args.output_format)
 }

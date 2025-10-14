@@ -51,7 +51,8 @@ struct CmdlineOptions {
     padding: f64,
 }
 
-fn main() -> Result<(), String> {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -63,7 +64,7 @@ fn main() -> Result<(), String> {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
+    let reader = get_input_reader(&args.input)?;
     let mut geometries: Vec<_> = read_geometries(reader, &args.input_format).collect();
     let padding = Coord {
         x: args.padding,
@@ -92,30 +93,23 @@ fn main() -> Result<(), String> {
     let mut bins = BTreeMap::new();
     bins.insert(0, TargetBin::new(args.width, args.height, 1));
 
-    match pack_rects(&rects, &mut bins, &volume_heuristic, &contains_smallest_box) {
-        Ok(packing) => {
-            let packing = packing.packed_locations();
-            for (idx, (_bin, location)) in packing.iter() {
-                let geometry = &mut geometries[*idx];
-                let bbox = geometry.bounding_rect().unwrap();
-                let source = bbox.center();
-                let target = Coord {
-                    x: location.x() as f64,
-                    y: location.y() as f64,
-                };
-                let offset = target - source;
-                geometry.translate_mut(offset.x, offset.y);
-            }
-        }
-        Err(e) => {
-            return Err(format!(
-                "Failed to pack geometries into the given {}x{} rectangle: {e}",
-                args.width, args.height
-            ));
-        }
+    let packing = pack_rects(&rects, &mut bins, &volume_heuristic, &contains_smallest_box)
+        .map_err(|e| eyre::eyre!("Failed to pack rectangles: {e:?}"))?;
+    let packing = packing.packed_locations();
+    for (idx, (_bin, location)) in packing.iter() {
+        let geometry = &mut geometries[*idx];
+        let bbox = geometry.bounding_rect().ok_or_else(|| {
+            eyre::eyre!("Geometry at index {idx} has no bounding box, cannot pack")
+        })?;
+        let source = bbox.center();
+        let target = Coord {
+            x: location.x() as f64,
+            y: location.y() as f64,
+        };
+        let offset = target - source;
+        geometry.translate_mut(offset.x, offset.y);
     }
 
-    let writer = get_output_writer(&args.output).unwrap();
-    write_geometries(writer, geometries, args.output_format);
-    Ok(())
+    let writer = get_output_writer(&args.output)?;
+    write_geometries(writer, geometries, args.output_format)
 }

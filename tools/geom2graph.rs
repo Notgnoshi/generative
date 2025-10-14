@@ -67,7 +67,8 @@ struct CmdlineOptions {
     snap_strategy: CliSnappingStrategy,
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -79,8 +80,8 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
-    let writer = get_output_writer(&args.output).unwrap();
+    let reader = get_input_reader(&args.input)?;
+    let writer = get_output_writer(&args.output)?;
 
     let strategy = match args.snap_strategy {
         CliSnappingStrategy::ClosestPoint => {
@@ -101,7 +102,7 @@ fn main() {
             graph
         };
 
-        write_graph(writer, &graph, &args.graph_format);
+        write_graph(writer, &graph, &args.graph_format)
     } else {
         let graph: GeometryGraph<petgraph::Undirected> = read_tgf_graph(reader);
         let (polygons, dangles) = polygonize(&graph);
@@ -115,6 +116,6 @@ fn main() {
             Box::new(geometries)
         };
 
-        write_geometries(writer, geometries, args.geometry_format);
+        write_geometries(writer, geometries, args.geometry_format)
     }
 }

@@ -34,7 +34,8 @@ struct CmdlineOptions {
     input_format: GeometryFormat,
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -46,14 +47,16 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
+    let reader = get_input_reader(&args.input)?;
     let geometries = read_geometries(reader, &args.input_format); // lazily loaded
 
     let points = flatten_geometries_into_points(geometries);
     if let Some(triangulation) = triangulate(points) {
         let urquhart = triangulation.urquhart();
 
-        let writer = get_output_writer(&args.output).unwrap();
-        write_graph(writer, &urquhart, &args.output_format);
+        let writer = get_output_writer(&args.output)?;
+        write_graph(writer, &urquhart, &args.output_format)?;
     }
+
+    Ok(())
 }

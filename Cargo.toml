@@ -74,8 +74,10 @@ required-features = ["cxx-bindings"]
 
 [dependencies]
 clap = { version = "4.0", features = ["derive"] }
+color-eyre = "0.6.5"
 cxx = { version = "1.0", optional = true }
 delaunator = "1.0"
+eyre = "0.6.12"
 geo = "0.30"
 hex = "0.4"
 itertools = "0.14"
@@ -85,7 +87,7 @@ petgraph = "0.8"
 rand = "0.9"
 rand_distr = "0.5"
 rectangle-pack = "0.4"
-rhai = { version = "1.13", features = ["only_i64", "no_index", "no_object", "no_time", "no_function", "no_module", "no_custom_syntax"] }
+rhai = { version = "1.23", features = ["only_i64", "no_index", "no_object", "no_time", "no_function", "no_module", "no_custom_syntax", "sync"] }
 svg = "0.18"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
