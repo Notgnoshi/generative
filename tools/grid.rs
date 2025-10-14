@@ -430,11 +430,11 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
         }
     }
 
-    let cols_is_even = width % 2 == 0;
+    let is_cols_even = width.is_multiple_of(2);
     let adjacency_offset = width + 1;
     let mut n = 0;
     for row in 0..rows {
-        let even_row = row % 2 == 0;
+        let is_even_row = row.is_multiple_of(2);
         for _col in 0..cols {
             tracing::trace!("adding neighbors for id={n}");
             if n > adjacency_offset {
@@ -450,11 +450,11 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
 
             // Holy shit there are so many god damn edge cases. This is ridiculous.
             let is_furthest_right = (n + 1) % adjacency_offset == 0;
-            let even_index = n % 2 == 0;
-            let has_right_neighbor = if cols_is_even || even_row {
-                even_index && !is_furthest_right
+            let is_even_index = n.is_multiple_of(2);
+            let has_right_neighbor = if is_cols_even || is_even_row {
+                is_even_index && !is_furthest_right
             } else {
-                !even_index && !is_furthest_right
+                !is_even_index && !is_furthest_right
             };
 
             if has_right_neighbor {
@@ -469,7 +469,7 @@ fn hex_grid(width: usize, height: usize, size_x: f64, _size_y: f64) -> GeometryG
 
     // Remove the two dangling extra nodes that were added to make the indexing math suck
     // (slightly) less.
-    let nodes_to_remove = if cols_is_even {
+    let nodes_to_remove = if is_cols_even {
         [width, nodes - cols]
     } else {
         [nodes - cols, nodes - 1]
