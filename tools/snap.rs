@@ -89,7 +89,8 @@ struct CmdlineOptions {
     tolerance: f64,
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -101,8 +102,8 @@ fn main() {
         .with_writer(std::io::stderr)
         .init();
 
-    let reader = get_input_reader(&args.input).unwrap();
-    let mut writer = get_output_writer(&args.output).unwrap();
+    let reader = get_input_reader(&args.input)?;
+    let mut writer = get_output_writer(&args.output)?;
     let strategy = match args.strategy {
         CliSnappingStrategy::ClosestPoint => SnappingStrategy::ClosestPoint(args.tolerance),
         CliSnappingStrategy::RegularGrid => SnappingStrategy::RegularGrid(args.tolerance),
@@ -112,12 +113,12 @@ fn main() {
         InputFormat::Wkt | InputFormat::WkbHex | InputFormat::WkbRaw => {
             let geometries = read_geometries(reader, &args.input_format.clone().into());
             let geometries = snap_geoms(geometries, strategy);
-            write_geometries(writer, geometries, args.input_format.into());
+            write_geometries(writer, geometries, args.input_format.into())
         }
         InputFormat::Tgf => {
             let graph: GeometryGraph<Undirected> = read_tgf_graph(reader);
             let graph = snap_graph(graph, strategy);
-            write_tgf_graph(&mut writer, &graph);
+            write_tgf_graph(&mut writer, &graph)
         }
     }
 }

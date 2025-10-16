@@ -66,7 +66,14 @@ fn expression(engine: &Engine, ast: &AST, x: i64, y: i64) -> Result<i64, Box<Eva
     engine.eval_ast_with_scope::<i64>(&mut scope, ast)
 }
 
-fn write_line<W>(writer: W, format: GeometryFormat, x1: i64, y1: i64, x2: i64, y2: i64)
+fn write_line<W>(
+    writer: W,
+    format: GeometryFormat,
+    x1: i64,
+    y1: i64,
+    x2: i64,
+    y2: i64,
+) -> eyre::Result<()>
 where
     W: Write,
 {
@@ -75,16 +82,16 @@ where
         Point::new(x2 as f64, y2 as f64),
     );
     let geometries = std::iter::once(Geometry::Line(line));
-    write_geometries(writer, geometries, format);
+    write_geometries(writer, geometries, format)
 }
 
-fn write_point<W>(writer: W, format: GeometryFormat, x1: i64, y1: i64)
+fn write_point<W>(writer: W, format: GeometryFormat, x1: i64, y1: i64) -> eyre::Result<()>
 where
     W: Write,
 {
     let point = Point::new(x1 as f64, y1 as f64);
     let geometries = std::iter::once(Geometry::Point(point));
-    write_geometries(writer, geometries, format);
+    write_geometries(writer, geometries, format)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
@@ -128,9 +135,9 @@ fn neighbor(x: i64, y: i64, n: Neighbor) -> (i64, i64) {
     }
 }
 
-fn main() -> Result<(), Box<EvalAltResult>> {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
-
     let filter = tracing_subscriber::EnvFilter::builder()
         .with_default_directive(args.log_level.into())
         .from_env_lossy();
@@ -147,7 +154,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
     let ys = args.y_min..args.y_max;
     let cross = xs.cartesian_product(ys);
 
-    let mut writer = get_output_writer(&args.output).unwrap();
+    let mut writer = get_output_writer(&args.output)?;
     if args.points {
         let geometries = cross.filter_map(|(x, y)| {
             if let Ok(value) = expression(&engine, &ast, x, y) {
@@ -163,7 +170,7 @@ fn main() -> Result<(), Box<EvalAltResult>> {
             None
         });
 
-        write_geometries(writer, geometries, args.output_format);
+        write_geometries(writer, geometries, args.output_format)?;
     } else {
         tracing::info!(
             "Searching neighbors in order: {:?}",
@@ -175,13 +182,13 @@ fn main() -> Result<(), Box<EvalAltResult>> {
                 for n in args.neighbor_search_order.iter() {
                     let (x2, y2) = neighbor(x, y, n.clone());
                     if expression(&engine, &ast, x2, y2)? > 0 {
-                        write_line(&mut writer, args.output_format, x, y, x2, y2);
+                        write_line(&mut writer, args.output_format, x, y, x2, y2)?;
                         wrote_line = true;
                         break;
                     }
                 }
                 if !wrote_line {
-                    write_point(&mut writer, args.output_format, x, y);
+                    write_point(&mut writer, args.output_format, x, y)?;
                 }
             }
         }

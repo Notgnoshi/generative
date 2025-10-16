@@ -102,7 +102,8 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     }
 }
 
-fn main() {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -121,7 +122,7 @@ fn main() {
         // close enough to normal with integers
         let n = args.points * 2; // changes mean
         let p = 0.5; // changes skew
-        let dist = Binomial::new(n, p).unwrap();
+        let dist = Binomial::new(n, p)?;
         dist.sample(&mut rng)
     } else {
         args.points
@@ -130,14 +131,14 @@ fn main() {
     tracing::info!("Generating {num_points} points with seed {seed}");
 
     let points = generate(num_points as usize, args.domain, &mut rng);
-    let mut writer = get_output_writer(&args.output).unwrap();
+    let mut writer = get_output_writer(&args.output)?;
     for point in points {
         writeln!(
             writer,
             "POINT ({} {})",
             point.x * args.scale,
             point.y * args.scale
-        )
-        .expect("Failed to write random point");
+        )?;
     }
+    Ok(())
 }

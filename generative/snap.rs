@@ -367,7 +367,7 @@ mod tests {
         D: EdgeType,
     {
         let mut buffer = BufWriter::new(Vec::new());
-        write_tgf_graph(&mut buffer, graph);
+        write_tgf_graph(&mut buffer, graph).unwrap();
         let buffer = buffer.into_inner().unwrap();
         String::from_utf8_lossy(&buffer).to_string()
     }

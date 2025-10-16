@@ -12,7 +12,7 @@ use noise::{NoiseFn, Perlin};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::{Binomial, Distribution};
-use rhai::{Engine, EvalAltResult, Scope};
+use rhai::{Engine, Scope};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum StreamlineKind {
@@ -192,7 +192,7 @@ impl VectorField {
         ((y - self.min_y) / self.stride) as usize
     }
 
-    fn write<W>(&self, writer: &mut W, format: GeometryFormat)
+    fn write<W>(&self, writer: &mut W, format: GeometryFormat) -> eyre::Result<()>
     where
         W: std::io::Write,
     {
@@ -223,7 +223,7 @@ impl VectorField {
             })
         });
 
-        write_geometries(writer, vectors, format);
+        write_geometries(writer, vectors, format)
     }
 }
 
@@ -375,7 +375,8 @@ fn simulate_geom_vertices(
     (geometry, streamlines)
 }
 
-fn main() -> Result<(), Box<EvalAltResult>> {
+fn main() -> eyre::Result<()> {
+    color_eyre::install()?;
     let args = CmdlineOptions::parse();
 
     let filter = tracing_subscriber::EnvFilter::builder()
@@ -430,14 +431,14 @@ fn main() -> Result<(), Box<EvalAltResult>> {
         function,
     );
 
-    let reader = get_input_reader(&args.input).unwrap();
-    let mut writer = get_output_writer(&args.output).unwrap();
+    let reader = get_input_reader(&args.input)?;
+    let mut writer = get_output_writer(&args.output)?;
 
     if args.draw_vector_field {
         for style in args.vector_field_style {
-            writeln!(&mut writer, "{style}").unwrap();
+            writeln!(&mut writer, "{style}")?;
         }
-        field.write(&mut writer, args.output_format);
+        field.write(&mut writer, args.output_format)?;
     }
 
     let geometries = read_geometries(reader, &args.input_format);
@@ -457,15 +458,15 @@ fn main() -> Result<(), Box<EvalAltResult>> {
 
     if !args.no_draw_streamlines {
         for style in args.streamline_style {
-            writeln!(&mut writer, "{style}").unwrap();
+            writeln!(&mut writer, "{style}")?;
         }
-        write_geometries(&mut writer, streamlines, args.output_format);
+        write_geometries(&mut writer, streamlines, args.output_format)?;
     }
     if args.draw_geometries {
         for style in args.geometry_style {
-            writeln!(&mut writer, "{style}").unwrap();
+            writeln!(&mut writer, "{style}")?;
         }
-        write_geometries(&mut writer, geometries, args.output_format);
+        write_geometries(&mut writer, geometries, args.output_format)?;
     }
     Ok(())
 }
