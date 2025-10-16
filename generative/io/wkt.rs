@@ -1,37 +1,11 @@
 use std::io::{BufRead, BufReader, Lines, Read, Write};
 use std::str::FromStr;
 
-use clap::ValueEnum;
 use geo::{
     CoordNum, Geometry, GeometryCollection, Line, LineString, MultiLineString, MultiPoint,
     MultiPolygon, Point, Polygon, Rect, Triangle,
 };
-use hex::{decode, encode_upper};
-use wkb::{geom_to_wkb, wkb_to_geom, write_geom_to_wkb};
 use wkt::{ToWkt, Wkt};
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum GeometryFormat {
-    /// One WKT geometry per line. Ignores trailing garbage; does not skip over leading garbage.
-    Wkt,
-    /// Stringified hex encoded WKB, one geometry per line
-    WkbHex,
-    /// Raw WKB bytes with no separator between geometries
-    WkbRaw,
-    // TODO: Flat?
-    // TODO: Splines?
-}
-
-impl std::fmt::Display for GeometryFormat {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            // important: Should match clap::ValueEnum format
-            GeometryFormat::Wkt => write!(f, "wkt"),
-            GeometryFormat::WkbHex => write!(f, "wkb-hex"),
-            GeometryFormat::WkbRaw => write!(f, "wkb-raw"),
-        }
-    }
-}
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum SvgStyle {
@@ -152,30 +126,19 @@ where
     }
 }
 
-pub fn read_geometries<R>(
-    reader: R,
-    format: &GeometryFormat,
-) -> Box<dyn Iterator<Item = Geometry<f64>>>
+pub fn read_geometries<R>(reader: R) -> Box<dyn Iterator<Item = Geometry<f64>>>
 where
     R: Read + 'static,
 {
-    match format {
-        GeometryFormat::Wkt => Box::new(read_wkt_geometries(reader)),
-        GeometryFormat::WkbHex => Box::new(read_wkbhex_geometries(reader)),
-        GeometryFormat::WkbRaw => Box::new(read_wkbraw_geometries(reader)),
-    }
+    Box::new(read_wkt_geometries(reader))
 }
 
-pub fn write_geometries<W, G>(writer: W, geometries: G, format: GeometryFormat) -> eyre::Result<()>
+pub fn write_geometries<W, G>(writer: W, geometries: G) -> eyre::Result<()>
 where
     W: Write,
     G: IntoIterator<Item = Geometry<f64>>,
 {
-    match format {
-        GeometryFormat::Wkt => write_wkt_geometries(writer, geometries),
-        GeometryFormat::WkbHex => write_wkbhex_geometries(writer, geometries),
-        GeometryFormat::WkbRaw => write_wkbraw_geometries(writer, geometries),
-    }
+    write_wkt_geometries(writer, geometries)
 }
 
 pub struct WktGeometries<R>
@@ -190,20 +153,6 @@ where
     R: Read,
 {
     lines: Lines<BufReader<R>>,
-}
-
-pub struct WkbHexGeometries<R>
-where
-    R: Read,
-{
-    lines: Lines<BufReader<R>>,
-}
-
-pub struct WkbRawGeometries<R>
-where
-    R: Read,
-{
-    reader: BufReader<R>,
 }
 
 impl<R> Iterator for WktGeometries<R>
@@ -271,69 +220,6 @@ where
     }
 }
 
-impl<R> Iterator for WkbRawGeometries<R>
-where
-    R: Read,
-{
-    type Item = Geometry<f64>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        // This is the only way to tell if a BufRead is exhausted without using the nightly only
-        // unstable has_data_left() API.
-        match self.reader.fill_buf() {
-            Ok(buf) => {
-                if buf.is_empty() {
-                    return None;
-                }
-            }
-            Err(e) => {
-                tracing::warn!("Failed to read WKB: {e:?}");
-                return None;
-            }
-        }
-
-        match wkb_to_geom(&mut self.reader) {
-            Ok(geom) => Some(geom),
-            Err(e) => {
-                tracing::warn!("Failed to parse WKB: {e:?}");
-                None
-            }
-        }
-    }
-}
-
-impl<R> Iterator for WkbHexGeometries<R>
-where
-    R: Read,
-{
-    type Item = Geometry<f64>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.lines.next() {
-            Some(line) => match line {
-                Ok(line) => match decode(line) {
-                    Ok(buf) => match wkb_to_geom(&mut &buf[..]) {
-                        Ok(geom) => Some(geom),
-                        Err(e) => {
-                            tracing::warn!("Failed to parse WKB(hex): {e:?}");
-                            None
-                        }
-                    },
-                    Err(e) => {
-                        tracing::warn!("Failed to decode WKB(hex): {e:?}");
-                        None
-                    }
-                },
-                Err(e) => {
-                    tracing::warn!("Failed to read WKB(hex) from line: {e:?}");
-                    None
-                }
-            },
-            None => None,
-        }
-    }
-}
-
 /// Return an iterator to the WKT geometries passed in through the given BufReader
 ///
 /// Expects one geometry per line (LF or CRLF). Parsing any given line ends after either the first
@@ -349,24 +235,6 @@ where
     }
 }
 
-fn read_wkbhex_geometries<R>(reader: R) -> WkbHexGeometries<R>
-where
-    R: Read,
-{
-    WkbHexGeometries {
-        lines: BufReader::new(reader).lines(),
-    }
-}
-
-fn read_wkbraw_geometries<R>(reader: R) -> WkbRawGeometries<R>
-where
-    R: Read,
-{
-    WkbRawGeometries {
-        reader: BufReader::new(reader),
-    }
-}
-
 /// Write the given geometries with the given Writer in WKT format
 ///
 /// Each geometry will be written on its own line.
@@ -378,37 +246,6 @@ where
     for geometry in geometries {
         let wkt_geom = geometry.to_wkt();
         writeln!(writer, "{wkt_geom}")?;
-    }
-    Ok(())
-}
-
-fn write_wkbhex_geometries<W, G>(mut writer: W, geometries: G) -> eyre::Result<()>
-where
-    W: Write,
-    G: IntoIterator<Item = Geometry<f64>>,
-{
-    for geom in geometries {
-        match geom_to_wkb(&geom) {
-            Ok(buffer) => {
-                writeln!(writer, "{}", encode_upper(buffer))?;
-            }
-            Err(e) => {
-                tracing::warn!("Failed to serialize geometry to WKB: {e:?}");
-            }
-        }
-    }
-    Ok(())
-}
-
-fn write_wkbraw_geometries<W, G>(mut writer: W, geometries: G) -> eyre::Result<()>
-where
-    W: Write,
-    G: IntoIterator<Item = Geometry<f64>>,
-{
-    for geom in geometries {
-        // TODO: What's this about the endianity byte?
-        write_geom_to_wkb(&geom, &mut writer)
-            .map_err(|e| eyre::eyre!("Failed to write WKB geometry: {e:?}"))?;
     }
     Ok(())
 }
@@ -472,75 +309,6 @@ mod tests {
         ];
 
         assert_eq!(actual, expected);
-    }
-
-    #[test]
-    fn test_wkb_single_input() {
-        let input_wkt = b"POINT(2 3.5)";
-        let input_wkbhex = b"010100000000000000000000400000000000000C40";
-        let input_wkbraw = decode(input_wkbhex).unwrap();
-
-        let expected = Geometry::Point(Point::new(2.0, 3.5));
-
-        let mut wkt_geometries = read_wkt_geometries(&input_wkt[..]);
-        assert_eq!(wkt_geometries.next().unwrap(), expected);
-
-        let mut wkbraw_geometries = read_wkbraw_geometries(input_wkbraw.as_slice());
-        assert_eq!(wkbraw_geometries.next().unwrap(), expected);
-
-        let mut wkbhex_geometries = read_wkbhex_geometries(&input_wkbhex[..]);
-        assert_eq!(wkbhex_geometries.next().unwrap(), expected);
-    }
-
-    #[test]
-    fn test_wkb_multi_input() {
-        let input_wkt = b"POINT(1 1)\nPOINT(2 3.5)";
-        let input_wkbhex = b"0101000000000000000000F03F000000000000F03F\n010100000000000000000000400000000000000C40";
-        let buffer: Vec<u8> = input_wkbhex[..]
-            .lines()
-            .flat_map(|l| decode(l.unwrap()).unwrap())
-            .collect();
-
-        let expected1 = Geometry::Point(Point::new(1.0, 1.0));
-        let expected2 = Geometry::Point(Point::new(2.0, 3.5));
-
-        let mut wkt_geometries = read_wkt_geometries(&input_wkt[..]);
-        assert_eq!(wkt_geometries.next().unwrap(), expected1);
-        assert_eq!(wkt_geometries.next().unwrap(), expected2);
-
-        let mut wkbhex_geometries = read_wkbhex_geometries(&input_wkbhex[..]);
-        assert_eq!(wkbhex_geometries.next().unwrap(), expected1);
-        assert_eq!(wkbhex_geometries.next().unwrap(), expected2);
-
-        let mut wkbraw_geometries = read_wkbraw_geometries(buffer.as_slice());
-        assert_eq!(wkbraw_geometries.next().unwrap(), expected1);
-        assert_eq!(wkbraw_geometries.next().unwrap(), expected2);
-    }
-
-    #[test]
-    fn test_wkbhex_output() {
-        let input_wkbhex = b"0101000000000000000000F03F000000000000F03F\n010100000000000000000000400000000000000C40\n";
-        let geometries = read_wkbhex_geometries(&input_wkbhex[..]);
-
-        let mut output_buffer = Vec::<u8>::new();
-        write_wkbhex_geometries(&mut output_buffer, geometries).unwrap();
-
-        assert_eq!(output_buffer, input_wkbhex);
-    }
-
-    #[test]
-    fn test_wkbraw_output() {
-        let input_wkbhex = b"0101000000000000000000F03F000000000000F03F\n010100000000000000000000400000000000000C40\n";
-        let buffer: Vec<u8> = input_wkbhex[..]
-            .lines()
-            .flat_map(|l| decode(l.unwrap()).unwrap())
-            .collect();
-        let geometries = read_wkbraw_geometries(buffer.as_slice());
-
-        let mut output_buffer = Vec::<u8>::new();
-        write_wkbraw_geometries(&mut output_buffer, geometries).unwrap();
-
-        assert_eq!(output_buffer, buffer);
     }
 
     #[test]

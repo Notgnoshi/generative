@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 use generative::flatten::flatten_geometries_into_points;
 use generative::io::{
-    GeometryFormat, GraphFormat, get_input_reader, get_output_writer, read_geometries, write_graph,
+    GraphFormat, get_input_reader, get_output_writer, read_geometries, write_graph,
 };
 use generative::triangulation::triangulate;
 
@@ -37,10 +37,6 @@ struct CmdlineOptions {
     #[clap(short, long)]
     input: Option<PathBuf>,
 
-    /// Input geometry format.
-    #[clap(short = 'I', long, default_value_t = GeometryFormat::Wkt)]
-    input_format: GeometryFormat,
-
     /// How to triangulate the input geometries
     #[clap(short, long, default_value = "whole-collection")]
     strategy: TriangulationStrategy,
@@ -61,7 +57,7 @@ fn main() -> eyre::Result<()> {
 
     let reader = get_input_reader(&args.input)?;
     let mut writer = get_output_writer(&args.output)?;
-    let geometries = read_geometries(reader, &args.input_format); // lazily loaded
+    let geometries = read_geometries(reader); // lazily loaded
 
     match args.strategy {
         TriangulationStrategy::EachGeometry => {

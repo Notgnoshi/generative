@@ -1,9 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
-use generative::io::{
-    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
-};
+use generative::io::{get_input_reader, get_output_writer, read_geometries, write_geometries};
 use geo::{
     AffineOps, AffineTransform, BoundingRect, Coord, Geometry, MapCoordsInPlace, Rect, coord,
 };
@@ -44,17 +42,9 @@ struct CmdlineOptions {
     #[clap(short, long)]
     output: Option<PathBuf>,
 
-    /// Output geometry format.
-    #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    output_format: GeometryFormat,
-
     /// Input file to read input from. Defaults to stdin.
     #[clap(short, long)]
     input: Option<PathBuf>,
-
-    /// Input geometry format.
-    #[clap(short = 'I', long, default_value_t = GeometryFormat::Wkt)]
-    input_format: GeometryFormat,
 
     /// How to center the affine transformation
     #[clap(long, default_value = "origin")]
@@ -299,7 +289,7 @@ fn main() -> eyre::Result<()> {
 
     let reader = get_input_reader(&args.input)?;
     let writer = get_output_writer(&args.output)?;
-    let geometries = read_geometries(reader, &args.input_format);
+    let geometries = read_geometries(reader);
     let mut transformed = affine_transform(geometries, &args);
 
     if args.range1.len() == 2 || args.range2.len() == 2 {
@@ -337,5 +327,5 @@ fn main() -> eyre::Result<()> {
         transformed = Box::new(geoms_coordwise(transformed, from_polar));
     }
 
-    write_geometries(writer, transformed, args.output_format)
+    write_geometries(writer, transformed)
 }

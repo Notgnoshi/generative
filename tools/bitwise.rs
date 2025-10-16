@@ -2,7 +2,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
-use generative::io::{GeometryFormat, get_output_writer, write_geometries};
+use generative::io::{get_output_writer, write_geometries};
 use geo::{Geometry, Line, Point};
 use itertools::Itertools;
 use rhai::{AST, Engine, EvalAltResult, Scope};
@@ -20,10 +20,6 @@ struct CmdlineOptions {
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
     output: Option<PathBuf>,
-
-    /// Output geometry format.
-    #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    output_format: GeometryFormat,
 
     /// Whether to output points or connected lines
     #[clap(long, default_value_t = false)]
@@ -66,14 +62,7 @@ fn expression(engine: &Engine, ast: &AST, x: i64, y: i64) -> Result<i64, Box<Eva
     engine.eval_ast_with_scope::<i64>(&mut scope, ast)
 }
 
-fn write_line<W>(
-    writer: W,
-    format: GeometryFormat,
-    x1: i64,
-    y1: i64,
-    x2: i64,
-    y2: i64,
-) -> eyre::Result<()>
+fn write_line<W>(writer: W, x1: i64, y1: i64, x2: i64, y2: i64) -> eyre::Result<()>
 where
     W: Write,
 {
@@ -82,16 +71,16 @@ where
         Point::new(x2 as f64, y2 as f64),
     );
     let geometries = std::iter::once(Geometry::Line(line));
-    write_geometries(writer, geometries, format)
+    write_geometries(writer, geometries)
 }
 
-fn write_point<W>(writer: W, format: GeometryFormat, x1: i64, y1: i64) -> eyre::Result<()>
+fn write_point<W>(writer: W, x1: i64, y1: i64) -> eyre::Result<()>
 where
     W: Write,
 {
     let point = Point::new(x1 as f64, y1 as f64);
     let geometries = std::iter::once(Geometry::Point(point));
-    write_geometries(writer, geometries, format)
+    write_geometries(writer, geometries)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
@@ -170,7 +159,7 @@ fn main() -> eyre::Result<()> {
             None
         });
 
-        write_geometries(writer, geometries, args.output_format)?;
+        write_geometries(writer, geometries)?;
     } else {
         tracing::info!(
             "Searching neighbors in order: {:?}",
@@ -182,13 +171,13 @@ fn main() -> eyre::Result<()> {
                 for n in args.neighbor_search_order.iter() {
                     let (x2, y2) = neighbor(x, y, n.clone());
                     if expression(&engine, &ast, x2, y2)? > 0 {
-                        write_line(&mut writer, args.output_format, x, y, x2, y2)?;
+                        write_line(&mut writer, x, y, x2, y2)?;
                         wrote_line = true;
                         break;
                     }
                 }
                 if !wrote_line {
-                    write_point(&mut writer, args.output_format, x, y)?;
+                    write_point(&mut writer, x, y)?;
                 }
             }
         }
