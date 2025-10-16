@@ -1,3 +1,4 @@
+pub mod attractor;
 #[cfg(feature = "cxx-bindings")]
 mod cxxbridge;
 pub mod dla;
