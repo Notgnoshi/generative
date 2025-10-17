@@ -83,7 +83,7 @@ where
     write_geometries(writer, geometries)
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum Neighbor {
     North,
     NorthEast,
@@ -169,7 +169,7 @@ fn main() -> eyre::Result<()> {
             if expression(&engine, &ast, x, y)? > 0 {
                 let mut wrote_line = false;
                 for n in args.neighbor_search_order.iter() {
-                    let (x2, y2) = neighbor(x, y, n.clone());
+                    let (x2, y2) = neighbor(x, y, *n);
                     if expression(&engine, &ast, x2, y2)? > 0 {
                         write_line(&mut writer, x, y, x2, y2)?;
                         wrote_line = true;
