@@ -2,9 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use generative::graph::GeometryGraph;
-use generative::io::{
-    GeometryFormat, GraphFormat, get_output_writer, write_geometries, write_graph,
-};
+use generative::io::{GraphFormat, get_output_writer, write_geometries, write_graph};
 #[cfg(feature = "cxx-bindings")]
 use generative::noding::{node, polygonize};
 use generative::snap::{SnappingStrategy, snap_geoms};
@@ -631,7 +629,7 @@ fn main() -> eyre::Result<()> {
         let geoms = rings.chain(spokes);
 
         match args.output_format {
-            GridFormat::Lines => write_geometries(writer, geoms, GeometryFormat::Wkt),
+            GridFormat::Lines => write_geometries(writer, geoms),
             GridFormat::Points => {
                 let mut points = Vec::new();
                 for geom in geoms {
@@ -642,7 +640,7 @@ fn main() -> eyre::Result<()> {
                 }
                 // Snap points as a way of deduplicating vertices
                 let points = snap_geoms(points.into_iter(), SnappingStrategy::ClosestPoint(0.0));
-                write_geometries(writer, points, GeometryFormat::Wkt)
+                write_geometries(writer, points)
             }
             #[cfg(feature = "cxx-bindings")]
             GridFormat::Graph | GridFormat::Cells => {
@@ -654,7 +652,7 @@ fn main() -> eyre::Result<()> {
                     let polygons = polygons.into_iter().map(Geometry::Polygon);
                     let dangles = dangles.into_iter().map(Geometry::LineString);
                     let geoms = polygons.chain(dangles);
-                    write_geometries(writer, geoms, GeometryFormat::Wkt)
+                    write_geometries(writer, geoms)
                 }
             }
             #[cfg(not(feature = "cxx-bindings"))]
@@ -668,18 +666,16 @@ fn main() -> eyre::Result<()> {
         match args.output_format {
             GridFormat::Graph => write_graph(writer, &graph, &GraphFormat::Tgf),
             GridFormat::Lines => write_graph(writer, &graph, &GraphFormat::Wkt),
-            GridFormat::Points => write_geometries(
-                writer,
-                graph.node_weights().map(|p| Geometry::Point(*p)),
-                GeometryFormat::Wkt,
-            ),
+            GridFormat::Points => {
+                write_geometries(writer, graph.node_weights().map(|p| Geometry::Point(*p)))
+            }
             #[cfg(feature = "cxx-bindings")]
             GridFormat::Cells => {
                 let (polygons, dangles) = polygonize(&graph);
                 let polygons = polygons.into_iter().map(Geometry::Polygon);
                 let dangles = dangles.into_iter().map(Geometry::LineString);
                 let geoms = polygons.chain(dangles);
-                write_geometries(writer, geoms, GeometryFormat::Wkt)
+                write_geometries(writer, geoms)
             }
         }
     }

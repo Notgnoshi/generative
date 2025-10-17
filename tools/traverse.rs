@@ -3,9 +3,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use generative::graph::GeometryGraph;
-use generative::io::{
-    GeometryFormat, get_input_reader, get_output_writer, read_tgf_graph, write_geometries,
-};
+use generative::io::{get_input_reader, get_output_writer, read_tgf_graph, write_geometries};
 use geo::{Geometry, LineString, Point};
 use petgraph::{EdgeType, Undirected};
 use rand::rngs::StdRng;
@@ -31,10 +29,6 @@ struct CmdlineOptions {
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
     output: Option<PathBuf>,
-
-    /// The output geometry format
-    #[clap(short='O', long, default_value_t=GeometryFormat::Wkt)]
-    output_format: GeometryFormat,
 
     /// The random seed to use. Use zero to let the tool pick its own random seed.
     #[clap(long, default_value_t = 0)]
@@ -203,14 +197,13 @@ fn main() -> eyre::Result<()> {
     .map(Geometry::LineString);
 
     let mut writer = get_output_writer(&args.output)?;
-    write_geometries(&mut writer, traversals, args.output_format)?;
+    write_geometries(&mut writer, traversals)?;
 
     // dump the remaining nodes
     if args.untraversed {
         write_geometries(
             &mut writer,
             graph.node_weights().map(|p| Geometry::Point(*p)),
-            args.output_format,
         )?;
     }
     Ok(())

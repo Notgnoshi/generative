@@ -3,9 +3,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
 use generative::MapCoordsInPlaceMut;
-use generative::io::{
-    GeometryFormat, get_input_reader, get_output_writer, read_geometries, write_geometries,
-};
+use generative::io::{get_input_reader, get_output_writer, read_geometries, write_geometries};
 use geo::{AffineOps, AffineTransform, Centroid, Coord, Geometry, Line, LineString};
 // use noise::Billow;
 use noise::{NoiseFn, Perlin};
@@ -48,17 +46,9 @@ struct CmdlineOptions {
     #[clap(short, long)]
     input: Option<PathBuf>,
 
-    /// Input geometry format.
-    #[clap(short = 'I', long, default_value_t = GeometryFormat::Wkt)]
-    input_format: GeometryFormat,
-
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
     output: Option<PathBuf>,
-
-    /// Output geometry format.
-    #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    output_format: GeometryFormat,
 
     /// A Rhai script that defines the vector field. If not given, a Perlin noise field will be
     /// used instead.
@@ -192,7 +182,7 @@ impl VectorField {
         ((y - self.min_y) / self.stride) as usize
     }
 
-    fn write<W>(&self, writer: &mut W, format: GeometryFormat) -> eyre::Result<()>
+    fn write<W>(&self, writer: &mut W) -> eyre::Result<()>
     where
         W: std::io::Write,
     {
@@ -223,7 +213,7 @@ impl VectorField {
             })
         });
 
-        write_geometries(writer, vectors, format)
+        write_geometries(writer, vectors)
     }
 }
 
@@ -438,10 +428,10 @@ fn main() -> eyre::Result<()> {
         for style in args.vector_field_style {
             writeln!(&mut writer, "{style}")?;
         }
-        field.write(&mut writer, args.output_format)?;
+        field.write(&mut writer)?;
     }
 
-    let geometries = read_geometries(reader, &args.input_format);
+    let geometries = read_geometries(reader);
 
     let geoms_and_streamlines = simulate(
         geometries,
@@ -460,13 +450,13 @@ fn main() -> eyre::Result<()> {
         for style in args.streamline_style {
             writeln!(&mut writer, "{style}")?;
         }
-        write_geometries(&mut writer, streamlines, args.output_format)?;
+        write_geometries(&mut writer, streamlines)?;
     }
     if args.draw_geometries {
         for style in args.geometry_style {
             writeln!(&mut writer, "{style}")?;
         }
-        write_geometries(&mut writer, geometries, args.output_format)?;
+        write_geometries(&mut writer, geometries)?;
     }
     Ok(())
 }

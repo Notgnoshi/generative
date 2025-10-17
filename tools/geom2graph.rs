@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 use generative::graph::GeometryGraph;
 use generative::io::{
-    GeometryFormat, GraphFormat, get_input_reader, get_output_writer, read_geometries,
-    read_tgf_graph, write_geometries, write_graph,
+    GraphFormat, get_input_reader, get_output_writer, read_geometries, read_tgf_graph,
+    write_geometries, write_graph,
 };
 use generative::noding::{node, polygonize};
 use generative::snap::{SnappingStrategy, snap_geoms, snap_graph};
@@ -41,10 +41,6 @@ struct CmdlineOptions {
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
     output: Option<PathBuf>,
-
-    /// Format to output --graph2geom geometries as
-    #[clap(long, default_value_t = GeometryFormat::Wkt)]
-    geometry_format: GeometryFormat,
 
     /// Format to output (the default) --graph2geom graphs as
     #[clap(long, default_value_t = GraphFormat::Tgf)]
@@ -93,7 +89,7 @@ fn main() -> eyre::Result<()> {
     };
 
     if args.geom2graph || !args.graph2geom {
-        let geometries = read_geometries(reader, &args.geometry_format);
+        let geometries = read_geometries(reader);
         let graph = node::<_, petgraph::Undirected>(geometries);
 
         let graph = if args.tolerance.is_some() {
@@ -116,6 +112,6 @@ fn main() -> eyre::Result<()> {
             Box::new(geometries)
         };
 
-        write_geometries(writer, geometries, args.geometry_format)
+        write_geometries(writer, geometries)
     }
 }

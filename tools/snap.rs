@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use clap::{Parser, ValueEnum};
 use generative::graph::GeometryGraph;
 use generative::io::{
-    GeometryFormat, get_input_reader, get_output_writer, read_geometries, read_tgf_graph,
-    write_geometries, write_tgf_graph,
+    get_input_reader, get_output_writer, read_geometries, read_tgf_graph, write_geometries,
+    write_tgf_graph,
 };
 use generative::snap::{SnappingStrategy, snap_geoms, snap_graph};
 use petgraph::Undirected;
@@ -13,10 +13,6 @@ use petgraph::Undirected;
 enum InputFormat {
     /// One WKT geometry per line. Ignores trailing garbage; does not skip over leading garbage.
     Wkt,
-    /// Stringified hex encoded WKB, one geometry per line
-    WkbHex,
-    /// Raw WKB bytes with no separator between geometries
-    WkbRaw,
     /// A geometry graph in TGF format
     Tgf,
 }
@@ -26,20 +22,7 @@ impl std::fmt::Display for InputFormat {
         match self {
             // important: Should match clap::ValueEnum format
             InputFormat::Wkt => write!(f, "wkt"),
-            InputFormat::WkbHex => write!(f, "wkb-hex"),
-            InputFormat::WkbRaw => write!(f, "wkb-raw"),
             InputFormat::Tgf => write!(f, "tgf"),
-        }
-    }
-}
-
-impl From<InputFormat> for GeometryFormat {
-    fn from(f: InputFormat) -> GeometryFormat {
-        match f {
-            InputFormat::Wkt => GeometryFormat::Wkt,
-            InputFormat::WkbHex => GeometryFormat::WkbHex,
-            InputFormat::WkbRaw => GeometryFormat::WkbRaw,
-            InputFormat::Tgf => unreachable!(),
         }
     }
 }
@@ -110,10 +93,10 @@ fn main() -> eyre::Result<()> {
     };
 
     match args.input_format {
-        InputFormat::Wkt | InputFormat::WkbHex | InputFormat::WkbRaw => {
-            let geometries = read_geometries(reader, &args.input_format.clone().into());
+        InputFormat::Wkt => {
+            let geometries = read_geometries(reader);
             let geometries = snap_geoms(geometries, strategy);
-            write_geometries(writer, geometries, args.input_format.into())
+            write_geometries(writer, geometries)
         }
         InputFormat::Tgf => {
             let graph: GeometryGraph<Undirected> = read_tgf_graph(reader);
