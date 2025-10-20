@@ -10,7 +10,6 @@ use noise::{NoiseFn, Perlin};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use rand_distr::{Binomial, Distribution};
-use rhai::{Engine, Scope};
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
 enum StreamlineKind {
@@ -50,18 +49,20 @@ struct CmdlineOptions {
     #[clap(short, long)]
     output: Option<PathBuf>,
 
-    /// A Rhai script that defines the vector field. If not given, a Perlin noise field will be
+    /// A Rune script that defines the vector field. If not given, a Perlin noise field will be
     /// used instead.
     ///
     /// Example:
     ///
-    ///     let temp = sqrt(x ** 2.0 + y ** 2.0 + 4.0);
-    ///     x = -sin(x) / temp;
-    ///     y = y / temp;
+    ///     let temp = f64::sqrt(x.powf(2.0) + y.powf(2.0) + 4.0);
+    ///     let x_new = -f64::sin(x) / temp;
+    ///     let y_new = y / temp;
     ///
-    /// I.e., the f64 x and y variables are both input and output.
+    /// I.e., the f64 x, y variables are inputs, and the x_new, y_new variables are outputs.
+    ///
+    /// May be given multiple times for multi-line functions.
     #[clap(short, long)]
-    function: Option<String>,
+    function: Vec<String>,
 
     /// The random seed to use. Use zero to let the tool pick its own random seed.
     #[clap(long, default_value_t = 0)]
@@ -137,8 +138,47 @@ fn generate_random_seed_if_not_specified(seed: u64) -> u64 {
     }
 }
 
+type VectorFieldFunction = Box<dyn Fn(f64, f64) -> (f64, f64)>;
+
+fn build_function_from_lines(lines: &[String]) -> eyre::Result<VectorFieldFunction> {
+    let context = rune::Context::with_default_modules()?;
+    let runtime = rune::sync::Arc::try_new(context.runtime()?)?;
+    let mut script = build_script_from_lines(lines)?;
+    let mut diagnostics = rune::Diagnostics::new();
+    let maybe_unit = rune::prepare(&mut script)
+        .with_context(&context)
+        .with_diagnostics(&mut diagnostics)
+        .build();
+    if !diagnostics.is_empty() {
+        let mut writer =
+            rune::termcolor::StandardStream::stderr(rune::termcolor::ColorChoice::Always);
+        diagnostics.emit(&mut writer, &script)?;
+    }
+    let unit = rune::sync::Arc::try_new(maybe_unit?)?;
+    let vm = rune::Vm::new(runtime, unit);
+    let eval_field = vm.lookup_function(["eval_field"])?;
+    let eval_expr = move |x: f64, y: f64| -> (f64, f64) {
+        eval_field
+            .call((x, y))
+            .expect("Failed to call eval_field()")
+    };
+    Ok(Box::new(eval_expr))
+}
+
+fn build_script_from_lines(lines: &[String]) -> eyre::Result<rune::Sources> {
+    let mut sources = rune::Sources::new();
+    let mut all_lines = vec!["pub fn eval_field(x, y) {".to_string()];
+    all_lines.extend_from_slice(lines);
+    all_lines.push("return (x_new, y_new); }".to_string());
+
+    let script = all_lines.join("\n");
+    let source = rune::Source::memory(script)?;
+    sources.insert(source)?;
+    Ok(sources)
+}
+
 struct VectorField {
-    function: Box<dyn Fn(f64, f64) -> [f64; 2]>,
+    function: VectorFieldFunction,
 
     min_x: f64,
     max_x: f64,
@@ -154,7 +194,7 @@ impl VectorField {
         min_y: f64,
         max_y: f64,
         stride: f64,
-        function: impl Fn(f64, f64) -> [f64; 2] + 'static,
+        function: VectorFieldFunction,
     ) -> Self {
         Self {
             function: Box::new(function),
@@ -202,8 +242,8 @@ impl VectorField {
 
                 // Vector field visualizations don't look good if the vectors use the same scale as the
                 // uniform grid they're drawn on. So we scale by the delta-h.
-                let dx = vector[0] * self.stride;
-                let dy = vector[1] * self.stride;
+                let dx = vector.0 * self.stride;
+                let dy = vector.1 * self.stride;
 
                 let x2 = x1 + dx;
                 let y2 = y1 + dy;
@@ -300,8 +340,8 @@ fn simulate_coordinate(
 
         let current_vector = (field.function)(current.x, current.y);
 
-        current.x += timestep * current_vector[0];
-        current.y += timestep * current_vector[1];
+        current.x += timestep * current_vector.0;
+        current.y += timestep * current_vector.1;
 
         if record_streamlines {
             streamline.push(current);
@@ -386,30 +426,13 @@ fn main() -> eyre::Result<()> {
     // let perlin = Billow::<Perlin>::new(seed as u32);
     let perlin = Perlin::new(seed as u32);
 
-    let function: Box<dyn Fn(f64, f64) -> [f64; 2]> = match args.function {
-        Some(string) => {
-            let engine = Engine::new();
-            let ast = engine.compile(string)?;
-
-            let func = move |x: f64, y: f64| -> [f64; 2] {
-                let mut scope = Scope::new();
-                scope.push("x", x);
-                scope.push("y", y);
-
-                engine.eval_ast_with_scope::<()>(&mut scope, &ast).unwrap();
-
-                let new_x = scope.get_value::<f64>("x").unwrap();
-                let new_y = scope.get_value::<f64>("y").unwrap();
-
-                [new_x, new_y]
-            };
-
-            Box::new(func)
-        }
-        None => Box::new(move |x, y| {
+    let function: VectorFieldFunction = if args.function.is_empty() {
+        Box::new(move |x, y| {
             let angle = perlin.get([x, y]);
-            [f64::cos(angle), f64::sin(angle)]
-        }),
+            (f64::cos(angle), f64::sin(angle))
+        })
+    } else {
+        build_function_from_lines(&args.function)?
     };
 
     let field = VectorField::new(
