@@ -2,10 +2,9 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
-use generative::io::{GeometryFormat, get_output_writer, write_geometries};
+use generative::io::{get_output_writer, write_geometries};
 use geo::{Geometry, Line, Point};
 use itertools::Itertools;
-use rhai::{AST, Engine, EvalAltResult, Scope};
 
 /// Perform bitwise operations on a grid
 ///
@@ -20,10 +19,6 @@ struct CmdlineOptions {
     /// Output file to write result to. Defaults to stdout.
     #[clap(short, long)]
     output: Option<PathBuf>,
-
-    /// Output geometry format.
-    #[clap(short = 'O', long, default_value_t = GeometryFormat::Wkt)]
-    output_format: GeometryFormat,
 
     /// Whether to output points or connected lines
     #[clap(long, default_value_t = false)]
@@ -58,22 +53,42 @@ struct CmdlineOptions {
     expression: String,
 }
 
-fn expression(engine: &Engine, ast: &AST, x: i64, y: i64) -> Result<i64, Box<EvalAltResult>> {
-    let mut scope = Scope::new();
-    scope.push("x", x);
-    scope.push("y", y);
+type BitwiseExpression = Box<dyn Fn(i64, i64) -> i64>;
 
-    engine.eval_ast_with_scope::<i64>(&mut scope, ast)
+fn build_expression(expr: &str) -> eyre::Result<BitwiseExpression> {
+    // Ok(Box::new(|x, y| (x & y) & ((x ^ y) % 13)))
+
+    let context = rune::Context::with_default_modules()?;
+    let runtime = rune::sync::Arc::try_new(context.runtime()?)?;
+    let mut script = rune::Sources::new();
+    script.insert(build_function(expr)?)?;
+    let mut diagnostics = rune::Diagnostics::new();
+    let maybe_unit = rune::prepare(&mut script)
+        .with_context(&context)
+        .with_diagnostics(&mut diagnostics)
+        .build();
+    if !diagnostics.is_empty() {
+        let mut writer =
+            rune::termcolor::StandardStream::stderr(rune::termcolor::ColorChoice::Always);
+        diagnostics.emit(&mut writer, &script)?;
+    }
+    let unit = rune::sync::Arc::try_new(maybe_unit?)?;
+    let vm = rune::Vm::new(runtime, unit);
+    let eval_expr = vm.lookup_function(["eval_expr"])?;
+    let eval_expr = move |x: i64, y: i64| -> i64 {
+        eval_expr.call((x, y)).expect("Failed to call eval_expr()")
+    };
+    Ok(Box::new(eval_expr))
 }
 
-fn write_line<W>(
-    writer: W,
-    format: GeometryFormat,
-    x1: i64,
-    y1: i64,
-    x2: i64,
-    y2: i64,
-) -> eyre::Result<()>
+fn build_function(expr: &str) -> eyre::Result<rune::Source> {
+    let lines = ["pub fn eval_expr(x, y) {", expr, "}"];
+    let script = lines.join("\n");
+    let source = rune::Source::memory(script)?;
+    Ok(source)
+}
+
+fn write_line<W>(writer: W, x1: i64, y1: i64, x2: i64, y2: i64) -> eyre::Result<()>
 where
     W: Write,
 {
@@ -82,19 +97,19 @@ where
         Point::new(x2 as f64, y2 as f64),
     );
     let geometries = std::iter::once(Geometry::Line(line));
-    write_geometries(writer, geometries, format)
+    write_geometries(writer, geometries)
 }
 
-fn write_point<W>(writer: W, format: GeometryFormat, x1: i64, y1: i64) -> eyre::Result<()>
+fn write_point<W>(writer: W, x1: i64, y1: i64) -> eyre::Result<()>
 where
     W: Write,
 {
     let point = Point::new(x1 as f64, y1 as f64);
     let geometries = std::iter::once(Geometry::Point(point));
-    write_geometries(writer, geometries, format)
+    write_geometries(writer, geometries)
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum Neighbor {
     North,
     NorthEast,
@@ -147,8 +162,7 @@ fn main() -> eyre::Result<()> {
         .with_writer(std::io::stderr)
         .init();
 
-    let engine = Engine::new();
-    let ast = engine.compile_expression(&args.expression)?;
+    let expr_fn = build_expression(&args.expression)?;
 
     let xs = args.x_min..args.x_max;
     let ys = args.y_min..args.y_max;
@@ -157,38 +171,32 @@ fn main() -> eyre::Result<()> {
     let mut writer = get_output_writer(&args.output)?;
     if args.points {
         let geometries = cross.filter_map(|(x, y)| {
-            if let Ok(value) = expression(&engine, &ast, x, y) {
-                if value > 0 {
-                    return Some(Geometry::Point(Point::new(x as f64, y as f64)));
-                }
-            } else {
-                tracing::error!(
-                    "Failed to evaluate expression '{}' given x={x}, y={y}",
-                    args.expression,
-                );
+            let value = expr_fn(x, y);
+            if value > 0 {
+                return Some(Geometry::Point(Point::new(x as f64, y as f64)));
             }
             None
         });
 
-        write_geometries(writer, geometries, args.output_format)?;
+        write_geometries(writer, geometries)?;
     } else {
         tracing::info!(
             "Searching neighbors in order: {:?}",
             args.neighbor_search_order
         );
         for (x, y) in cross {
-            if expression(&engine, &ast, x, y)? > 0 {
+            if expr_fn(x, y) > 0 {
                 let mut wrote_line = false;
                 for n in args.neighbor_search_order.iter() {
-                    let (x2, y2) = neighbor(x, y, n.clone());
-                    if expression(&engine, &ast, x2, y2)? > 0 {
-                        write_line(&mut writer, args.output_format, x, y, x2, y2)?;
+                    let (x2, y2) = neighbor(x, y, *n);
+                    if expr_fn(x2, y2) > 0 {
+                        write_line(&mut writer, x, y, x2, y2)?;
                         wrote_line = true;
                         break;
                     }
                 }
                 if !wrote_line {
-                    write_point(&mut writer, args.output_format, x, y)?;
+                    write_point(&mut writer, x, y)?;
                 }
             }
         }

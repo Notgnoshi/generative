@@ -19,7 +19,9 @@ point-cloud \
         --max-y=1 \
         --delta-h=0.1 \
         --time-steps=20 \
-        --function "let temp = sqrt(x ** 2.0 + y ** 2.0 + 4.0); x = -sin(x) / temp; y = y / temp;" \
+        --function "let temp = f64::sqrt(x.powf(2.0) + y.powf(2.0) + 4.0);" \
+        --function "let x_new = -f64::sin(x) / temp;" \
+        --function "let y_new = y / temp;" \
         --draw-vector-field \
         --vector-field-style="STROKE(gray)" \
         --vector-field-style="STROKEDASHARRAY(1)" \
