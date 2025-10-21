@@ -138,7 +138,8 @@ impl SvgOptions {
             self.global_stroke, self.global_stroke_width, self.global_fill
         );
 
-        element::Style::new(format!("svg {{{style}}}"))
+        let style = element::Style::new(format!("svg {{{style}}}"));
+        style.set("type", "text/css")
     }
 }
 
