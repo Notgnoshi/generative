@@ -1,6 +1,6 @@
-<svg transform="scale(1,-1)" viewBox="-563.114853540013 -256.7746461774187 1134.093380157768 760.8432032080274" xmlns="http://www.w3.org/2000/svg">
-<style>
-svg { stroke:black; stroke-width:2; fill:none;}
+<svg viewBox="-563.114853540013 -256.7746461774187 1134.093380157768 760.8432032080274" xmlns="http://www.w3.org/2000/svg">
+<style type="text/css">
+svg { stroke:black; stroke-width:2; fill:none; transform:scale(1,-1);}
 </style>
 <polyline points="567.9785266177552 -98.15720521809912 566.1853282774896 -88.54822969647614"/>
 <polyline points="566.1853282774897 -88.54822969647508 559.1788427616007 -94.93346758746566"/>

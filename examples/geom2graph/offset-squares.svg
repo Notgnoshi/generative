@@ -1,6 +1,6 @@
-<svg transform="scale(1,-1)" viewBox="-152.25 -152.25 306 306" xmlns="http://www.w3.org/2000/svg">
-<style>
-svg { stroke:black; stroke-width:2; fill:none;}
+<svg viewBox="-152.25 -152.25 306 306" xmlns="http://www.w3.org/2000/svg">
+<style type="text/css">
+svg { stroke:black; stroke-width:2; fill:none; transform:scale(1,-1);}
 </style>
 <path d="M-149.25,-149.25 L-149.25,50.75 L-49.25,50.75 L-49.25,-49.25 L50.75,-49.25 L50.75,-149.25 z" fill-rule="evenodd"/>
 <path d="M-49.25,50.75 L50.75,50.75 L50.75,-49.25 L-49.25,-49.25 z" fill-rule="evenodd"/>

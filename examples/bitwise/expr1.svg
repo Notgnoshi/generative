@@ -1,6 +1,6 @@
-<svg transform="scale(1,-1)" viewBox="-209 -209 466 466" xmlns="http://www.w3.org/2000/svg">
-<style>
-svg { stroke:black; stroke-width:2; fill:none;}
+<svg viewBox="-209 -209 466 466" xmlns="http://www.w3.org/2000/svg">
+<style type="text/css">
+svg { stroke:black; stroke-width:2; fill:none; transform:scale(1,-1);}
 </style>
 <circle cx="-206" cy="-66" r="1"/>
 <polyline points="-206 -46 -196 -36"/>
