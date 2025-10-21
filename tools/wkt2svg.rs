@@ -124,21 +124,23 @@ impl From<&CmdlineOptions> for SvgOptions {
 }
 
 impl SvgOptions {
-    fn get_global_style(&self) -> element::Style {
-        // let style = element::Style::new("svg { stroke:black; stroke-width:2px; fill:none;}");
-
+    fn get_global_style(&self, use_screen_coordinates: bool) -> element::Style {
         let style = if let Some(dasharray) = &self.global_stroke_dasharray {
             format!("stroke-dasharray:{dasharray};")
         } else {
             String::new()
         };
 
-        let style = format!(
+        let mut style = format!(
             "{style} stroke:{}; stroke-width:{}; fill:{};",
             self.global_stroke, self.global_stroke_width, self.global_fill
         );
+        if !use_screen_coordinates {
+            style.push_str(" transform:scale(1,-1);");
+        }
 
-        element::Style::new(format!("svg {{{style}}}"))
+        let style = element::Style::new(format!("svg {{{style}}}"));
+        style.set("type", "text/css")
     }
 }
 
@@ -515,10 +517,7 @@ fn main() -> eyre::Result<()> {
     tracing::debug!("Transforming geometries with: {transform:?} to fit into viewBox {viewbox:?}");
 
     let mut document = Document::new().set("viewBox", viewbox);
-    if !args.screen_coordinates {
-        document = document.set("transform", "scale(1,-1)");
-    }
-    let style = options.get_global_style();
+    let style = options.get_global_style(args.screen_coordinates);
     document = document.add(style);
     for geometry in geometries {
         document = to_svg(geometry, &transform, document, &mut options);

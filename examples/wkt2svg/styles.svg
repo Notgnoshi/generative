@@ -1,6 +1,6 @@
-<svg transform="scale(1,-1)" viewBox="-3 -3 106 106" xmlns="http://www.w3.org/2000/svg">
-<style>
-svg { stroke:black; stroke-width:2; fill:none;}
+<svg viewBox="-3 -3 106 106" xmlns="http://www.w3.org/2000/svg">
+<style type="text/css">
+svg { stroke:black; stroke-width:2; fill:none; transform:scale(1,-1);}
 </style>
 <circle cx="0" cy="0" r="1"/>
 <circle cx="100" cy="100" r="1"/>
