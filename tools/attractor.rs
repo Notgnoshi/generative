@@ -260,8 +260,8 @@ fn main() -> eyre::Result<()> {
             (x, y) = dynamical_system(x, y);
             formatter.handle_point(x, y)?;
         }
-        formatter.flush()?;
     }
+    formatter.flush()?;
 
     Ok(())
 }
