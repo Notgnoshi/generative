@@ -1,0 +1,7 @@
+let a = 1.4;
+let b = 1.56;
+let c = 1.4;
+let d = -6.56;
+
+let x_new = d * f64::sin(a * x) - f64::sin(b * y);
+let y_new = c * f64::cos(a * x) + f64::cos(b * y);
