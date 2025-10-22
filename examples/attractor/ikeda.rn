@@ -1,0 +1,6 @@
+// ikeda is a chaotic attractor for u>=0.6
+let u = 0.9;
+
+let t_n = 0.4 - 6.0 / (1.0 + x.powi(2) + y.powi(2));
+let x_new = 1.0 + u * (x * f64::cos(t_n) - y * f64::sin(t_n));
+let y_new = u * (x * f64::sin(t_n) + y * f64::cos(t_n));

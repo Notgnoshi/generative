@@ -1,0 +1,7 @@
+let a = 0.9;
+let b = -0.6013;
+let c = 2.0;
+let d = 0.5;
+
+let x_new = x.powi(2) - y.powi(2) + a * x + b * y;
+let y_new = 2.0 * x * y + c * x + d * y;

@@ -1,0 +1,12 @@
+let a = 0.192;
+let b = 0.982;
+
+fn f(x) {
+    let a = 0.192;
+    let b = 0.982;
+
+    a * x + 2.0 * (1.0 - a) * x.powi(2) / (1.0 + x.powi(2)).powi(2)
+}
+
+let x_new = b * y + f(x);
+let y_new = f(x_new) - x;

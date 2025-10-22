@@ -12,6 +12,7 @@ A polyglot collection of composable generative art tools, with a focus on 2D com
 * [How to build](#how-to-build)
 * [Philosophy](#philosophy)
 * [Examples](#examples)
+  * [Chaotic attractors](#chaotic-attractors)
   * [Asemic writing](#asemic-writing)
   * [Random L-Systems](#random-l-systems)
 * [The tools](#the-tools)
@@ -29,6 +30,7 @@ A polyglot collection of composable generative art tools, with a focus on 2D com
     * [streamline](#streamline)
     * [traverse](#traverse)
     * [urquhart](#urquhart)
+    * [attractor](#attractor)
   * [Transformations](#transformations)
     * [project.py](#projectpy)
     * [geom2graph](#geom2graph)
@@ -96,6 +98,24 @@ to produce/consume a standard textual interface.
 * Graphs are in [TGF](https://en.wikipedia.org/wiki/Trivial_Graph_Format) format
 
 # Examples
+
+## Chaotic attractors
+See the [`attractor`](#attractor) tool for more details on how to generate these attractor images.
+
+![](examples/attractor/clifford.png)
+
+![](examples/attractor/ikeda.png)
+
+![](examples/attractor/johnny-svensson.png)
+
+![](examples/attractor/peter-de-jong.png)
+
+![](examples/attractor/tinkerbell.png)
+
+![](examples/attractor/fractal-dreams-ssss.png)
+
+![](examples/attractor/gumowski-mira.png)
+
 ## Asemic writing
 The following snippet generates random asemic writing glyphs
 ```sh
@@ -552,6 +572,27 @@ point-cloud --seed 11878883030565683752 --points 20 --scale 200 |
 } | wkt2svg --output ./examples/urquhart/urquhart.svg
 ```
 ![](examples/urquhart/urquhart.svg)
+
+### attractor
+The `attractor` tool is very similar to the [`streamline`](#streamline) tool. It takes a Rune script
+defining a 2D dynamical system, and traces the trajectories of points in that system.
+
+For example the [tinkerbell.rn](examples/attractor/tinkerbell.rn) script defines the Tinkerbell
+attractor:
+
+```sh
+attractor \
+    --script ./examples/attractor/tinkerbell.rn \
+    --output ./examples/attractor/tinkerbell.png \
+    --output-format image \
+    -x=-0.72 \
+    -y=-0.64 \
+    --iterations 500000
+```
+![](examples/attractor/tinkerbell.png)
+
+You may use `--output-format` to get WKT POINTs or LINESTRINGs instead of a PNG image, but the PGN
+image looks better than an SVG rendering of the WKT geometries.
 
 ## Transformations
 ### project.py

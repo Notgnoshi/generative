@@ -1,0 +1,9 @@
+// From Chaos in Wonderland, version SSSS
+
+let a = 1.468;
+let b = 2.407;
+let c = 0.194;
+let d = 1.438;
+
+let x_new = f64::sin(y * b) + c * f64::sin(x * b);
+let y_new = f64::sin(x * a) + d * f64::sin(y * a);

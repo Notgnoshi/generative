@@ -68,6 +68,10 @@ name = "snap"
 path = "tools/snap.rs"
 
 [[bin]]
+name = "attractor"
+path = "tools/attractor.rs"
+
+[[bin]]
 name = "geom2graph"
 path = "tools/geom2graph.rs"
 required-features = ["cxx-bindings"]
@@ -79,6 +83,7 @@ cxx = { version = "1.0", optional = true }
 delaunator = "1.0"
 eyre = "0.6.12"
 geo = "0.31"
+image = { version = "0.25.8", default-features = false, features = ["png"] }
 itertools = "0.14"
 kdtree = "0.7"
 noise = "0.9"
