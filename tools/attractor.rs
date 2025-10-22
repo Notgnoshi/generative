@@ -160,8 +160,7 @@ fn params_from_letters(letters: &str) -> eyre::Result<Vec<String>> {
         let alphabet_index = ((ch as u8) - b'A') as f64;
         let value = -1.2 + (alphabet_index * 0.1);
 
-        let param_index = param_index + 1; // make 1-based
-        params.push(format!("let a_{param_index} = {value};"));
+        params.push(format!("let a_{param_index} = {value}_f64;"));
     }
 
     Ok(params)
