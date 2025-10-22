@@ -254,6 +254,7 @@ fn main() -> eyre::Result<()> {
         args.height,
     )?;
 
+    let start = std::time::Instant::now();
     for (i, (mut x, mut y)) in initial_values.into_iter().enumerate() {
         tracing::trace!("i={i}: Starting at: ({x}, {y})");
         for j in 0..args.iterations {
@@ -269,6 +270,8 @@ fn main() -> eyre::Result<()> {
         }
     }
     formatter.flush()?;
+    let elapsed = start.elapsed();
+    tracing::info!("Finished in {elapsed:?}");
 
     Ok(())
 }
