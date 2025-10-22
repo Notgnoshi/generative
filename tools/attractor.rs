@@ -239,10 +239,9 @@ fn main() -> eyre::Result<()> {
     }
 
     let mut initial_values = Vec::with_capacity(args.num_points as usize);
-    for i in 0..args.num_points {
+    for _ in 0..args.num_points {
         let initial_x = args.initial_x.unwrap_or_else(|| dist.sample(&mut rng));
         let initial_y = args.initial_y.unwrap_or_else(|| dist.sample(&mut rng));
-        tracing::trace!("i={i}: Starting at: ({initial_x}, {initial_y})");
         initial_values.push((initial_x, initial_y));
     }
 
@@ -255,9 +254,17 @@ fn main() -> eyre::Result<()> {
         args.height,
     )?;
 
-    for (mut x, mut y) in initial_values {
-        for _ in 0..args.iterations {
-            (x, y) = dynamical_system(x, y);
+    for (i, (mut x, mut y)) in initial_values.into_iter().enumerate() {
+        tracing::trace!("i={i}: Starting at: ({x}, {y})");
+        for j in 0..args.iterations {
+            let (x_new, y_new) = dynamical_system(x, y);
+            if !x_new.is_finite() || !y_new.is_finite() || x_new.abs() > 1e6 || y_new.abs() > 1e6 {
+                tracing::warn!(
+                    "Dynamical system produced non-finite value at iteration {j} for point {i}: ({x}, {y})"
+                );
+                break;
+            }
+            (x, y) = (x_new, y_new);
             formatter.handle_point(x, y)?;
         }
     }
