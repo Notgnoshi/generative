@@ -21,8 +21,20 @@ struct CmdlineOptions {
     #[clap(short = 'O', long, default_value_t = OutputFormat::Points)]
     output_format: OutputFormat,
 
-    #[clap(short, long)]
+    #[clap(short, long, required_if_eq("output_format", "image"))]
     output: Option<PathBuf>,
+
+    /// The width of the output image
+    ///
+    /// If not given, an appropriate width will be chosen
+    #[clap(short = 'W', long)]
+    width: Option<u32>,
+
+    /// The height of the output image
+    ///
+    /// If not given, an appropriate height will be chosen
+    #[clap(short = 'H', long)]
+    height: Option<u32>,
 
     /// Mathematical expressions defining the dynamical system
     ///
@@ -236,9 +248,14 @@ fn main() -> eyre::Result<()> {
     }
 
     let expected_coords = (args.iterations * args.num_points) as usize;
-    let mut formatter = AttractorFormatter::new(args.output_format, args.output, expected_coords)?;
+    let mut formatter = AttractorFormatter::new(
+        args.output_format,
+        args.output,
+        expected_coords,
+        args.width,
+        args.height,
+    )?;
 
-    // TODO: This is a prime candidate for parallelism
     for (mut x, mut y) in initial_values {
         for _ in 0..args.iterations {
             (x, y) = dynamical_system(x, y);

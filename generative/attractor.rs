@@ -1,16 +1,17 @@
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 
-use geo::{Coord, LineString};
+use geo::{BoundingRect, Coord, LineString};
 use wkt::ToWkt;
 
-#[derive(Clone, Copy, Debug, clap::ValueEnum)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, clap::ValueEnum)]
 pub enum OutputFormat {
     /// Write out each visited point as a WKT POINT
     Points,
     /// Write out each visited point in a WKT LINESTRING
     Line,
-    // TODO: Image
+    /// Write out the visited points as a PNG image
+    Image,
 }
 
 impl std::fmt::Display for OutputFormat {
@@ -19,27 +20,20 @@ impl std::fmt::Display for OutputFormat {
             // important: Should match clap::ValueEnum format
             OutputFormat::Points => write!(f, "points"),
             OutputFormat::Line => write!(f, "line"),
+            OutputFormat::Image => write!(f, "image"),
         }
     }
 }
 
-// TODO: A performant output writer that can handle parallelism and different output formats
-//
-// * Image: would need to share a thread-safe image buffer, and then write to the actual image
-//   file all at once at the end. Each thread would have to keep its own local copy of the 2D
-//   histogram, and then merge them at the end. It's fine to keep everything in-memory for the
-//   image writer, because you have to build a 2D histogram of the hit pixels anyway, and
-//   that's gotta be in-memory regardless. So what if we have to spin up a few copies of it
-//   per-thread and then merge? It's not gonna be gigabytes... I hope
-//
-//   But then how do you map the (x, y) coordinates to pixel coordinates without loading all of
-//   them into memory first (to find the min/max extents)?
-
 pub struct AttractorFormatter {
     format: OutputFormat,
     writer: BufWriter<Box<dyn Write>>,
+    output: Option<PathBuf>,
 
     accumulated: Vec<Coord>,
+
+    width: Option<u32>,
+    height: Option<u32>,
 }
 
 // public
@@ -48,8 +42,10 @@ impl AttractorFormatter {
         format: OutputFormat,
         output: Option<PathBuf>,
         expected_coords: usize,
+        width: Option<u32>,
+        height: Option<u32>,
     ) -> eyre::Result<Self> {
-        let writer: Box<dyn Write> = match output {
+        let writer: Box<dyn Write> = match &output {
             Some(path) => {
                 if path == Path::new("-") {
                     Box::new(std::io::stdout())
@@ -61,19 +57,24 @@ impl AttractorFormatter {
             None => Box::new(std::io::stdout()),
         };
         let writer = BufWriter::new(writer);
-        let accumulated = Vec::with_capacity(expected_coords);
+        let buffer_capacity = match format {
+            OutputFormat::Points | OutputFormat::Line => 1024,
+            OutputFormat::Image => expected_coords,
+        };
+        let accumulated = Vec::with_capacity(buffer_capacity);
 
         Ok(Self {
             format,
             writer,
+            output,
             accumulated,
+            width,
+            height,
         })
     }
 
     pub fn handle_point(&mut self, x: f64, y: f64) -> eyre::Result<()> {
-        match self.format {
-            OutputFormat::Points | OutputFormat::Line => self.accumulate_coord(Coord { x, y }),
-        }
+        self.accumulate_coord(Coord { x, y })
     }
 
     pub fn flush(&mut self) -> eyre::Result<()> {
@@ -81,20 +82,17 @@ impl AttractorFormatter {
         self.writer.flush()?;
         Ok(())
     }
-
-    /// In the case parallelism is used, merge another AttractorFormatter from another thread into
-    /// this one
-    pub fn merge(&mut self, _other: AttractorFormatter) {
-        // TODO: This is mostly only useful for the image formatter
-    }
 }
 
 // private
 impl AttractorFormatter {
     fn accumulate_coord(&mut self, coord: Coord) -> eyre::Result<()> {
         self.accumulated.push(coord);
-        // TODO: Don't do this for images
-        if self.accumulated.len() > 1_000 {
+        // Writing an image requires saving all of the points in memory so we can map them to pixel
+        // coordinates later. For other formats, we can flush periodically to save memory.
+        if self.format != OutputFormat::Image
+            && self.accumulated.len() == self.accumulated.capacity()
+        {
             self.write_accumulated()?;
         }
         Ok(())
@@ -115,8 +113,80 @@ impl AttractorFormatter {
                     writeln!(self.writer, "{}", linestring.to_wkt())?;
                 }
             }
+            OutputFormat::Image => self.write_image(accumulated)?,
         }
 
         Ok(())
+    }
+
+    fn write_image(&mut self, accumulated: Vec<Coord<f64>>) -> eyre::Result<()> {
+        let accumulated = LineString::from(accumulated);
+        let bbox = accumulated.bounding_rect().ok_or_else(|| {
+            eyre::eyre!("Cannot determine bounding box of accumulated coordinates")
+        })?;
+        let (width, height) = self.determine_image_size(&bbox);
+
+        // Padding is to avoid off-by-one errors due to rounding floats -> int
+        let mut image = image::GrayImage::new(width + 1, height + 1);
+        for pixel in image.pixels_mut() {
+            pixel.0[0] = 255; // white
+            // I struggled using GrayAlphaImage and setting the alpha values correctly. Maybe I'll
+            // revisit that later. For now, just darken the pixels on each visit.
+        }
+        for coord in accumulated {
+            let (x, y) = Self::map_coordinate_to_pixel(&coord, &bbox, width, height);
+            let pixel = image.get_pixel_mut(x, y);
+            pixel.0[0] = pixel.0[0].saturating_sub(64); // darken the pixel, but don't wrap around!
+        }
+
+        image.save_with_format(self.output.as_ref().unwrap(), image::ImageFormat::Png)?;
+
+        Ok(())
+    }
+
+    fn determine_image_size(&self, bbox: &geo::Rect) -> (u32, u32) {
+        let coord_width = bbox.max().x - bbox.min().x;
+        let coord_height = bbox.max().y - bbox.min().y;
+        let aspect_ratio = coord_width / coord_height;
+        tracing::debug!("extents: {bbox:?}");
+        tracing::debug!(
+            "dimensions: {coord_width:.4} x {coord_height:.4}, aspect: {aspect_ratio:.4}"
+        );
+
+        let (width, height) = match (self.width, self.height) {
+            (Some(width), Some(height)) => (width, height),
+            (None, None) => {
+                let default_width = 800;
+                let height = (default_width as f64 / aspect_ratio) as u32;
+                (default_width, height)
+            }
+            (Some(width), None) => {
+                let height = (width as f64 / aspect_ratio) as u32;
+                (width, height)
+            }
+            (None, Some(height)) => {
+                let width = (height as f64 * aspect_ratio) as u32;
+                (width, height)
+            }
+        };
+        tracing::debug!("Image size: {width}x{height}");
+
+        (width, height)
+    }
+
+    fn map_coordinate_to_pixel(
+        coord: &Coord<f64>,
+        bbox: &geo::Rect,
+        image_width: u32,
+        image_height: u32,
+    ) -> (u32, u32) {
+        let image_width = image_width as f64;
+        let image_height = image_height as f64;
+        // TODO: If this is expensive, we can precompute the scale factor
+        let px_x = (coord.x - bbox.min().x) * image_width / (bbox.max().x - bbox.min().x);
+        let px_y = (coord.y - bbox.min().y) * image_height / (bbox.max().y - bbox.min().y);
+
+        // TODO: Round? Truncate?
+        (px_x as u32, px_y as u32)
     }
 }
