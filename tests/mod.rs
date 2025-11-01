@@ -1,3 +1,5 @@
+mod test_bundle;
+
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Output;
