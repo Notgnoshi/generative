@@ -1,4 +1,5 @@
 mod test_bundle;
+mod test_pack;
 
 use std::collections::HashMap;
 use std::path::PathBuf;
