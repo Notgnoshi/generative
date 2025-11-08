@@ -1,3 +1,4 @@
+mod test_attractor;
 mod test_bundle;
 #[cfg(feature = "cxx-bindings")]
 mod test_geom2graph;
