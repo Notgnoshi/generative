@@ -97,13 +97,13 @@ struct CmdlineOptions {
     /// Scale coordinate 1 (x, or r) to fit in the given range
     ///
     /// If specified, will be applied regardless of whether polar conversion is performed
-    #[clap(long, num_args = 2)]
+    #[clap(long, value_name = "MIN>,<MAX", value_delimiter = ',')]
     range1: Vec<f64>,
 
     /// Scale coordinate 2 (y, or theta) to fit in the given range
     ///
     /// If specified, will be applied regardless of whether polar conversion is performed
-    #[clap(long, num_args = 2)]
+    #[clap(long, value_name = "MIN>,<MAX", value_delimiter = ',')]
     range2: Vec<f64>,
 }
 
@@ -277,6 +277,12 @@ fn geoms_coordwise(
 fn main() -> eyre::Result<()> {
     color_eyre::install()?;
     let args = CmdlineOptions::parse();
+    if !args.range1.is_empty() && args.range1.len() != 2 {
+        eyre::bail!("--range1 must have 2 comma-separated values");
+    }
+    if !args.range2.is_empty() && args.range2.len() != 2 {
+        eyre::bail!("--range2 must have 2 comma-separated values");
+    }
 
     let filter = tracing_subscriber::EnvFilter::builder()
         .with_default_directive(args.log_level.into())

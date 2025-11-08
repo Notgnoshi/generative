@@ -41,6 +41,7 @@ pub fn snap_geoms(
     }
 
     let points = flatten_geometries_into_points_ref(geoms.iter());
+    // Build the k-d tree, filtering out duplicate points as we go
     let mut index = GeomKdTree::new(2);
     for point in points {
         let coord: Coord = point.into();
@@ -79,32 +80,26 @@ fn snap_geom_impl(mut geom: Geometry, index: &mut GeomKdTree, tolerance: f64) ->
     filter_duplicate_vertices(geom)
 }
 
-fn snap_coord(coord: Coord, index: &mut GeomKdTree, tolerance: f64) -> Coord {
-    // Find the closest two points in the index, because the first closest should always be ourself.
-    let coords = [coord.x, coord.y];
-    let neighbors = index
-        .within(&coords, tolerance, &squared_euclidean)
-        .unwrap();
-    // We should always find ourselves, or, if move_snapped_point is true, at least find where
-    // ourselves have already been snapped to (because one point in the kd-tree could be multiple
-    // vertices from multiple geometries).
-    debug_assert!(!neighbors.is_empty());
+fn snap_coord(to_snap: Coord, index: &mut GeomKdTree, tolerance: f64) -> Coord {
+    let query = [to_snap.x, to_snap.y];
+    let neighbors = index.within(&query, tolerance, &squared_euclidean).unwrap();
 
     if !neighbors.is_empty() {
         let (mut _distance, mut found_coords) = neighbors[0];
-        // We found ourselves. Now look for a neighbor in range
-        if found_coords == &coord && neighbors.len() > 1 {
+        // If we found ourselves, snap to the next closest point
+        if found_coords == &to_snap && neighbors.len() > 1 {
             // The next closest point
             (_distance, found_coords) = neighbors[1];
         }
 
+        // Remove the point that we snapped to, so that future snaps don't find it again
         let snapped_coord = *found_coords;
-        index.remove(&coords, &coord).unwrap();
+        index.remove(&query, &to_snap).unwrap();
 
-        return snapped_coord;
+        snapped_coord
+    } else {
+        to_snap
     }
-
-    coord
 }
 
 fn snap_coord_grid(coord: Coord, tolerance: f64) -> Coord {
@@ -210,6 +205,15 @@ where
     for node_idx in graph.node_indices() {
         let node = graph[node_idx];
         let coords = [node.0.x, node.0.y];
+
+        // Don't add duplicate vertices to the index
+        let closest = index.nearest(&coords, 1, &squared_euclidean).unwrap();
+        if let Some(closest) = closest.first() {
+            let (distance, _) = closest;
+            if *distance == 0.0 {
+                continue;
+            }
+        }
         index.add(coords, node_idx).unwrap();
     }
 
@@ -231,8 +235,8 @@ where
 {
     let mut nodes_to_remove = Vec::new();
     for node in graph.node_indices() {
-        if let Some(snapped) = snap_graph_node(&mut graph, node, index, tolerance) {
-            nodes_to_remove.push(snapped);
+        if let Some(_snapped_to) = snap_graph_node(&mut graph, node, index, tolerance) {
+            nodes_to_remove.push(node);
         }
     }
 
@@ -246,6 +250,9 @@ where
     graph
 }
 
+/// Snap the given node to the closest other node within the given tolerance
+///
+/// Returns the NodeIndex that was snapped to, if the given node was snapped.
 fn snap_graph_node<D>(
     graph: &mut GeometryGraph<D>,
     node_idx: NodeIndex<usize>,
@@ -259,29 +266,40 @@ where
     let nearest_coords = index
         .within(&coords, tolerance, &squared_euclidean)
         .unwrap();
-    debug_assert!(
-        !nearest_coords.is_empty(),
-        "We'll always look up at least ourselves"
-    );
 
     // There's no node close enough to snap to
-    if nearest_coords.len() <= 1 {
+    if nearest_coords.is_empty() {
         return None;
     }
 
-    let (mut _distance, mut found_idx) = nearest_coords[0];
-    let found_coord = graph[*found_idx].0;
-    if found_coord == graph[node_idx].0 && nearest_coords.len() > 1 {
-        (_distance, found_idx) = nearest_coords[1];
+    // Find the closest node that isn't the query node itself
+    let mut snap_to = None;
+    for (_distance, found_idx) in nearest_coords {
+        if *found_idx != node_idx {
+            snap_to = Some(*found_idx);
+            break;
+        }
     }
-    let found_idx = *found_idx;
 
-    index.remove(&coords, &node_idx).unwrap();
+    // We found a node to snap to
+    if let Some(found_idx) = snap_to {
+        // Remove the snapped from node from the index, but we have to be careful to only remove it
+        // if we know the coordinates are actually in the index (duplicate coordinates are filtered
+        // out ahead of time because they would otherwise cause infinite loops here)
+        if graph[found_idx] != graph[node_idx] {
+            // Remove the node we're snapping from
+            index.remove(&coords, &node_idx).unwrap();
+        }
 
-    snap_graph_nodes(graph, node_idx, found_idx);
-    Some(node_idx)
+        // Snap the two nodes together, updating the adjacencies
+        snap_graph_nodes(graph, node_idx, found_idx);
+        Some(found_idx)
+    } else {
+        None
+    }
 }
 
+/// Snap `snap_from` to `snap_to`, and update all of `snap_from`s adjacencies
 fn snap_graph_nodes<D>(
     graph: &mut GeometryGraph<D>,
     snap_from: NodeIndex<usize>,
@@ -289,9 +307,7 @@ fn snap_graph_nodes<D>(
 ) where
     D: EdgeType,
 {
-    if snap_from == snap_to || graph[snap_from] == graph[snap_to] {
-        return;
-    }
+    debug_assert_ne!(snap_from, snap_to);
 
     let neighbors: Vec<_> = graph.neighbors(snap_from).collect();
     let mut neighbors_to_snap = Vec::new();
@@ -358,6 +374,7 @@ mod tests {
     use float_cmp::assert_approx_eq;
     use geo::{LineString, Point};
     use petgraph::Undirected;
+    use pretty_assertions::assert_eq;
 
     use super::*;
     use crate::io::{read_tgf_graph, write_tgf_graph};
@@ -471,32 +488,102 @@ mod tests {
     }
 
     #[test]
-    fn test_snap_graph_closest_simple() {
-        let tgf = b"0 POINT(0 0)\n1 POINT(1 0)\n2 POINT(1.1 0)\n3 POINT(2 0)\n#\n0 1\n1 2\n2 3";
+    fn test_snap_graph_closest_duplicate() {
+        let tgf = b"\
+            0 POINT(0 0)\n\
+            1 POINT(0 0)\n\
+            #\n\
+            0 1\n\
+        ";
         let graph = read_tgf_graph::<Undirected, _>(&tgf[..]);
-        assert_eq!(graph.node_count(), 4);
-        assert_eq!(graph.edge_count(), 3);
+        assert_eq!(graph.node_count(), 2);
+        assert_eq!(graph.edge_count(), 1);
 
-        let tgf = b"0\tPOINT(0 0)\n1\tPOINT(2 0)\n2\tPOINT(1.1 0)\n#\n2\t1\n2\t0\n";
-        let expected_tgf = String::from_utf8_lossy(tgf);
+        let expected_tgf = "\
+            0\tPOINT(0 0)\n\
+            #\n\
+        ";
 
         let actual = snap_graph(graph, SnappingStrategy::ClosestPoint(0.2));
 
         let actual_tgf = get_tgf(&actual);
-        assert_eq!(actual_tgf, expected_tgf);
+        assert_eq!(expected_tgf, actual_tgf);
+    }
+
+    #[test]
+    fn test_snap_graph_closest_simple() {
+        let tgf = b"\
+            0 POINT(0 0)\n\
+            1 POINT(1 0)\n\
+            2 POINT(1.1 0)\n\
+            3 POINT(2 0)\n\
+            4 POINT(1.1 0)\n\
+            #\n\
+            0 1\n\
+            1 2\n\
+            2 3\n\
+            2 4\n\
+        ";
+        let graph = read_tgf_graph::<Undirected, _>(&tgf[..]);
+        assert_eq!(graph.node_count(), 5);
+        assert_eq!(graph.edge_count(), 4);
+
+        let expected_tgf = "\
+            0\tPOINT(0 0)\n\
+            1\tPOINT(2 0)\n\
+            2\tPOINT(1.1 0)\n\
+            #\n\
+            2\t1\n\
+            2\t0\n\
+        ";
+
+        let actual = snap_graph(graph, SnappingStrategy::ClosestPoint(0.2));
+
+        let actual_tgf = get_tgf(&actual);
+        assert_eq!(expected_tgf, actual_tgf);
     }
 
     #[test]
     fn test_snap_graph_closest_complex() {
-        let tgf = b"0\tPOINT(-0.1 0)\n1\tPOINT(0 0)\n2\tPOINT(0 0.1)\n3\tPOINT(0 -0.1)\n4\tPOINT(2 0)\n#\n0\t1\n2\t1\n3\t1\n1\t4\n";
+        let tgf = b"\
+            0\tPOINT(-0.1 0)\n\
+            1\tPOINT(0 0)\n\
+            2\tPOINT(0 0.1)\n\
+            3\tPOINT(0 -0.1)\n\
+            4\tPOINT(2 0)\n\
+            #\n\
+            0\t1\n\
+            2\t1\n\
+            3\t1\n\
+            1\t4\n\
+        ";
         let graph = read_tgf_graph::<Undirected, _>(&tgf[..]);
 
-        let tgf = b"0\tPOINT(2 0)\n1\tPOINT(0 -0.1)\n#\n1\t0\n";
-        let expected_tgf = String::from_utf8_lossy(tgf);
+        let expected_tgf = "\
+            0\tPOINT(2 0)\n\
+            1\tPOINT(0 -0.1)\n\
+            #\n\
+            1\t0\n\
+        ";
 
         let actual = snap_graph(graph, SnappingStrategy::ClosestPoint(0.11));
 
         let actual_tgf = get_tgf(&actual);
-        assert_eq!(actual_tgf, expected_tgf);
+        assert_eq!(expected_tgf, actual_tgf);
+    }
+
+    #[test]
+    fn test_snap_duplicate_vertices_crash() {
+        let points = [
+            Geometry::Point(Point::new(-0.4999999999999998, 0.8660254037844387)),
+            Geometry::Point(Point::new(-0.4999999999999998, 0.8660254037844387)),
+        ];
+
+        let snapped: Vec<_> =
+            snap_geoms(points.into_iter(), SnappingStrategy::ClosestPoint(0.0)).collect();
+
+        // Snapping can't remove duplicate vertices; it can only move the coordinates of a vertex
+        // to the coordinates of another vertex.
+        assert_eq!(snapped.len(), 2);
     }
 }

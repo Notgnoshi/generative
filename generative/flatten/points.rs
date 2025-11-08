@@ -74,8 +74,7 @@ pub fn flatten_geometries_into_points(
         .map(|coord| coord.into())
 }
 
-/// A variant of [`flatten_geometries_into_points`](flatten_geometries_into_points) that doesn't
-/// consume the geometries
+/// A variant of [`flatten_geometries_into_points`] that doesn't consume the geometries
 ///
 /// NOTE: Closed rings are implicitly opened.
 pub fn flatten_geometries_into_points_ref<'geom>(
