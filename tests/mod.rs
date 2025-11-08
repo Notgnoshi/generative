@@ -3,6 +3,7 @@ mod test_bundle;
 mod test_geom2graph;
 mod test_grid;
 mod test_pack;
+mod test_smooth;
 mod test_wkt2svg;
 
 use std::collections::HashMap;
