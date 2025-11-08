@@ -1,6 +1,7 @@
 mod test_bundle;
 #[cfg(feature = "cxx-bindings")]
 mod test_geom2graph;
+mod test_grid;
 mod test_pack;
 mod test_wkt2svg;
 
