@@ -5,6 +5,7 @@ mod test_grid;
 mod test_pack;
 mod test_smooth;
 mod test_snap;
+mod test_transform;
 mod test_wkt2svg;
 
 use std::collections::HashMap;
