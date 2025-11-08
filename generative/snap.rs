@@ -41,6 +41,7 @@ pub fn snap_geoms(
     }
 
     let points = flatten_geometries_into_points_ref(geoms.iter());
+    // Build the k-d tree, filtering out duplicate points as we go
     let mut index = GeomKdTree::new(2);
     for point in points {
         let coord: Coord = point.into();
@@ -79,32 +80,26 @@ fn snap_geom_impl(mut geom: Geometry, index: &mut GeomKdTree, tolerance: f64) ->
     filter_duplicate_vertices(geom)
 }
 
-fn snap_coord(coord: Coord, index: &mut GeomKdTree, tolerance: f64) -> Coord {
-    // Find the closest two points in the index, because the first closest should always be ourself.
-    let coords = [coord.x, coord.y];
-    let neighbors = index
-        .within(&coords, tolerance, &squared_euclidean)
-        .unwrap();
-    // We should always find ourselves, or, if move_snapped_point is true, at least find where
-    // ourselves have already been snapped to (because one point in the kd-tree could be multiple
-    // vertices from multiple geometries).
-    debug_assert!(!neighbors.is_empty());
+fn snap_coord(to_snap: Coord, index: &mut GeomKdTree, tolerance: f64) -> Coord {
+    let query = [to_snap.x, to_snap.y];
+    let neighbors = index.within(&query, tolerance, &squared_euclidean).unwrap();
 
     if !neighbors.is_empty() {
         let (mut _distance, mut found_coords) = neighbors[0];
-        // We found ourselves. Now look for a neighbor in range
-        if found_coords == &coord && neighbors.len() > 1 {
+        // If we found ourselves, snap to the next closest point
+        if found_coords == &to_snap && neighbors.len() > 1 {
             // The next closest point
             (_distance, found_coords) = neighbors[1];
         }
 
+        // Remove the point that we snapped to, so that future snaps don't find it again
         let snapped_coord = *found_coords;
-        index.remove(&coords, &coord).unwrap();
+        index.remove(&query, &to_snap).unwrap();
 
-        return snapped_coord;
+        snapped_coord
+    } else {
+        to_snap
     }
-
-    coord
 }
 
 fn snap_coord_grid(coord: Coord, tolerance: f64) -> Coord {
@@ -498,5 +493,20 @@ mod tests {
 
         let actual_tgf = get_tgf(&actual);
         assert_eq!(actual_tgf, expected_tgf);
+    }
+
+    #[test]
+    fn test_snap_duplicate_vertices_crash() {
+        let points = [
+            Geometry::Point(Point::new(-0.4999999999999998, 0.8660254037844387)),
+            Geometry::Point(Point::new(-0.4999999999999998, 0.8660254037844387)),
+        ];
+
+        let snapped: Vec<_> =
+            snap_geoms(points.into_iter(), SnappingStrategy::ClosestPoint(0.0)).collect();
+
+        // Snapping can't remove duplicate vertices; it can only move the coordinates of a vertex
+        // to the coordinates of another vertex.
+        assert_eq!(snapped.len(), 2);
     }
 }
